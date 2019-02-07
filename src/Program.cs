@@ -8,13 +8,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordRandomNumber
 {
-    class RandomNumberBot
+    class Program
     {
         private CommandService _commands;
         private DiscordSocketClient _client;
         private IServiceProvider _services;
 
-        static void Main() => new RandomNumberBot().Start().GetAwaiter().GetResult();
+        static void Main() => new Program().Start().GetAwaiter().GetResult();
 
         public async Task Start()
         {
@@ -24,14 +24,12 @@ namespace DiscordRandomNumber
             // Add this for logging.
             _client.Log += Log;
 
-            string token = ""; // Please keep this part private
-
             _services = new ServiceCollection()
                 .BuildServiceProvider();
 
             await InstallCommands();
 
-            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.LoginAsync(TokenType.Bot, Token.Value);
             await _client.StartAsync();
 
             await Task.Delay(-1);
@@ -55,23 +53,37 @@ namespace DiscordRandomNumber
         public async Task HandleCommand(SocketMessage messageParam)
         {
             // Don't process the command if it was a System Message
-            var message = messageParam as SocketUserMessage;
-            if (message == null) return;
+            if (!(messageParam is SocketUserMessage message))
+                return;
 
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
 
             // Determine if the message is a command, based on if it starts with '!' or a mention prefix
-            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))) return;
+            if (!(message.HasCharPrefix('!', ref argPos) ||
+                  message.HasMentionPrefix(_client.CurrentUser, ref argPos))) return;
 
             // Create a Command Context
             var context = new CommandContext(_client, message);
 
+            await Log(
+                new LogMessage(LogSeverity.Info, this.GetType().FullName,
+                    $"User {message.Author} @ {DateTime.UtcNow} wrote: {message}"));
+
             // Execute the command. (result does not indicate a return value, 
             // rather an object stating if the command executed successfully)
             var result = await _commands.ExecuteAsync(context, argPos, _services);
+
             if (!result.IsSuccess)
-                await context.Channel.SendMessageAsync(result.ErrorReason);
+            {
+                if (result.Error is CommandError.ParseFailed)
+                    await context.Channel.SendMessageAsync("Please provide a positive number.");
+                else
+                    await context.Channel.SendMessageAsync(result.ErrorReason);
+
+                await Log(new LogMessage(LogSeverity.Error, " ",
+                    $"The following error occurred: {result.ErrorReason}"));
+            }
         }
     }
 }
