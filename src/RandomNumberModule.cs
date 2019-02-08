@@ -45,14 +45,12 @@ namespace DiscordRandomNumber
                 throw new Exception("Not a number");
             }
 
-            // Return the generated random number.
-            await ReplyAsync(embed: generatedNumber.BuildEmbed("is the generated number"));
+            await ReplyAsync(embed: generatedNumber.BuildEmbed());
         }
 
         /// <summary>
-        /// Usage: random {lower limit} {upper limit}
+        /// Usage: remind {minutes} {message}?
         /// </summary>
-        /// <returns>The generated random number</returns>
         [Command("remind"), Summary("Sets a reminder")]
         public async Task SetReminder([Summary("The number in minutes")] double minutes,
             [Summary("The (optional) message")] string message = null)
@@ -60,10 +58,13 @@ namespace DiscordRandomNumber
             if (minutes <= 0)
                 throw new Exception("Please provide a positive number.");
 
+            // Create to new timer to be executed after the specified minutes.
             Timer _ = new Timer(Reminder, message, (int) (minutes * 1000 * 60), -1);
 
-            // Return the generated random number.
-            await ReplyAsync(embed: "You will be reminded via a personal message".BuildEmbed($"After {minutes} minutes."));
+            // Tell the user that he will be notified.
+            await ReplyAsync(
+                embed: $"Reminder set for {DateTime.UtcNow.AddMinutes(minutes * 1000 * 60):U}".BuildEmbed(
+                    "You will be reminded via a personal message."));
         }
 
         private async void Reminder(object message)
@@ -72,7 +73,7 @@ namespace DiscordRandomNumber
 
             if (userInfo is IUser currentUser)
             {
-                await currentUser.SendMessageAsync(embed: "Reminder".BuildEmbed(message ?? "Your reminder message was left empty"));
+                await currentUser.SendMessageAsync(embed: "Reminder".BuildEmbed(message));
             }
         }
     }
