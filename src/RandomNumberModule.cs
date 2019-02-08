@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -29,10 +30,6 @@ namespace DiscordRandomNumber
             string generatedNumber;
             try
             {
-                // Check for negative numbers.
-//                if (min < 0 || max < 0)
-//                    throw new ArgumentException();
-
                 generatedNumber = Random.Next(min, max).ToString();
             }
             catch (ArgumentOutOfRangeException)
@@ -49,7 +46,34 @@ namespace DiscordRandomNumber
             }
 
             // Return the generated random number.
-            await ReplyAsync(generatedNumber);
+            await ReplyAsync(embed: generatedNumber.BuildEmbed("is the generated number"));
+        }
+
+        /// <summary>
+        /// Usage: random {lower limit} {upper limit}
+        /// </summary>
+        /// <returns>The generated random number</returns>
+        [Command("remind"), Summary("Sets a reminder")]
+        public async Task SetReminder([Summary("The number in minutes")] double minutes,
+            [Summary("The (optional) message")] string message = null)
+        {
+            if (minutes <= 0)
+                throw new Exception("Please provide a positive number.");
+
+            Timer _ = new Timer(Reminder, message, (int) (minutes * 1000 * 60), -1);
+
+            // Return the generated random number.
+            await ReplyAsync(embed: "You will be reminded via a personal message".BuildEmbed($"After {minutes} minutes."));
+        }
+
+        private async void Reminder(object message)
+        {
+            var userInfo = Context.User;
+
+            if (userInfo is IUser currentUser)
+            {
+                await currentUser.SendMessageAsync(embed: "Reminder".BuildEmbed(message ?? "Your reminder message was left empty"));
+            }
         }
     }
 
@@ -60,7 +84,7 @@ namespace DiscordRandomNumber
         /// <summary>
         /// Usage: square {number}
         /// </summary>
-        /// <returns>The number suqared.</returns>
+        /// <returns>The number squared.</returns>
         [Command("square"), Summary("Squares a number.")]
         public async Task Square([Summary("The number to square.")] int num)
         {
