@@ -34,13 +34,7 @@ namespace DiscordRandomNumber
 
             await Task.Delay(-1);
         }
-
-        private Task Log(LogMessage msg)
-        {
-            Console.WriteLine(msg.ToString());
-            return Task.CompletedTask;
-        }
-
+        
         public async Task InstallCommands()
         {
             // Hook the MessageReceived Event into our Command Handler
@@ -84,6 +78,12 @@ namespace DiscordRandomNumber
                 await Log(new LogMessage(LogSeverity.Error, " ",
                     $"The following error occurred: {result.ErrorReason}"));
             }
+        }
+
+        private Task Log(LogMessage msg)
+        {
+            Console.WriteLine(msg.ToString());
+            return Task.CompletedTask;
         }
     }
 }
