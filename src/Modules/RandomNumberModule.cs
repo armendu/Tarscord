@@ -1,13 +1,23 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Microsoft.Extensions.Configuration;
 
 namespace DiscordRandomNumber.Modules
 {
     public class RandomNumberModule : ModuleBase
     {
-        private static readonly Random Random = new Random();
+        private readonly CommandService _service;
+        private readonly IConfigurationRoot _config;
+        private readonly Random _random;
 
+        public RandomNumberModule(CommandService service, IConfigurationRoot config, Random random)
+        {
+            _service = service;
+            _config = config;
+            _random = random;
+        }
+        
         // ~say hello -> hello
         [Command("say"), Summary("Echos a message.")]
         public async Task Say([Remainder, Summary("The text to echo")]
