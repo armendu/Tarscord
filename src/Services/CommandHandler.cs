@@ -14,10 +14,7 @@ namespace DiscordRandomNumber.Services
         private readonly IServiceProvider _provider;
 
         // DiscordSocketClient, CommandService, IConfigurationRoot, and IServiceProvider are injected automatically from the IServiceProvider
-        public CommandHandler(
-            DiscordSocketClient discord,
-            CommandService commands,
-            IConfigurationRoot config,
+        public CommandHandler(DiscordSocketClient discord, CommandService commands, IConfigurationRoot config,
             IServiceProvider provider)
         {
             _discord = discord;
@@ -30,19 +27,25 @@ namespace DiscordRandomNumber.Services
 
         private async Task OnMessageReceivedAsync(SocketMessage s)
         {
-            var msg = s as SocketUserMessage; // Ensure the message is from a user/bot
-            if (msg == null) return;
-            if (msg.Author.Id == _discord.CurrentUser.Id) return; // Ignore self when checking commands
+            if (!(s is SocketUserMessage message)) return;
 
-            var context = new SocketCommandContext(_discord, msg); // Create the command context
+            // Ignore self when checking commands
+            if (message.Author.Id == _discord.CurrentUser.Id)
+                return;
 
-            int argPos = 0; // Check if the message has a valid command prefix
-            if (msg.HasStringPrefix(_config["prefix"], ref argPos) ||
-                msg.HasMentionPrefix(_discord.CurrentUser, ref argPos))
+            var context = new SocketCommandContext(_discord, message); // Create the command context
+
+            int argPos = 0;
+
+            // Check if the message has a valid command prefix
+            if (message.HasStringPrefix(_config["prefix"], ref argPos) ||
+                message.HasMentionPrefix(_discord.CurrentUser, ref argPos))
             {
-                var result = await _commands.ExecuteAsync(context, argPos, _provider); // Execute the command
+                // Execute the command
+                var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-                if (!result.IsSuccess) // If not successful, reply with the error.
+                // If not successful, reply with the error.
+                if (!result.IsSuccess)
                     await context.Channel.SendMessageAsync(result.ToString());
             }
         }

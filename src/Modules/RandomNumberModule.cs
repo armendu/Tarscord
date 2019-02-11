@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.Commands;
-using Microsoft.Extensions.Configuration;
 
 namespace DiscordRandomNumber.Modules
 {
     public class RandomNumberModule : ModuleBase
     {
-        private readonly CommandService _service;
-        private readonly IConfigurationRoot _config;
         private readonly Random _random;
 
-        public RandomNumberModule(CommandService service, IConfigurationRoot config, Random random)
+        public RandomNumberModule(Random random)
         {
-            _service = service;
-            _config = config;
             _random = random;
         }
         
@@ -38,7 +33,7 @@ namespace DiscordRandomNumber.Modules
             string generatedNumber;
             try
             {
-                generatedNumber = Random.Next(min, max).ToString();
+                generatedNumber = _random.Next(min, max).ToString();
             }
             catch (ArgumentOutOfRangeException)
             {
