@@ -21,14 +21,20 @@ namespace DiscordRandomNumber.Modules
         public async Task HelpAsync()
         {
             string prefix = _config["prefix"];
-            var builder = new EmbedBuilder()
+            var builder = new EmbedBuilder
             {
-                Color = new Color(114, 137, 218),
+                Color = Color.Blue,
                 Description = "These are the commands you can use"
             };
 
             foreach (var module in _service.Modules)
             {
+                // Exclude the Help module
+                if (module.Name == this.GetType().Name)
+                {
+                    continue;
+                }
+
                 string description = null;
                 foreach (var cmd in module.Commands)
                 {
@@ -48,7 +54,7 @@ namespace DiscordRandomNumber.Modules
                 }
             }
 
-            await ReplyAsync("", false, builder.Build());
+            await ReplyAsync(embed: builder.Build());
         }
 
         [Command("help")]
@@ -61,11 +67,10 @@ namespace DiscordRandomNumber.Modules
                 await ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
                 return;
             }
-
-            string prefix = _config["prefix"];
+            
             var builder = new EmbedBuilder()
             {
-                Color = new Color(114, 137, 218),
+                Color = Color.Blue,
                 Description = $"Here are some commands like **{command}**"
             };
 
@@ -82,7 +87,7 @@ namespace DiscordRandomNumber.Modules
                 });
             }
 
-            await ReplyAsync("", false, builder.Build());
+            await ReplyAsync(embed: builder.Build());
         }
     }
 }
