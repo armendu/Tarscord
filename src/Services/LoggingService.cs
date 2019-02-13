@@ -29,16 +29,20 @@ namespace DiscordRandomNumber.Services
 
         private Task OnLogAsync(LogMessage msg)
         {
-            if (!Directory.Exists(_logDirectory)) // Create the log directory if it doesn't exist
+            // Create the log directory if it doesn't exist
+            if (!Directory.Exists(_logDirectory))
                 Directory.CreateDirectory(_logDirectory);
-            if (!File.Exists(_logFile)) // Create today's log file if it doesn't exist
+
+            // Create today's log file if it doesn't exist
+            if (!File.Exists(_logFile))
                 File.Create(_logFile).Dispose();
 
             string logText =
                 $"{DateTime.UtcNow:hh:mm:ss} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
             File.AppendAllText(_logFile, logText + "\n"); // Write the log text to a file
 
-            return Console.Out.WriteLineAsync(logText); // Write the log text to the console
+            // Write the log text to the console
+            return Console.Out.WriteLineAsync(logText);
         }
     }
 }

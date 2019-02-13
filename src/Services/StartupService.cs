@@ -16,10 +16,7 @@ namespace DiscordRandomNumber.Services
         private readonly IConfigurationRoot _config;
 
         // DiscordSocketClient, CommandService, and IConfigurationRoot are injected automatically from the IServiceProvider
-        public StartupService(
-            IServiceProvider provider,
-            DiscordSocketClient discord,
-            CommandService commands,
+        public StartupService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands,
             IConfigurationRoot config)
         {
             _provider = provider;
@@ -30,16 +27,21 @@ namespace DiscordRandomNumber.Services
 
         public async Task StartAsync()
         {
-            string discordToken = _config["tokens:discord"]; // Get the discord token from the config file
+            // Get the discord token from the config file
+            string discordToken = _config["tokens:discord"];
             if (string.IsNullOrWhiteSpace(discordToken))
                 throw new Exception(
-                    "Please enter your bot's token into the `config.yml` file found in the applications root directory.");
+                    "Please enter your bots token into the `config.yml` file found in the applications root directory.");
 
-            await _discord.LoginAsync(TokenType.Bot, discordToken); // Login to discord
-            await _discord.StartAsync(); // Connect to the websocket
+            // Login to discord
+            await _discord.LoginAsync(TokenType.Bot, discordToken);
 
+            // Connect to the websocket
+            await _discord.StartAsync();
+
+            // Load commands and modules into the command service
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(),
-                _provider); // Load commands and modules into the command service
+                _provider);
         }
     }
 }

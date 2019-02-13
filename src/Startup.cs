@@ -49,11 +49,11 @@ namespace DiscordRandomNumber
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
-                {
-                    // Add discord to the collection
-                    LogLevel = LogSeverity.Verbose, // Tell the logger to give Verbose amount of info
-                    MessageCacheSize = 1000 // Cache 1,000 messages per channel
-                }))
+            {
+                // Add discord to the collection
+                LogLevel = LogSeverity.Verbose, // Tell the logger to give Verbose amount of info
+                MessageCacheSize = 1000 // Cache 1,000 messages per channel
+            }))
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {
                     // Add the command service to the collection

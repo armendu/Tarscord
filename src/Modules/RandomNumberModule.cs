@@ -12,22 +12,13 @@ namespace DiscordRandomNumber.Modules
         {
             _random = random;
         }
-        
-        // ~say hello -> hello
-        [Command("say"), Summary("Echos a message.")]
-        public async Task Say([Remainder, Summary("The text to echo")]
-            string echo)
-        {
-            // ReplyAsync is a method on ModuleBase
-            await ReplyAsync(echo);
-        }
 
         /// <summary>
         /// Usage: random {lower limit} {upper limit}
         /// </summary>
         /// <returns>The generated random number</returns>
         [Command("random"), Summary("Generates a random number between two numbers")]
-        public async Task GenerateRandomNumber([Summary("The lower limit")] int min,
+        public async Task GenerateRandomNumberAsync([Summary("The lower limit")] int min,
             [Summary("The upper limit")] int max)
         {
             string generatedNumber;

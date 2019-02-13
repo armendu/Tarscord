@@ -44,7 +44,7 @@ namespace DiscordRandomNumber.Services
                 // Execute the command
                 var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-                // If not successful, reply with the error.
+                // If not successful, reply with the error
                 if (!result.IsSuccess)
                     await context.Channel.SendMessageAsync(result.ToString());
             }
