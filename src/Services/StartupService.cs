@@ -15,7 +15,6 @@ namespace DiscordRandomNumber.Services
         private readonly CommandService _commands;
         private readonly IConfigurationRoot _config;
 
-        // DiscordSocketClient, CommandService, and IConfigurationRoot are injected automatically from the IServiceProvider
         public StartupService(IServiceProvider provider, DiscordSocketClient discord, CommandService commands,
             IConfigurationRoot config)
         {

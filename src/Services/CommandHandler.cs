@@ -13,7 +13,6 @@ namespace DiscordRandomNumber.Services
         private readonly IConfigurationRoot _config;
         private readonly IServiceProvider _provider;
 
-        // DiscordSocketClient, CommandService, IConfigurationRoot, and IServiceProvider are injected automatically from the IServiceProvider
         public CommandHandler(DiscordSocketClient discord, CommandService commands, IConfigurationRoot config,
             IServiceProvider provider)
         {
@@ -33,7 +32,8 @@ namespace DiscordRandomNumber.Services
             if (message.Author.Id == _discord.CurrentUser.Id)
                 return;
 
-            var context = new SocketCommandContext(_discord, message); // Create the command context
+            // Create the command context
+            var context = new SocketCommandContext(_discord, message); 
 
             int argPos = 0;
 
