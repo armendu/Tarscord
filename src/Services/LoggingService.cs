@@ -5,7 +5,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace DiscordRandomNumber.Services
+namespace Tarscord.Services
 {
     class LoggingService
     {

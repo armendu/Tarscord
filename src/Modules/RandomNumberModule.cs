@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 
-namespace DiscordRandomNumber.Modules
+namespace Tarscord.Modules
 {
     public class RandomNumberModule : ModuleBase
     {
@@ -36,7 +36,7 @@ namespace DiscordRandomNumber.Modules
             }
             catch (Exception)
             {
-                throw new Exception("Not a number");
+                throw new Exception("Not a number.");
             }
 
             await ReplyAsync(embed: generatedNumber.BuildEmbed());

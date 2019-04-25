@@ -4,7 +4,7 @@ using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 
-namespace DiscordRandomNumber.Modules
+namespace Tarscord.Modules
 {
     public class HelpModule : ModuleBase<SocketCommandContext>
     {

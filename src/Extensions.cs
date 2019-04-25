@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace DiscordRandomNumber
+namespace Tarscord
 {
     public static class Extensions
     {
