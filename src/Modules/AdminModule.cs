@@ -24,8 +24,18 @@ namespace Tarscord.Modules
                 // TODO: After the specified minutes, the user should be un muted.
                 if (Context.Channel is IGuildChannel channel)
                 {
-                    await channel.AddPermissionOverwriteAsync(user, new OverwritePermissions(sendMessages: PermValue.Deny));
+                    OverwritePermissions? possiblePermissions = channel.GetPermissionOverwrite(user);
+
+                    if (possiblePermissions is OverwritePermissions permissions)
+                    {
+                        var overwrittenPermissions = permissions.Modify(sendMessages: PermValue.Deny);
+
+                        await channel.AddPermissionOverwriteAsync(user, overwrittenPermissions);
+                    }
+                    else
+                        await ReplyAsync(embed: $"The user '{user.Username}' could not be muted.".BuildEmbed());
                 }
+
                 await ReplyAsync(embed: $"The user '{user.Username}' was muted.".BuildEmbed());
             }
         }
@@ -41,11 +51,18 @@ namespace Tarscord.Modules
                 if (user == null)
                     throw new Exception("Please provide member of the channel.");
 
-                // TODO: After the specified minutes, the user should be un muted.
                 if (Context.Channel is IGuildChannel channel)
                 {
-                    await channel.AddPermissionOverwriteAsync(user, new OverwritePermissions(sendMessages: PermValue.Allow));
+                    OverwritePermissions? possiblePermissions = channel.GetPermissionOverwrite(user);
+
+                    if (possiblePermissions is OverwritePermissions permissions)
+                    {
+                        var overwrittenPermissions = permissions.Modify(sendMessages: PermValue.Allow);
+
+                        await channel.AddPermissionOverwriteAsync(user, overwrittenPermissions);
+                    }
                 }
+
                 await ReplyAsync(embed: $"The user '{user.Username}' was unmuted.".BuildEmbed());
             }
         }
