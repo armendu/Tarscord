@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using DiscordRandomNumber.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Tarscord.Services;
 
-namespace DiscordRandomNumber
+namespace Tarscord
 {
     public class Startup
     {

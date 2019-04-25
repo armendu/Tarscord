@@ -6,7 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 
-namespace DiscordRandomNumber.Services
+namespace Tarscord.Services
 {
     public class StartupService
     {

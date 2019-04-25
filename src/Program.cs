@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace DiscordRandomNumber
+namespace Tarscord
 {
     class Program
     {

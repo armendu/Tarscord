@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Tarscord.Models;
 
-namespace DiscordRandomNumber.Modules
+namespace Tarscord.Modules
 {
     public class ReminderModule : ModuleBase
     {
+        private SortedList<DateTime, ReminderInfo> _reminders = new SortedList<DateTime, ReminderInfo>();
+
         /// <summary>
         /// Usage: remind {minutes} {message}?
         /// </summary>

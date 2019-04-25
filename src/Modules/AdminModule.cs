@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace DiscordRandomNumber.Modules
+namespace Tarscord.Modules
 {
     [RequireOwner]
     public class AdminModule : ModuleBase
@@ -13,22 +12,42 @@ namespace DiscordRandomNumber.Modules
         /// Usage: mute {user} {minutes}?
         /// </summary>
         [Command("mute"), Summary("Mutes a user for a specified time")]
-        public async Task SetReminderAsync([Summary("The user to be muted")] IUser user = null,
+        public async Task MuteUserAsync([Summary("The user to be muted")] IUser user = null,
             [Summary("Minutes for which the player is muted")]
             int minutes = 1)
         {
-            if (user == null)
-                throw new Exception("Please provide member of the channel.");
+            using (Context.Channel.EnterTypingState())
+            {
+                if (user == null)
+                    throw new Exception("Please provide member of the channel.");
 
-            // Tell the user that he will be notified
-            if (!(user is IGuildUser userInfo)) throw new Exception("User is not part of the channel.");
-            
-            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToString() == "Muted") ??
-                       await Context.Guild.CreateRoleAsync("Muted", new GuildPermissions(sendMessages: false));
+                // TODO: After the specified minutes, the user should be un muted.
+                if (Context.Channel is IGuildChannel channel)
+                {
+                    await channel.AddPermissionOverwriteAsync(user, new OverwritePermissions(sendMessages: PermValue.Deny));
+                }
+                await ReplyAsync(embed: $"The user '{user.Username}' was muted.".BuildEmbed());
+            }
+        }
 
-            await userInfo.AddRoleAsync(role);
+        /// <summary>
+        /// Usage: unmute {user} {minutes}?
+        /// </summary>
+        [Command("unmute"), Summary("Unmutes a user")]
+        public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser user = null)
+        {
+            using (Context.Channel.EnterTypingState())
+            {
+                if (user == null)
+                    throw new Exception("Please provide member of the channel.");
 
-            await ReplyAsync($"The user {userInfo.Nickname} was muted.");
+                // TODO: After the specified minutes, the user should be un muted.
+                if (Context.Channel is IGuildChannel channel)
+                {
+                    await channel.AddPermissionOverwriteAsync(user, new OverwritePermissions(sendMessages: PermValue.Allow));
+                }
+                await ReplyAsync(embed: $"The user '{user.Username}' was unmuted.".BuildEmbed());
+            }
         }
     }
 }
