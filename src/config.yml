@@ -1,3 +1,6 @@
 ﻿prefix: '!'
 tokens:
     discord: ""
+sarcasm-level: 0
+humor-level: 0
+    

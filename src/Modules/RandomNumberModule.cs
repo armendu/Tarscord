@@ -41,5 +41,12 @@ namespace Tarscord.Modules
 
             await ReplyAsync(embed: generatedNumber.BuildEmbed());
         }
+
+        [Command("r"), Summary("Generates a random number between two numbers")]
+        public async Task IgnoreOtherBotAsync([Summary("The lower limit")] int min,
+            [Summary("The upper limit")] int max)
+        {
+            //
+        }
     }
 }

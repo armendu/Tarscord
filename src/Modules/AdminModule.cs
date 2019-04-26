@@ -26,14 +26,11 @@ namespace Tarscord.Modules
                 {
                     OverwritePermissions? possiblePermissions = channel.GetPermissionOverwrite(user);
 
-                    if (possiblePermissions is OverwritePermissions permissions)
-                    {
-                        var overwrittenPermissions = permissions.Modify(sendMessages: PermValue.Deny);
+                    var overwrittenPermissions = possiblePermissions is OverwritePermissions permissions
+                        ? permissions.Modify(sendMessages: PermValue.Deny)
+                        : new OverwritePermissions(sendMessages: PermValue.Deny);
 
-                        await channel.AddPermissionOverwriteAsync(user, overwrittenPermissions);
-                    }
-                    else
-                        await ReplyAsync(embed: $"The user '{user.Username}' could not be muted.".BuildEmbed());
+                    await channel.AddPermissionOverwriteAsync(user, overwrittenPermissions);
                 }
 
                 await ReplyAsync(embed: $"The user '{user.Username}' was muted.".BuildEmbed());
@@ -60,6 +57,11 @@ namespace Tarscord.Modules
                         var overwrittenPermissions = permissions.Modify(sendMessages: PermValue.Allow);
 
                         await channel.AddPermissionOverwriteAsync(user, overwrittenPermissions);
+                    }
+                    else
+                    {
+                        await ReplyAsync(embed: $"The user '{user.Username}' is not muted".BuildEmbed());
+                        return;
                     }
                 }
 
