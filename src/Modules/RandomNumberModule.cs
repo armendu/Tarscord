@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Tarscord.Extensions;
 
 namespace Tarscord.Modules
 {
@@ -39,7 +40,7 @@ namespace Tarscord.Modules
                 throw new Exception("Not a number.");
             }
 
-            await ReplyAsync(embed: generatedNumber.BuildEmbed());
+            await ReplyAsync(embed: generatedNumber.EmbedMessage());
         }
 
         [Command("r"), Summary("Generates a random number between two numbers")]

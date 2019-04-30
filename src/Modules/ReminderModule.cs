@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Tarscord.Extensions;
 using Tarscord.Models;
 
 namespace Tarscord.Modules
@@ -27,7 +28,7 @@ namespace Tarscord.Modules
 
             // Tell the user that he will be notified
             await ReplyAsync(
-                embed: $"Reminder set for {DateTime.UtcNow.AddMinutes(minutes * 1000 * 60):U}".BuildEmbed(
+                embed: $"Reminder set for {DateTime.UtcNow.AddMinutes(minutes * 1000 * 60):U}".EmbedMessage(
                     "You will be reminded via a personal message."));
         }
 
@@ -37,7 +38,7 @@ namespace Tarscord.Modules
 
             if (userInfo is IUser currentUser)
             {
-                await currentUser.SendMessageAsync(embed: "Reminder".BuildEmbed(message));
+                await currentUser.SendMessageAsync(embed: "Reminder".EmbedMessage(message));
             }
         }
     }

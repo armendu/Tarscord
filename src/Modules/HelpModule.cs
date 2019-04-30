@@ -30,7 +30,7 @@ namespace Tarscord.Modules
             foreach (var module in _service.Modules)
             {
                 // Exclude the Help module
-                if (module.Name == this.GetType().Name)
+                if (module.Name == GetType().Name)
                 {
                     continue;
                 }
@@ -68,7 +68,7 @@ namespace Tarscord.Modules
                 return;
             }
             
-            var builder = new EmbedBuilder()
+            var builder = new EmbedBuilder
             {
                 Color = Color.Blue,
                 Description = $"Here are some commands like **{command}**"

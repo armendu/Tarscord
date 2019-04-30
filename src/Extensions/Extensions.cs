@@ -1,10 +1,10 @@
 ﻿using Discord;
 
-namespace Tarscord
+namespace Tarscord.Extensions
 {
     public static class Extensions
     {
-        public static Embed BuildEmbed(this string name, object message = null)
+        public static Embed EmbedMessage(this string name, object message = null)
         {
             return new EmbedBuilder
             {
