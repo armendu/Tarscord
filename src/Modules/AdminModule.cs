@@ -65,8 +65,9 @@ namespace Tarscord.Modules
                             break;
 
                         case AdminAction.Unmute:
-                            possiblePermissions?.Modify(sendMessages: PermValue.Allow);
-
+                            if (possiblePermissions is OverwritePermissions permissions)
+                                overwritePermissions = permissions.Modify(sendMessages: PermValue.Allow);
+                            
                             message = $"The user '{user.Username}' was unmuted.";
                             break;
 
