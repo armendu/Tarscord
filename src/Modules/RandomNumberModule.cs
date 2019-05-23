@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.Commands;
-using Tarscord.Extensions;
+using Tarscord.Utils.Extensions;
 
 namespace Tarscord.Modules
 {
@@ -41,13 +41,6 @@ namespace Tarscord.Modules
             }
 
             await ReplyAsync(embed: generatedNumber.EmbedMessage());
-        }
-
-        [Command("r"), Summary("Generates a random number between two numbers")]
-        public async Task IgnoreOtherBotAsync([Summary("The lower limit")] int min,
-            [Summary("The upper limit")] int max)
-        {
-            //
         }
     }
 }

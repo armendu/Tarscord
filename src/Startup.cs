@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Services;
+using Tarscord.Utils.Helpers;
 
 namespace Tarscord
 {
@@ -65,7 +66,9 @@ namespace Tarscord
             .AddSingleton<StartupService>()
             .AddSingleton<LoggingService>()
             .AddSingleton<Random>()
-            .AddSingleton(Configuration);
+            .AddSingleton(Configuration)
+            .AddSingleton<Reminders>()
+            .AddHostedService<TimedHostedService>();
         }
     }
 }

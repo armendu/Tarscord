@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Tarscord.Extensions;
+using Tarscord.Utils.Extensions;
 
 namespace Tarscord.Modules
 {
@@ -17,7 +17,7 @@ namespace Tarscord.Modules
             [Summary("Minutes for which the user is muted")]
             int minutes = 1)
         {
-            await ExecuteCommand(user, AdminAction.Mute, minutes);
+            await ExecuteCommand(user, CommandType.Mute, minutes);
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Tarscord.Modules
         [Command("unmute"), Summary("Unmutes a user")]
         public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser user = null)
         {
-            await ExecuteCommand(user, AdminAction.Unmute);
+            await ExecuteCommand(user, CommandType.Unmute);
         }
 
         /// <summary>
@@ -38,10 +38,10 @@ namespace Tarscord.Modules
             [Summary("Minutes for which the user cannot react")]
             int minutes = 1)
         {
-            await ExecuteCommand(user, AdminAction.DenyReacting, minutes);
+            await ExecuteCommand(user, CommandType.DenyReacting, minutes);
         }
 
-        private async Task ExecuteCommand(IUser user, AdminAction action, int minutes = 0)
+        private async Task ExecuteCommand(IUser user, CommandType action, int minutes = 0)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -58,20 +58,20 @@ namespace Tarscord.Modules
 
                     switch (action)
                     {
-                        case AdminAction.Mute:
+                        case CommandType.Mute:
                             overwritePermissions = possiblePermissions?.Modify(sendMessages: PermValue.Deny) ??
                                                    new OverwritePermissions(sendMessages: PermValue.Deny);
                             message = $"The user '{user.Username}' was muted.";
                             break;
 
-                        case AdminAction.Unmute:
+                        case CommandType.Unmute:
                             if (possiblePermissions is OverwritePermissions permissions)
                                 overwritePermissions = permissions.Modify(sendMessages: PermValue.Allow);
                             
                             message = $"The user '{user.Username}' was unmuted.";
                             break;
 
-                        case AdminAction.DenyReacting:
+                        case CommandType.DenyReacting:
                             overwritePermissions = possiblePermissions?.Modify(addReactions: PermValue.Deny)
                                                    ?? new OverwritePermissions(addReactions: PermValue.Deny);
 
@@ -85,7 +85,7 @@ namespace Tarscord.Modules
             }
         }
 
-        enum AdminAction
+        enum CommandType
         {
             Mute,
             Unmute,

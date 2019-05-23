@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace Tarscord.Extensions
+namespace Tarscord.Utils.Extensions
 {
     public static class Extensions
     {
