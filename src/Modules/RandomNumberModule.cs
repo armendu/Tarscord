@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord.Commands;
-using Tarscord.Utils.Extensions;
+using Tarscord.Extensions;
 
 namespace Tarscord.Modules
 {
