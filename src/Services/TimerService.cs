@@ -31,7 +31,7 @@ namespace Tarscord.Services
             ReminderInfos.Add(dateToRemind, reminderInfo);
         }
 
-        public async Task NotifyUserWithMessage()
+        public async Task NotifyUserWithMessageAsync()
         {
             if (!ReminderInfos.Any())
             {
@@ -41,7 +41,7 @@ namespace Tarscord.Services
 
             var firstPair = ReminderInfos.FirstOrDefault();
 
-            if (firstPair.Key < DateTime.Now)
+            if (firstPair.Key < DateTime.UtcNow)
             {
                 var userInfo = firstPair.Value.User;
 
@@ -56,21 +56,21 @@ namespace Tarscord.Services
 
         public Task StartTimerAsync()
         {
-            _timer = new Timer(DoWork, null, TimeSpan.Zero,
+            _timer = new Timer(CheckReminders, null, TimeSpan.Zero,
                 TimeSpan.FromSeconds(10));
 
             return Task.CompletedTask;
         }
 
-        private async void DoWork(object state)
+        private async void CheckReminders(object state)
         {
-            // Started
-            await NotifyUserWithMessage();
+            // Send message if a reminder is set
+            await NotifyUserWithMessageAsync();
         }
 
         public Task StopTimerAsync(CancellationToken cancellationToken = default)
         {
-            // Task done
+            // Stop the timer
             _timer?.Change(Timeout.Infinite, 0);
 
             return Task.CompletedTask;

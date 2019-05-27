@@ -5,7 +5,7 @@ using Discord.Commands;
 
 namespace Tarscord.Modules
 {
-    public class SampleGroupModule: ModuleBase
+    public class SampleGroupModule : ModuleBase
     {
         // Create a module with the 'sample' prefix
         [Group("sample")]

@@ -17,7 +17,7 @@ namespace Tarscord.Modules
             [Summary("Minutes for which the user is muted")]
             int minutes = 1)
         {
-            await ExecuteCommand(user, CommandType.Mute, minutes);
+            await ExecuteCommandAsync(user, CommandType.Mute, minutes);
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Tarscord.Modules
         [Command("unmute"), Summary("Unmutes a user")]
         public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser user = null)
         {
-            await ExecuteCommand(user, CommandType.Unmute);
+            await ExecuteCommandAsync(user, CommandType.Unmute);
         }
 
         /// <summary>
@@ -38,10 +38,10 @@ namespace Tarscord.Modules
             [Summary("Minutes for which the user cannot react")]
             int minutes = 1)
         {
-            await ExecuteCommand(user, CommandType.DenyReacting, minutes);
+            await ExecuteCommandAsync(user, CommandType.DenyReacting, minutes);
         }
 
-        private async Task ExecuteCommand(IUser user, CommandType action, int minutes = 0)
+        private async Task ExecuteCommandAsync(IUser user, CommandType action, int minutes = 0)
         {
             using (Context.Channel.EnterTypingState())
             {
@@ -85,7 +85,7 @@ namespace Tarscord.Modules
             }
         }
 
-        enum CommandType
+        private enum CommandType
         {
             Mute,
             Unmute,

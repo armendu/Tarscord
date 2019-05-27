@@ -6,7 +6,7 @@ using Tarscord.Extensions;
 
 namespace Tarscord.Modules
 {
-    public class InteractionModule: ModuleBase
+    public class InteractionModule : ModuleBase
     {
         /// <summary>
         /// Usage: dare {user} {minutes}?
@@ -14,6 +14,7 @@ namespace Tarscord.Modules
         [Command("dare"), Summary("Sends a sarcastic message based on the sarcasm level")]
         public async Task SendSarcasticMessageAsync([Summary("The user to be muted")] IUser user = null)
         {
+            // TODO: Check for sarcasm level
             using (Context.Channel.EnterTypingState())
             {
                 if (user == null)

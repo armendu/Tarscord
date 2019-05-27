@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Tarscord.Extensions;
-using Tarscord.Models;
 using Tarscord.Services;
 
 namespace Tarscord.Modules
@@ -29,7 +27,7 @@ namespace Tarscord.Modules
                 throw new Exception("Please provide a positive number.");
 
             var user = Context.User;
-            var dateToRemind = DateTime.Now.AddMinutes(minutes);
+            var dateToRemind = DateTime.UtcNow.AddMinutes(minutes);
 
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -46,7 +44,5 @@ namespace Tarscord.Modules
                 embed: $"Reminder set for {dateToRemind:U}".EmbedMessage(
                     "You will be reminded via a personal messages."));
         }
-
-        
     }
 }

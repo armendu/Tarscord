@@ -4,14 +4,14 @@ using Discord.Commands;
 namespace Tarscord.Modules
 {
     [RequireOwner]
-    class BotConfigModule: ModuleBase
+    public class BotConfigModule : ModuleBase
     {
         /// <summary>
-        /// Usage: sarcasm-level {value:int}
+        /// Usage: sarcasm-level {level:int}
         /// </summary>
-        [Command("sarcasm-level"), Summary("Mutes a user for a specified time")]
-        public async Task MuteUserAsync([Summary("Minutes for which the user is muted")]
-            int value)
+        [Command("sarcasm-level"), Summary("Sets the sarcasm level of the bot")]
+        public async Task SetSarcasmLevelAsync([Summary("Level specified as a number")]
+            int level)
         {
             // TODO: Implement this method
             await Task.CompletedTask;
