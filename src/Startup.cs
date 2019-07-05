@@ -17,7 +17,7 @@ namespace Tarscord
         {
             var builder = new ConfigurationBuilder() // Create a new instance of the config builder
                 .SetBasePath(AppContext.BaseDirectory) // Specify the default location for the config file
-                .AddYamlFile("config.yml"); // Add this (yaml encoded) file to the configuration
+                .AddYamlFile("Resources/config.yml"); // Add this (yaml encoded) file to the configuration
             Configuration = builder.Build(); // Build the configuration
         }
 

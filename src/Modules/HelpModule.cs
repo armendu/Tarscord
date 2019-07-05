@@ -40,7 +40,7 @@ namespace Tarscord.Modules
                 {
                     var result = await cmd.CheckPreconditionsAsync(Context);
                     if (result.IsSuccess)
-                        description += $"{prefix}{cmd.Aliases.First()}\n";
+                        description += $"{prefix}{cmd.Aliases.First()} - {cmd.Summary}\n";
                 }
 
                 if (!string.IsNullOrWhiteSpace(description))

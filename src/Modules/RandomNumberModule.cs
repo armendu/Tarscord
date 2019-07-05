@@ -27,17 +27,9 @@ namespace Tarscord.Modules
             {
                 generatedNumber = _random.Next(min, max).ToString();
             }
-            catch (ArgumentOutOfRangeException)
-            {
-                throw new Exception("The second argument cannot be smaller than the first.");
-            }
-            catch (ArgumentException)
-            {
-                throw new Exception("Please provide a positive number.");
-            }
             catch (Exception)
             {
-                throw new Exception("Not a number.");
+                throw new Exception("Wrong command usage. Try: random lower-limit upper-limit");
             }
 
             await ReplyAsync(embed: generatedNumber.EmbedMessage());
