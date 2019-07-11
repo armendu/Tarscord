@@ -110,10 +110,10 @@ namespace Tarscord.Modules
             [Command("confirm"), Summary("Confirm your attendance")]
             public async Task ConfirmAsync([Summary("The event name")] string eventName,
                 [Summary("The (optional) user to confirm for")]
-                IUser user = null)
+                params IUser[] user)
             {
-                if (user == null)
-                    user = Context.User;
+                if (user.Length == 0)
+                    user = new [] {Context.User};
 
                 bool result = _eventService.ConfirmAttendance(eventName, user);
 

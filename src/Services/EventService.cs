@@ -57,13 +57,16 @@ namespace Tarscord.Services
             return _events[eventName].EventOrganizer == organizer && _events.Remove(eventName);
         }
 
-        public bool ConfirmAttendance(string eventName, IUser user)
+        public bool ConfirmAttendance(string eventName, IUser[] users)
         {
             if (!_events.ContainsKey(eventName)) return false;
 
-            if (_events[eventName].Attendees.Contains(user)) return false;
+            foreach (var user in users)
+            {
+                if (!_events[eventName].Attendees.Contains(user))
+                    _events[eventName].Attendees.Add(user);
+            }
 
-            _events[eventName].Attendees.Add(user);
             return true;
         }
 
