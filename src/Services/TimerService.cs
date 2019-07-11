@@ -4,13 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using Tarscord.Extensions;
 using Tarscord.Models;
 
 namespace Tarscord.Services
 {
-    public class TimerService : ModuleBase<SocketCommandContext>
+    public class TimerService
     {
         private static readonly SortedList<DateTime, ReminderInfo> ReminderInfos =
             new SortedList<DateTime, ReminderInfo>();
@@ -39,18 +38,18 @@ namespace Tarscord.Services
                 return;
             }
 
-            var firstPair = ReminderInfos.FirstOrDefault();
+            var (dateTime, reminderInfo) = ReminderInfos.FirstOrDefault();
 
-            if (firstPair.Key < DateTime.UtcNow)
+            if (dateTime < DateTime.UtcNow)
             {
-                var userInfo = firstPair.Value.User;
+                var userInfo = reminderInfo.User;
 
                 if (userInfo is IUser currentUser)
                 {
-                    await currentUser.SendMessageAsync(embed: "Reminder".EmbedMessage(firstPair.Value.Message));
+                    await currentUser.SendMessageAsync(embed: "Reminder".EmbedMessage(reminderInfo.Message));
                 }
 
-                ReminderInfos.Remove(firstPair.Key);
+                ReminderInfos.Remove(dateTime);
             }
         }
 

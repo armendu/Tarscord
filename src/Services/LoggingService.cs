@@ -7,7 +7,7 @@ using Discord.WebSocket;
 
 namespace Tarscord.Services
 {
-    class LoggingService
+    public class LoggingService
     {
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
@@ -25,7 +25,7 @@ namespace Tarscord.Services
             _discord.Log += OnLogAsync;
             _commands.Log += OnLogAsync;
         }
-
+        
         private Task OnLogAsync(LogMessage msg)
         {
             // Create the log directory if it doesn't exist

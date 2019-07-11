@@ -33,8 +33,7 @@ namespace Tarscord.Modules
 
             foreach (var message in messages)
             {
-                stringBuilder.Append(message);
-                stringBuilder.Append(' ');
+                stringBuilder.Append($"{message} ");
             }
 
             _timerService.AddReminder(dateToRemind, user, stringBuilder.ToString());
