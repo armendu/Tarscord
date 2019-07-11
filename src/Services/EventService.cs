@@ -27,11 +27,18 @@ namespace Tarscord.Services
             return allEvents;
         }
 
-        public EventInfo CreateEvent(IUser user, string eventName, string eventDescription, DateTime dateTime)
+        public EventInfo GetEventInformation(string eventName)
+        {
+            _events.TryGetValue(eventName, out EventInfo eventInfo);
+
+            return eventInfo;
+        }
+
+        public EventInfo CreateEvent(IUser organizer, string eventName, string eventDescription, DateTime dateTime)
         {
             var eventInfo = new EventInfo
             {
-                EventOrganizer = user,
+                EventOrganizer = organizer,
                 EventName = eventName,
                 DateTime = dateTime,
                 EventDescription = eventDescription,
@@ -43,6 +50,13 @@ namespace Tarscord.Services
             return result ? eventInfo : null;
         }
 
+        public bool CancelEvent(IUser organizer, string eventName)
+        {
+            if (!_events.ContainsKey(eventName)) return false;
+
+            return _events[eventName].EventOrganizer == organizer && _events.Remove(eventName);
+        }
+
         public bool ConfirmAttendance(string eventName, IUser user)
         {
             if (!_events.ContainsKey(eventName)) return false;
@@ -52,7 +66,7 @@ namespace Tarscord.Services
             _events[eventName].Attendees.Add(user);
             return true;
         }
-        
+
         public List<IUser> ShowConfirmedAttendees(string eventName)
         {
             return _events.ContainsKey(eventName) ? _events[eventName].Attendees.ToList() : null;
