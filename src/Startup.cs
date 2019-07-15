@@ -65,7 +65,6 @@ namespace Tarscord
             .AddSingleton<StartupService>()
             .AddSingleton<LoggingService>()
             .AddSingleton<TimerService>()
-            .AddSingleton<Random>()
             .AddSingleton<EventService>()
             .AddSingleton(Configuration);
         }

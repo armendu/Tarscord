@@ -85,7 +85,10 @@ namespace Tarscord.Modules
                 EventInfo createdEvent =
                     _eventService.CreateEvent(Context.User, eventName, stringBuilder.ToString(), parsedDateTime);
 
-                await ReplyAsync(embed: "The event was created".EmbedMessage(createdEvent.ToString()));
+                if (createdEvent == null)
+                    await ReplyAsync(embed: "The event creation failed".EmbedMessage("Please provide a unique name for the event"));
+                else
+                    await ReplyAsync(embed: "The event was successfully created".EmbedMessage(createdEvent.ToString()));
             }
 
             /// <summary>

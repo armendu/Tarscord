@@ -10,6 +10,7 @@ namespace Tarscord.Models
         public string EventName { get; set; }
         public DateTime? DateTime { get; set; }
         public IList<IUser> Attendees { get; set; }
+        public IList<string> OtherAttendees { get; set; }
         public string EventDescription { get; set; }
 
         public override string ToString()
