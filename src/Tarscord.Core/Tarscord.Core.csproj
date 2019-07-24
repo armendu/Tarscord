@@ -4,8 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <AssemblyName>Tarscord</AssemblyName>
-    <RootNamespace>Tarscord</RootNamespace>
+    <AssemblyName>Tarscord.Core</AssemblyName>
+    <RootNamespace>Tarscord.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
