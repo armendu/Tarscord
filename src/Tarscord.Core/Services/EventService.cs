@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Dapper.Contrib.Extensions;
 using Discord;
 using Tarscord.Models;
+using Tarscord.Persistence;
 
 namespace Tarscord.Services
 {
     public class EventService
     {
         private readonly Dictionary<string, EventInfo> _events;
+        private readonly IDatabaseConnection _connection;
 
-        public EventService()
+        public EventService(IDatabaseConnection connection)
         {
             _events = new Dictionary<string, EventInfo>();
+            _connection = connection;
         }
 
         public List<string> GetAllEvents()
@@ -44,6 +49,7 @@ namespace Tarscord.Services
                 EventDescription = eventDescription,
                 Attendees = new List<IUser>()
             };
+            int resultOfQuery = _connection.Connection.InsertAsync(new Tarscord.Persistence.Entities.EventInfo() {EventName = "test", EventDescription = ""}).Result;
 
             bool result = _events.TryAdd(eventName, eventInfo);
 

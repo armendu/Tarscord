@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Tarscord.Persistence;
 using Tarscord.Services;
 
 namespace Tarscord
@@ -66,7 +68,8 @@ namespace Tarscord
             .AddSingleton<LoggingService>()
             .AddSingleton<TimerService>()
             .AddSingleton<EventService>()
-            .AddSingleton(Configuration);
+            .AddSingleton(Configuration)
+            .AddTransient<IDatabaseConnection, DatabaseConnection>();
         }
     }
 }

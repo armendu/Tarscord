@@ -15,6 +15,10 @@
     <PackageReference Include="NetEscapades.Configuration.Yaml" Version="1.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Tarscord.Persistence\Tarscord.Persistence.csproj" />
+  </ItemGroup>
+
     <ItemGroup>
         <None Update="Resources\config.yml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
