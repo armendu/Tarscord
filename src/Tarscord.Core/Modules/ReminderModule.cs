@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Tarscord.Core.Extensions;
-using Tarscord.Services;
+using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules
 {

@@ -2,7 +2,7 @@
 
 namespace Tarscord.Persistence.Interfaces
 {
-    public interface IEventRepository : IBaseRepository<EventInfo>
+    public interface IEventAttendeesRepository : IBaseRepository<EventAttendees>
     {
     }
 }

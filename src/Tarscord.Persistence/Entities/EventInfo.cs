@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Tarscord.Persistence.Entities
 {
@@ -11,6 +10,7 @@ namespace Tarscord.Persistence.Entities
 //        public IList<string> Attendees { get; set; }
 //        public IList<string> OtherAttendees { get; set; }
         public string EventDescription { get; set; }
+        public int IsActive { get; set; }
 
         public override string ToString()
         {

@@ -30,14 +30,14 @@ namespace Tarscord.Core.Modules
             [Command("list"), Summary("Lists all events")]
             public async Task ListEventsAsync()
             {
-                List<string> events = _eventService.GetAllEvents();
+                List<EventInfo> events = await _eventService.GetAllEvents();
                 if (events != null && events.Any())
                 {
                     StringBuilder stringBuilder = new StringBuilder();
 
                     for (int i = 1; i <= events.Count; i++)
                     {
-                        stringBuilder.Append($"{i}. {events[i - 1]}\n");
+                        stringBuilder.Append($"{i}. {events[i - 1].EventName}\n");
                     }
 
                     await ReplyAsync(embed: $"Here are all the events:\n{stringBuilder}".EmbedMessage());
@@ -55,7 +55,7 @@ namespace Tarscord.Core.Modules
             [Command("show"), Summary("Show information about an event")]
             public async Task ShowEventInformationAsync([Summary("The event name")] string eventName)
             {
-                EventInfo eventInformation = _eventService.GetEventInformation(eventName);
+                EventInfo eventInformation = await _eventService.GetEventInformation(eventName);
                 if (eventInformation != null)
                     await ReplyAsync(embed: "Here is events information:".EmbedMessage(eventInformation.ToString()));
                 else

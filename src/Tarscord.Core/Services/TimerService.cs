@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Tarscord.Extensions;
-using Tarscord.Models;
+using Tarscord.Core.Extensions;
+using Tarscord.Core.Models;
 
-namespace Tarscord.Services
+namespace Tarscord.Core.Services
 {
     public class TimerService
     {

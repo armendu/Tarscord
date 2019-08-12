@@ -19,7 +19,11 @@ namespace Tarscord.Persistence
 
             Connection.Open();
             string sql =
-                "create table EventInfos (EventOrganizer nvarchar(100), EventName nvarchar(100), DateTime datetime, EventDescription nvarchar(100))";
+                "CREATE TABLE EventInfos (Id INTEGER PRIMARY KEY, " +
+                "EventOrganizer NVARCHAR(100), EventName NVARCHAR(100), " +
+                "DateTime datetime, EventDescription NVARCHAR(100), IsActive bool);" +
+                "CREATE TABLE EventAttendees (Id INTEGER PRIMARY KEY, " +
+                "EventInfoId INTEGER, Attendee NVARCHAR(100), Confirmed bool);";
             Connection.Execute(sql);
         }
     }

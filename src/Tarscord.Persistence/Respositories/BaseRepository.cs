@@ -35,11 +35,11 @@ namespace Tarscord.Persistence.Respositories
         {
 //            using (var transaction = _connection.Connection.BeginTransaction())
 //            {
-                await _connection.Connection.InsertAsync(item);
+                int noRowsAffected = await _connection.Connection.InsertAsync(item);
 //                transaction.Commit();
 //            }
 
-            return item;
+            return noRowsAffected != 0 ? item : null;
         }
 
         public async Task<T> UpdateItem(T item)
