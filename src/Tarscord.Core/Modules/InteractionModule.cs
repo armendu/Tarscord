@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Tarscord.Extensions;
+using Tarscord.Core.Extensions;
 
-namespace Tarscord.Modules
+namespace Tarscord.Core.Modules
 {
     public class InteractionModule : ModuleBase
     {

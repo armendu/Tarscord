@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Data;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Tarscord.Core.Services;
 using Tarscord.Persistence;
-using Tarscord.Services;
+using Tarscord.Persistence.Interfaces;
+using Tarscord.Persistence.Respositories;
 
-namespace Tarscord
+namespace Tarscord.Core
 {
     public class Startup
     {
@@ -69,7 +70,8 @@ namespace Tarscord
             .AddSingleton<TimerService>()
             .AddSingleton<EventService>()
             .AddSingleton(Configuration)
-            .AddTransient<IDatabaseConnection, DatabaseConnection>();
+            .AddScoped<IEventRepository, EventRepository>()
+            .AddSingleton<IDatabaseConnection, DatabaseConnection>();
         }
     }
 }

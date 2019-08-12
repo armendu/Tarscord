@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Tarscord
+namespace Tarscord.Core
 {
     class Program
     {

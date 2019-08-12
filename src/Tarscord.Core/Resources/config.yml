@@ -1,5 +1,6 @@
 ﻿prefix: '?'
 tokens:
-    discord: ""
+    discord: "NTQxOTgyNDY1OTM0MzYwNTk4.XTgWAA.a2KT74FVjQD4_lq5fX2d_tzSwS8"
 sarcasm-level: 0
 humor-level: 0
+database-file: "Tarscord.DB"

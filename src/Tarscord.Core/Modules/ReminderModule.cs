@@ -2,10 +2,10 @@
 using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
-using Tarscord.Extensions;
+using Tarscord.Core.Extensions;
 using Tarscord.Services;
 
-namespace Tarscord.Modules
+namespace Tarscord.Core.Modules
 {
     public class ReminderModule : ModuleBase
     {

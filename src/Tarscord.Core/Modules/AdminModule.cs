@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Tarscord.Extensions;
+using Tarscord.Core.Extensions;
 
-namespace Tarscord.Modules
+namespace Tarscord.Core.Modules
 {
     [RequireOwner]
     public class AdminModule : ModuleBase
@@ -67,7 +67,7 @@ namespace Tarscord.Modules
                         case CommandType.Unmute:
                             if (possiblePermissions is OverwritePermissions permissions)
                                 overwritePermissions = permissions.Modify(sendMessages: PermValue.Allow);
-                            
+
                             message = $"The user '{user.Username}' was unmuted.";
                             break;
 

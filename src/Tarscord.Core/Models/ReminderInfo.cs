@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace Tarscord.Models
+namespace Tarscord.Core.Models
 {
     public class ReminderInfo
     {

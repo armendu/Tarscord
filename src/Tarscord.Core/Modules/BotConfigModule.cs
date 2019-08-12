@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Discord.Commands;
 
-namespace Tarscord.Modules
+namespace Tarscord.Core.Modules
 {
     [RequireOwner]
     public class BotConfigModule : ModuleBase

@@ -6,7 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 
-namespace Tarscord.Services
+namespace Tarscord.Core.Services
 {
     public class StartupService
     {

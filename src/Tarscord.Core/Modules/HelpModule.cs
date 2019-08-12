@@ -4,7 +4,7 @@ using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 
-namespace Tarscord.Modules
+namespace Tarscord.Core.Modules
 {
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
@@ -67,7 +67,7 @@ namespace Tarscord.Modules
                 await ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
                 return;
             }
-            
+
             var builder = new EmbedBuilder
             {
                 Color = Color.Blue,

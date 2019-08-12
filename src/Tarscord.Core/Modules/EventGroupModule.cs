@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Tarscord.Extensions;
-using Tarscord.Models;
-using Tarscord.Services;
+using Tarscord.Core.Extensions;
+using Tarscord.Core.Services;
+using Tarscord.Persistence.Entities;
 
-namespace Tarscord.Modules
+namespace Tarscord.Core.Modules
 {
     public class EventGroupModule
     {
@@ -83,10 +83,11 @@ namespace Tarscord.Modules
                 DateTime.TryParse(dateTime, out DateTime parsedDateTime);
 
                 EventInfo createdEvent =
-                    _eventService.CreateEvent(Context.User, eventName, stringBuilder.ToString(), parsedDateTime);
+                    await _eventService.CreateEvent(Context.User, eventName, stringBuilder.ToString(), parsedDateTime);
 
                 if (createdEvent == null)
-                    await ReplyAsync(embed: "The event creation failed".EmbedMessage("Please provide a unique name for the event"));
+                    await ReplyAsync(
+                        embed: "The event creation failed".EmbedMessage("Please provide a unique name for the event"));
                 else
                     await ReplyAsync(embed: "The event was successfully created".EmbedMessage(createdEvent.ToString()));
             }
@@ -101,7 +102,8 @@ namespace Tarscord.Modules
                 bool result = _eventService.CancelEvent(Context.User, eventName);
 
                 if (result)
-                    await ReplyAsync(embed: $"You have successfully canceled the event named '{eventName}'".EmbedMessage());
+                    await ReplyAsync(
+                        embed: $"You have successfully canceled the event named '{eventName}'".EmbedMessage());
                 else
                     await ReplyAsync(embed: $"The cancelation of the event named '{eventName}'failed.".EmbedMessage());
             }
@@ -116,7 +118,7 @@ namespace Tarscord.Modules
                 params IUser[] user)
             {
                 if (user.Length == 0)
-                    user = new [] {Context.User};
+                    user = new[] {Context.User};
 
                 bool result = _eventService.ConfirmAttendance(eventName, user);
 

@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Dapper.Contrib.Extensions;
 using Discord;
-using Tarscord.Models;
-using Tarscord.Persistence;
+using Tarscord.Persistence.Entities;
+using Tarscord.Persistence.Interfaces;
 
-namespace Tarscord.Services
+namespace Tarscord.Core.Services
 {
     public class EventService
     {
         private readonly Dictionary<string, EventInfo> _events;
-        private readonly IDatabaseConnection _connection;
+        private readonly IEventRepository _eventRepository;
 
-        public EventService(IDatabaseConnection connection)
+        public EventService(IEventRepository eventRepository)
         {
             _events = new Dictionary<string, EventInfo>();
-            _connection = connection;
+            _eventRepository = eventRepository;
         }
 
         public List<string> GetAllEvents()
@@ -39,17 +37,19 @@ namespace Tarscord.Services
             return eventInfo;
         }
 
-        public EventInfo CreateEvent(IUser organizer, string eventName, string eventDescription, DateTime dateTime)
+        public async Task<EventInfo> CreateEvent(IUser organizer, string eventName, string eventDescription,
+            DateTime dateTime)
         {
             var eventInfo = new EventInfo
             {
-                EventOrganizer = organizer,
+                EventOrganizer = organizer.Username,
                 EventName = eventName,
                 DateTime = dateTime,
-                EventDescription = eventDescription,
-                Attendees = new List<IUser>()
+                EventDescription = eventDescription
             };
-            int resultOfQuery = _connection.Connection.InsertAsync(new Tarscord.Persistence.Entities.EventInfo() {EventName = "test", EventDescription = ""}).Result;
+
+            // TODO: Create tables in the database if they don't exist
+            var someres = await _eventRepository.CreateAsync(eventInfo);
 
             bool result = _events.TryAdd(eventName, eventInfo);
 
@@ -60,7 +60,8 @@ namespace Tarscord.Services
         {
             if (!_events.ContainsKey(eventName)) return false;
 
-            return _events[eventName].EventOrganizer == organizer && _events.Remove(eventName);
+//            return _events[eventName].EventOrganizer == organizer && _events.Remove(eventName);
+            return false;
         }
 
         public bool ConfirmAttendance(string eventName, IUser[] users)
@@ -69,8 +70,8 @@ namespace Tarscord.Services
 
             foreach (var user in users)
             {
-                if (!_events[eventName].Attendees.Contains(user))
-                    _events[eventName].Attendees.Add(user);
+//                if (!_events[eventName].Attendees.Contains(user))
+//                    _events[eventName].Attendees.Add(user);
             }
 
             return true;
@@ -78,7 +79,8 @@ namespace Tarscord.Services
 
         public List<IUser> ShowConfirmedAttendees(string eventName)
         {
-            return _events.ContainsKey(eventName) ? _events[eventName].Attendees.ToList() : null;
+//            return _events.ContainsKey(eventName) ? _events[eventName].Attendees.ToList() : null;
+            return null;
         }
     }
 }

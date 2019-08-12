@@ -4,7 +4,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 
-namespace Tarscord.Services
+namespace Tarscord.Core.Services
 {
     public class CommandHandler
     {
@@ -33,7 +33,7 @@ namespace Tarscord.Services
                 return;
 
             // Create the command context
-            var context = new SocketCommandContext(_discord, message); 
+            var context = new SocketCommandContext(_discord, message);
 
             int argPos = 0;
 
