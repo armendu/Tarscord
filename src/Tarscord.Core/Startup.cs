@@ -71,6 +71,7 @@ namespace Tarscord.Core
             .AddSingleton<EventService>()
             .AddSingleton(Configuration)
             .AddScoped<IEventRepository, EventRepository>()
+            .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>();
         }
     }

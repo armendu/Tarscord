@@ -11,22 +11,31 @@ namespace Tarscord.Core.Services
     public class EventService
     {
         private readonly IEventRepository _eventRepository;
+        private readonly IEventAttendeesRepository _eventAttendeesRepository;
 
-        public EventService(IEventRepository eventRepository)
+        public EventService(IEventRepository eventRepository, IEventAttendeesRepository eventAttendeesRepository)
         {
             _eventRepository = eventRepository;
+            _eventAttendeesRepository = eventAttendeesRepository;
         }
 
+        /// <summary>
+        /// Retrieves all the events from the database 
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<EventInfo>> GetAllEvents()
         {
             var result = await _eventRepository.GetAllAsync();
 
-            if (!result.Any())
-                return null;
-
-            return result.ToList();
+            // Remove IsActive if possible
+            return result.Any() ? result.Where(info => info.IsActive).ToList() : null;
         }
 
+        /// <summary>
+        /// Retrieves an event stored in the database
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <returns></returns>
         public async Task<EventInfo> GetEventInformation(string eventName)
         {
             var eventInfos = await _eventRepository.FindBy(info => info.EventName == eventName);
@@ -34,47 +43,140 @@ namespace Tarscord.Core.Services
             return eventInfos.FirstOrDefault();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="organizer"></param>
+        /// <param name="eventName"></param>
+        /// <param name="eventDescription"></param>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
         public async Task<EventInfo> CreateEvent(IUser organizer, string eventName, string eventDescription,
             DateTime dateTime)
         {
             var eventInfo = new EventInfo
             {
                 EventOrganizer = organizer.Username,
+                EventOrganizerId = organizer.Id,
                 EventName = eventName,
-                DateTime = dateTime,
-                EventDescription = eventDescription
+                EventDate = dateTime,
+                EventDescription = eventDescription,
+                IsActive = true,
+                Created = DateTime.UtcNow,
+                Updated = DateTime.UtcNow
             };
 
-            EventInfo result = await _eventRepository.CreateAsync(eventInfo);
-
-            return result != null ? eventInfo : null;
+            return await _eventRepository.CreateAsync(eventInfo);
         }
 
-        public bool CancelEvent(IUser organizer, string eventName)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="organizer"></param>
+        /// <param name="eventName"></param>
+        /// <returns></returns>
+        public async Task<EventInfo> CancelEvent(IUser organizer, string eventName)
         {
-//            if (!_events.ContainsKey(eventName)) return false;
+            var eventInfos = await _eventRepository.FindBy(info =>
+                info.EventOrganizerId == organizer.Id && info.EventName == eventName);
 
-//            return _events[eventName].EventOrganizer == organizer && _events.Remove(eventName);
-            return false;
+            if (!eventInfos.Any())
+                return null;
+
+            var eventInfoToUpdate = eventInfos.FirstOrDefault();
+
+            if (eventInfoToUpdate == null)
+                return null;
+
+            eventInfoToUpdate.IsActive = false;
+            eventInfoToUpdate.Updated = DateTime.UtcNow;
+
+            await _eventRepository.UpdateItem(eventInfoToUpdate);
+
+            return eventInfoToUpdate;
         }
 
-        public bool ConfirmAttendance(string eventName, IUser[] users)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="users"></param>
+        /// <returns></returns>
+        public async Task<List<string>> ConfirmAttendance(string eventName, IUser[] users)
         {
-//            if (!_events.ContainsKey(eventName)) return false;
+            var result = await _eventRepository.FindBy(info => info.EventName == eventName);
 
+            if (!result.Any())
+                return null;
+
+            var eventToAttend = result.FirstOrDefault();
+
+            if (eventToAttend == null)
+                return null;
+
+            List<string> confirmedAttendance = new List<string>();
             foreach (var user in users)
             {
-//                if (!_events[eventName].Attendees.Contains(user))
-//                    _events[eventName].Attendees.Add(user);
+                var attendee = await _eventAttendeesRepository.CreateAsync(new EventAttendee
+                {
+                    AttendeeId = user.Id,
+                    AttendeeName = user.Username,
+                    Confirmed = true,
+                    EventInfoId = eventToAttend.Id,
+                    Created = DateTime.UtcNow,
+                    Updated = DateTime.UtcNow
+                });
+
+                confirmedAttendance.Add(attendee.AttendeeName);
+            }
+
+            return confirmedAttendance;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <returns></returns>
+        public async Task<List<string>> ShowConfirmedAttendees(string eventName)
+        {
+            var eventInfo = await _eventRepository.FindBy(info => info.EventName == eventName);
+
+            if (!eventInfo.Any())
+                return null;
+
+            var attendees =
+                await _eventAttendeesRepository.FindBy(attendee =>
+                    attendee.EventInfoId == eventInfo.FirstOrDefault()?.Id);
+
+            return attendees.Any() ? attendees.Select(a => a.AttendeeName).ToList() : null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public async Task<bool> CancelAttendance(string eventName, IUser user)
+        {
+            var eventToCancel = await _eventRepository.FindBy(info => info.EventName == eventName);
+
+            if (!eventToCancel.Any())
+                return false;
+
+            var attendees = await _eventAttendeesRepository.FindBy(e =>
+                e.EventInfoId == eventToCancel.FirstOrDefault()?.Id && e.AttendeeId == user.Id);
+
+            if (!attendees.Any())
+                return false;
+
+            foreach (var res in attendees)
+            {
+                await _eventAttendeesRepository.DeleteItem(res);
             }
 
             return true;
-        }
-
-        public List<IUser> ShowConfirmedAttendees(string eventName)
-        {
-//            return _events.ContainsKey(eventName) ? _events[eventName].Attendees.ToList() : null;
-            return null;
         }
     }
 }

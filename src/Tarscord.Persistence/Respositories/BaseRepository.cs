@@ -33,57 +33,21 @@ namespace Tarscord.Persistence.Respositories
 
         public async Task<T> CreateAsync(T item)
         {
-//            using (var transaction = _connection.Connection.BeginTransaction())
-//            {
-                int noRowsAffected = await _connection.Connection.InsertAsync(item);
-//                transaction.Commit();
-//            }
-
+            int noRowsAffected = await _connection.Connection.InsertAsync(item);
+            
             return noRowsAffected != 0 ? item : null;
         }
 
         public async Task<T> UpdateItem(T item)
         {
-            using (var transaction = _connection.Connection.BeginTransaction())
-            {
-                try
-                {
-                    await _connection.Connection.UpdateAsync(item);
-                    transaction.Commit();
-                }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-                finally
-                {
-                    transaction.Dispose();
-                }
-            }
+            await _connection.Connection.UpdateAsync(item);
 
             return item;
         }
 
         public async Task DeleteItem(T item)
         {
-            using (var transaction = _connection.Connection.BeginTransaction())
-            {
-                try
-                {
-                    await _connection.Connection.DeleteAsync(item);
-                    transaction.Commit();
-                }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-                finally
-                {
-                    transaction.Dispose();
-                }
-            }
+            await _connection.Connection.DeleteAsync(item);
         }
     }
 }

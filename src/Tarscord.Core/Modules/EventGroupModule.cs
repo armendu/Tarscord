@@ -37,15 +37,14 @@ namespace Tarscord.Core.Modules
 
                     for (int i = 1; i <= events.Count; i++)
                     {
-                        stringBuilder.Append($"{i}. {events[i - 1].EventName}\n");
+                        stringBuilder.Append(
+                            $"{i}. '{events[i - 1].EventName}' created by '{events[i - 1].EventOrganizer}'\n");
                     }
 
                     await ReplyAsync(embed: $"Here are all the events:\n{stringBuilder}".EmbedMessage());
                 }
                 else
-                {
-                    await ReplyAsync(embed: "There are no events".EmbedMessage());
-                }
+                    await ReplyAsync(embed: "No active event were found".EmbedMessage());
             }
 
             /// <summary>
@@ -53,11 +52,14 @@ namespace Tarscord.Core.Modules
             /// </summary>
             /// <returns>The number squared.</returns>
             [Command("show"), Summary("Show information about an event")]
+            [Alias("info", "get")]
             public async Task ShowEventInformationAsync([Summary("The event name")] string eventName)
             {
                 EventInfo eventInformation = await _eventService.GetEventInformation(eventName);
+
                 if (eventInformation != null)
-                    await ReplyAsync(embed: "Here is events information:".EmbedMessage(eventInformation.ToString()));
+                    await ReplyAsync(
+                        embed: "Here is the event's information:".EmbedMessage(eventInformation.ToString()));
                 else
                     await ReplyAsync(embed: $"The event named '{eventName}' does not exist".EmbedMessage());
             }
@@ -67,6 +69,7 @@ namespace Tarscord.Core.Modules
             /// </summary>
             /// <returns>The number squared.</returns>
             [Command("create"), Summary("Create an event")]
+            [Alias("add", "make", "generate")]
             public async Task CreateEventAsync([Summary("The event name")] string eventName = "Unnamed event",
                 [Summary("The event date and time")] string dateTime = "",
                 [Summary("The event description")] params string[] eventDescription)
@@ -85,23 +88,23 @@ namespace Tarscord.Core.Modules
                 EventInfo createdEvent =
                     await _eventService.CreateEvent(Context.User, eventName, stringBuilder.ToString(), parsedDateTime);
 
-                if (createdEvent == null)
-                    await ReplyAsync(
-                        embed: "The event creation failed".EmbedMessage("Please provide a unique name for the event"));
-                else
+                if (createdEvent != null)
                     await ReplyAsync(embed: "The event was successfully created".EmbedMessage(createdEvent.ToString()));
+                else
+                    await ReplyAsync(embed: "The event creation failed".EmbedMessage());
             }
 
             /// <summary>
             /// Usage: event cancel {eventName}
             /// </summary>
             /// <returns>The number squared.</returns>
-            [Command("cancel"), Summary("Cancel an event")]
+            [Command("remove"), Summary("Cancel an event")]
+            [Alias("delete")]
             public async Task CancelEventAsync([Summary("The event name")] string eventName)
             {
-                bool result = _eventService.CancelEvent(Context.User, eventName);
+                EventInfo result = await _eventService.CancelEvent(Context.User, eventName);
 
-                if (result)
+                if (result != null)
                     await ReplyAsync(
                         embed: $"You have successfully canceled the event named '{eventName}'".EmbedMessage());
                 else
@@ -120,12 +123,47 @@ namespace Tarscord.Core.Modules
                 if (user.Length == 0)
                     user = new[] {Context.User};
 
-                bool result = _eventService.ConfirmAttendance(eventName, user);
+                List<string> confirmAttendance = await _eventService.ConfirmAttendance(eventName, user);
 
-                if (result)
-                    await ReplyAsync(embed: "Thank you for confirming your attendance".EmbedMessage());
+                if (confirmAttendance.Any())
+                {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    for (int i = 1; i <= confirmAttendance.Count; i++)
+                    {
+                        stringBuilder.Append($"{i}. {confirmAttendance[i - 1]}\n");
+                    }
+
+                    await ReplyAsync(
+                        embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
+                            .EmbedMessage(stringBuilder.ToString()));
+                }
                 else
-                    await ReplyAsync(embed: "You have already confirmed your attendance".EmbedMessage());
+                    await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage());
+            }
+
+            /// <summary>
+            /// Usage: event confirm {eventName} {user?} 
+            /// </summary>
+            /// <returns>The number squared.</returns>
+            [Command("cancel"), Summary("Confirm your attendance")]
+            [Alias("unattend")]
+            public async Task CancelAttendanceAsync([Summary("The event name")] string eventName,
+                [Summary("The (optional) user to confirm for")]
+                IUser user = null)
+            {
+                if (user == null)
+                    user = Context.User;
+
+                bool canceledAttendance = await _eventService.CancelAttendance(eventName, user);
+
+                if (canceledAttendance)
+                {
+                    await ReplyAsync(
+                        embed: $"You successfully canceled your attendance for the event named '{eventName}'"
+                            .EmbedMessage());
+                }
+                else
+                    await ReplyAsync(embed: "Attendance cancellation failed".EmbedMessage());
             }
 
             /// <summary>
@@ -135,7 +173,7 @@ namespace Tarscord.Core.Modules
             [Command("confirmed"), Summary("Shows confirmed attendees.")]
             public async Task ShowConfirmedAsync([Summary("The event name")] string eventName)
             {
-                List<IUser> attendees = _eventService.ShowConfirmedAttendees(eventName);
+                List<string> attendees = await _eventService.ShowConfirmedAttendees(eventName);
 
                 if (attendees == null)
                 {

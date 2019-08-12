@@ -3,7 +3,7 @@ using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Persistence.Respositories
 {
-    public class EventAttendeesRepository : BaseRepository<EventAttendees>, IEventAttendeesRepository
+    public class EventAttendeesRepository : BaseRepository<EventAttendee>, IEventAttendeesRepository
     {
         public EventAttendeesRepository(IDatabaseConnection connection) : base(connection)
         {
