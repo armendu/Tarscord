@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tarscord.Core", "src\Tarscord.Core\Tarscord.Core.csproj", "{D44364F2-9C2A-4C32-A083-7E2026557FA0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tarscord.Persistence", "src\Tarscord.Persistence\Tarscord.Persistence.csproj", "{DF74A589-8594-47E5-BA94-A5CED69ABBB2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D44364F2-9C2A-4C32-A083-7E2026557FA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D44364F2-9C2A-4C32-A083-7E2026557FA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D44364F2-9C2A-4C32-A083-7E2026557FA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D44364F2-9C2A-4C32-A083-7E2026557FA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {69310E05-3069-48D7-AC36-8585D6210C56}
+	EndGlobalSection
+EndGlobal
