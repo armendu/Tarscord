@@ -118,12 +118,12 @@ namespace Tarscord.Core.Modules
             [Command("confirm"), Summary("Confirm your attendance")]
             public async Task ConfirmAsync([Summary("The event name")] string eventName,
                 [Summary("The (optional) user to confirm for")]
-                params IUser[] user)
+                params IUser[] users)
             {
-                if (user.Length == 0)
-                    user = new[] {Context.User};
+                if (users.Length == 0)
+                    users = new[] {Context.User};
 
-                List<string> confirmAttendance = await _eventService.ConfirmAttendance(eventName, user);
+                List<string> confirmAttendance = await _eventService.ConfirmAttendance(eventName, users);
 
                 if (confirmAttendance.Any())
                 {

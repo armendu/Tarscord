@@ -1,6 +1,6 @@
 ﻿@echo off
 
-cd src
+cd src/Tarscord.Core
 dotnet run
 
 pause

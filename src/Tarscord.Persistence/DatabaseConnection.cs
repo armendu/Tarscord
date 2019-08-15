@@ -21,7 +21,7 @@ namespace Tarscord.Persistence
             string sql =
                 "CREATE TABLE EventInfos (Id INTEGER PRIMARY KEY, " +
                 "EventOrganizer NVARCHAR(100), EventOrganizerId INTEGER, " +
-                "EventName NVARCHAR(100) NOT NULL, EventDate datetime, " +
+                "EventName NVARCHAR(100) NOT NULL UNIQUE, EventDate datetime, " +
                 "EventDescription NVARCHAR(100), IsActive bool, " +
                 "Created datetime, Updated datetime);" +
                 "CREATE TABLE EventAttendees (Id INTEGER PRIMARY KEY, AttendeeId INTEGER, " +

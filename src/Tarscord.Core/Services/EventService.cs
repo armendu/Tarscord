@@ -54,6 +54,7 @@ namespace Tarscord.Core.Services
         public async Task<EventInfo> CreateEvent(IUser organizer, string eventName, string eventDescription,
             DateTime dateTime)
         {
+            // TODO: Add exception handling
             var eventInfo = new EventInfo
             {
                 EventOrganizer = organizer.Username,
