@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tarscord.Core", "src\Tarsco
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tarscord.Persistence", "src\Tarscord.Persistence\Tarscord.Persistence.csproj", "{DF74A589-8594-47E5-BA94-A5CED69ABBB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Core.Tests", "tests\Tarscord.Core.Tests\Tarscord.Core.Tests.csproj", "{0465984A-3D61-45DC-8316-F818107F1105}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Persistence.Tests", "tests\Tarscord.Persistence.Tests\Tarscord.Persistence.Tests.csproj", "{73195D06-D7ED-4D4B-AC09-942F79ECA780}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF74A589-8594-47E5-BA94-A5CED69ABBB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0465984A-3D61-45DC-8316-F818107F1105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0465984A-3D61-45DC-8316-F818107F1105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0465984A-3D61-45DC-8316-F818107F1105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0465984A-3D61-45DC-8316-F818107F1105}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73195D06-D7ED-4D4B-AC09-942F79ECA780}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73195D06-D7ED-4D4B-AC09-942F79ECA780}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73195D06-D7ED-4D4B-AC09-942F79ECA780}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73195D06-D7ED-4D4B-AC09-942F79ECA780}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
