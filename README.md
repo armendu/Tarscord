@@ -1,11 +1,12 @@
 # Tarscord
 
 ## Summary
-A simple discord bot that can help you manage your discord server. Right now, some of the features that Tarscord supports are:
+Tarscord is a sarcastic discord bot that can help you manage your discord server. Some of the features that Tarscord supports are:
 
 * Mute/Unmute members
+* Add event and save them to a local database
 * Generate random numbers
-* Set a reminder (not fully functional)
+* Set reminders
 * Others will be added soon...
 
 
