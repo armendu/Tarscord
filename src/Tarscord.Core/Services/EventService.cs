@@ -44,7 +44,7 @@ namespace Tarscord.Core.Services
         }
 
         /// <summary>
-        /// 
+        /// Creates a new event
         /// </summary>
         /// <param name="organizer"></param>
         /// <param name="eventName"></param>
@@ -71,7 +71,7 @@ namespace Tarscord.Core.Services
         }
 
         /// <summary>
-        /// 
+        /// Cancels an ongoing event
         /// </summary>
         /// <param name="organizer"></param>
         /// <param name="eventName"></param>
@@ -98,7 +98,7 @@ namespace Tarscord.Core.Services
         }
 
         /// <summary>
-        /// 
+        /// Confirms the attendance for an event
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="users"></param>
@@ -135,7 +135,7 @@ namespace Tarscord.Core.Services
         }
 
         /// <summary>
-        /// 
+        /// Shows confirmed attendees for an event
         /// </summary>
         /// <param name="eventName"></param>
         /// <returns></returns>
@@ -154,7 +154,7 @@ namespace Tarscord.Core.Services
         }
 
         /// <summary>
-        /// 
+        /// Cancels the attendance for an event
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="user"></param>

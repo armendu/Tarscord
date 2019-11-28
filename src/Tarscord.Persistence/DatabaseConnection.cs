@@ -18,6 +18,7 @@ namespace Tarscord.Persistence
             if (System.IO.File.Exists(dbPath)) return;
 
             Connection.Open();
+            // TODO: Remove this hardcoded string
             string sql =
                 "CREATE TABLE EventInfos (Id INTEGER PRIMARY KEY, " +
                 "EventOrganizer NVARCHAR(100), EventOrganizerId INTEGER, " +

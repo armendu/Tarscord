@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Dapper.Contrib.Extensions;
 using Tarscord.Persistence.Interfaces;
 
-namespace Tarscord.Persistence.Respositories
+namespace Tarscord.Persistence.Repositories
 {
-    public class BaseRepository<T>: IBaseRepository<T> where T : class
+    public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
         private readonly IDatabaseConnection _connection;
 
@@ -34,7 +34,7 @@ namespace Tarscord.Persistence.Respositories
         public async Task<T> CreateAsync(T item)
         {
             int noRowsAffected = await _connection.Connection.InsertAsync(item);
-            
+
             return noRowsAffected != 0 ? item : null;
         }
 
