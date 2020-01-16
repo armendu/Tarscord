@@ -173,7 +173,7 @@ namespace Tarscord.Core.Modules
             [Command("confirmed"), Summary("Shows confirmed attendees.")]
             public async Task ShowConfirmedAsync([Summary("The event name")] string eventName)
             {
-                List<string> attendees = await _eventService.ShowConfirmedAttendees(eventName);
+                List<string> attendees = await _eventService.GetConfirmedAttendees(eventName);
 
                 if (attendees == null)
                 {

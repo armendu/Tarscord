@@ -19,10 +19,6 @@ namespace Tarscord.Core.Services
             _eventAttendeesRepository = eventAttendeesRepository;
         }
 
-        /// <summary>
-        /// Retrieves all the events from the database 
-        /// </summary>
-        /// <returns></returns>
         public async Task<List<EventInfo>> GetAllEvents()
         {
             var result = await _eventRepository.GetAllAsync();
@@ -31,11 +27,6 @@ namespace Tarscord.Core.Services
             return result.Any() ? result.Where(info => info.IsActive).ToList() : null;
         }
 
-        /// <summary>
-        /// Retrieves an event stored in the database
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <returns></returns>
         public async Task<EventInfo> GetEventInformation(string eventName)
         {
             var eventInfos = await _eventRepository.FindBy(info => info.EventName == eventName);
@@ -43,14 +34,6 @@ namespace Tarscord.Core.Services
             return eventInfos.FirstOrDefault();
         }
 
-        /// <summary>
-        /// Creates a new event
-        /// </summary>
-        /// <param name="organizer"></param>
-        /// <param name="eventName"></param>
-        /// <param name="eventDescription"></param>
-        /// <param name="dateTime"></param>
-        /// <returns></returns>
         public async Task<EventInfo> CreateEvent(IUser organizer, string eventName, string eventDescription,
             DateTime dateTime)
         {
@@ -67,15 +50,9 @@ namespace Tarscord.Core.Services
                 Updated = DateTime.UtcNow
             };
 
-            return await _eventRepository.CreateAsync(eventInfo);
+            return await _eventRepository.InsertAsync(eventInfo);
         }
 
-        /// <summary>
-        /// Cancels an ongoing event
-        /// </summary>
-        /// <param name="organizer"></param>
-        /// <param name="eventName"></param>
-        /// <returns></returns>
         public async Task<EventInfo> CancelEvent(IUser organizer, string eventName)
         {
             var eventInfos = await _eventRepository.FindBy(info =>
@@ -97,12 +74,6 @@ namespace Tarscord.Core.Services
             return eventInfoToUpdate;
         }
 
-        /// <summary>
-        /// Confirms the attendance for an event
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="users"></param>
-        /// <returns></returns>
         public async Task<List<string>> ConfirmAttendance(string eventName, IUser[] users)
         {
             var result = await _eventRepository.FindBy(info => info.EventName == eventName);
@@ -115,10 +86,11 @@ namespace Tarscord.Core.Services
             if (eventToAttend == null)
                 return null;
 
-            List<string> confirmedAttendance = new List<string>();
+            var attendeesToAdd = new List<EventAttendee>();
+
             foreach (var user in users)
             {
-                var attendee = await _eventAttendeesRepository.CreateAsync(new EventAttendee
+                var attendee = new EventAttendee
                 {
                     AttendeeId = user.Id,
                     AttendeeName = user.Username,
@@ -126,20 +98,16 @@ namespace Tarscord.Core.Services
                     EventInfoId = eventToAttend.Id,
                     Created = DateTime.UtcNow,
                     Updated = DateTime.UtcNow
-                });
-
-                confirmedAttendance.Add(attendee.AttendeeName);
+                };
+                attendeesToAdd.Add(attendee);
             }
 
-            return confirmedAttendance;
+            await _eventAttendeesRepository.InsertAllAsync(attendeesToAdd);
+
+            return attendeesToAdd.Select(a => a.AttendeeName).ToList();
         }
 
-        /// <summary>
-        /// Shows confirmed attendees for an event
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <returns></returns>
-        public async Task<List<string>> ShowConfirmedAttendees(string eventName)
+        public async Task<List<string>> GetConfirmedAttendees(string eventName)
         {
             var eventInfo = await _eventRepository.FindBy(info => info.EventName == eventName);
 
@@ -153,31 +121,28 @@ namespace Tarscord.Core.Services
             return attendees.Any() ? attendees.Select(a => a.AttendeeName).ToList() : null;
         }
 
-        /// <summary>
-        /// Cancels the attendance for an event
-        /// </summary>
-        /// <param name="eventName"></param>
-        /// <param name="user"></param>
-        /// <returns></returns>
         public async Task<bool> CancelAttendance(string eventName, IUser user)
         {
+            // TODO: Clean up
+            bool hasCanceledAttendance = false;
             var eventToCancel = await _eventRepository.FindBy(info => info.EventName == eventName);
 
             if (!eventToCancel.Any())
-                return false;
+                return hasCanceledAttendance;
 
             var attendees = await _eventAttendeesRepository.FindBy(e =>
                 e.EventInfoId == eventToCancel.FirstOrDefault()?.Id && e.AttendeeId == user.Id);
 
             if (!attendees.Any())
-                return false;
+                return hasCanceledAttendance;
 
             foreach (var res in attendees)
             {
                 await _eventAttendeesRepository.DeleteItem(res);
             }
 
-            return true;
+            hasCanceledAttendance = true;
+            return hasCanceledAttendance;
         }
     }
 }

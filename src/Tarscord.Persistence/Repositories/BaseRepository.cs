@@ -9,7 +9,7 @@ namespace Tarscord.Persistence.Repositories
 {
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
-        private readonly IDatabaseConnection _connection;
+        protected readonly IDatabaseConnection _connection;
 
         public BaseRepository(IDatabaseConnection connection)
         {
@@ -31,7 +31,7 @@ namespace Tarscord.Persistence.Repositories
             return items.AsQueryable();
         }
 
-        public async Task<T> CreateAsync(T item)
+        public async Task<T> InsertAsync(T item)
         {
             int noRowsAffected = await _connection.Connection.InsertAsync(item);
 

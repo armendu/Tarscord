@@ -8,7 +8,7 @@ namespace Tarscord.Persistence.Interfaces
     {
         Task<IQueryable<T>> FindBy(Func<T, bool> predicate);
         Task<IQueryable<T>> GetAllAsync();
-        Task<T> CreateAsync(T item);
+        Task<T> InsertAsync(T item);
         Task<T> UpdateItem(T item);
         Task DeleteItem(T item);
     }
