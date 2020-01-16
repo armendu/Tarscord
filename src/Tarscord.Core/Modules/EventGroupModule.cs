@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,89 +27,89 @@ namespace Tarscord.Core.Modules
             /// <summary>
             /// Usage: event list
             /// </summary>
-            /// <returns>The number squared.</returns>
             [Command("list"), Summary("Lists all events")]
             public async Task ListEventsAsync()
             {
                 List<EventInfo> events = await _eventService.GetAllEvents();
-                if (events != null && events.Any())
+                string messageToReplyWith = "No active events were found";
+
+                if (events?.Any() == true)
                 {
-                    StringBuilder stringBuilder = new StringBuilder();
+                    string formatedEventInformation = FormatEventInformation(events);
 
-                    for (int i = 1; i <= events.Count; i++)
-                    {
-                        stringBuilder.Append(
-                            $"{i}. '{events[i - 1].EventName}' created by '{events[i - 1].EventOrganizer}'\n");
-                    }
-
-                    await ReplyAsync(embed: $"Here are all the events:\n{stringBuilder}".EmbedMessage());
+                    messageToReplyWith = $"Here are all the events:\n{formatedEventInformation}";
                 }
-                else
-                    await ReplyAsync(embed: "No active event were found".EmbedMessage());
+
+                await ReplyAsync(embed: messageToReplyWith.EmbedMessage());
+            }
+
+            private string FormatEventInformation(List<EventInfo> events)
+            {
+                var eventsInformation = new StringBuilder();
+
+                for (int i = 0; i <= events.Count; i++)
+                {
+                    eventsInformation.Append(
+                        i + 1).Append(". '").Append(events[i].EventName).Append("' created by '").Append(events[i].EventOrganizer).Append("'\n");
+                }
+
+                return eventsInformation.ToString();
             }
 
             /// <summary>
             /// Usage: event list
             /// </summary>
-            /// <returns>The number squared.</returns>
             [Command("show"), Summary("Show information about an event")]
-            [Alias("info", "get")]
+            [Alias("info", "get", "display")]
             public async Task ShowEventInformationAsync([Summary("The event name")] string eventName)
             {
+                Embed embededMessageToReplyWith = $"The event named '{eventName}' does not exist".EmbedMessage();
                 EventInfo eventInformation = await _eventService.GetEventInformation(eventName);
 
                 if (eventInformation != null)
-                    await ReplyAsync(
-                        embed: "Here is the event's information:".EmbedMessage(eventInformation.ToString()));
-                else
-                    await ReplyAsync(embed: $"The event named '{eventName}' does not exist".EmbedMessage());
+                    embededMessageToReplyWith = "Here is the event's information:".EmbedMessage(eventInformation.ToString());
+
+                await ReplyAsync(embed: embededMessageToReplyWith);
             }
 
             /// <summary>
             /// Usage: event create {user}
             /// </summary>
-            /// <returns>The number squared.</returns>
             [Command("create"), Summary("Create an event")]
             [Alias("add", "make", "generate")]
-            public async Task CreateEventAsync([Summary("The event name")] string eventName = "Unnamed event",
+            public async Task CreateEventAsync(
+                [Summary("The event name"), Required(ErrorMessage = "Please provide a unique name for your event")] string eventName,
                 [Summary("The event date and time")] string dateTime = "",
                 [Summary("The event description")] params string[] eventDescription)
             {
-                StringBuilder stringBuilder = new StringBuilder("");
-                if (eventDescription.Any())
-                {
-                    foreach (var word in eventDescription)
-                    {
-                        stringBuilder.Append($"{word} ");
-                    }
-                }
+                Embed embededMessageToReplyWith = "The event creation failed".EmbedMessage();
 
+                string concatinatedDescription = string.Join(" ", eventDescription);
                 DateTime.TryParse(dateTime, out DateTime parsedDateTime);
 
                 EventInfo createdEvent =
-                    await _eventService.CreateEvent(Context.User, eventName, stringBuilder.ToString(), parsedDateTime);
+                    await _eventService.CreateEvent(Context.User, eventName, concatinatedDescription, parsedDateTime);
 
                 if (createdEvent != null)
-                    await ReplyAsync(embed: "The event was successfully created".EmbedMessage(createdEvent.ToString()));
-                else
-                    await ReplyAsync(embed: "The event creation failed".EmbedMessage());
+                    embededMessageToReplyWith = "The event was successfully created".EmbedMessage(createdEvent.ToString());
+
+                await ReplyAsync(embed: embededMessageToReplyWith);
             }
 
             /// <summary>
             /// Usage: event cancel {eventName}
             /// </summary>
-            /// <returns>The number squared.</returns>
             [Command("remove"), Summary("Cancel an event")]
             [Alias("delete")]
             public async Task CancelEventAsync([Summary("The event name")] string eventName)
             {
+                string messageToReplyWith = $"You have successfully canceled the event named '{eventName}'";
                 EventInfo result = await _eventService.CancelEvent(Context.User, eventName);
 
                 if (result != null)
-                    await ReplyAsync(
-                        embed: $"You have successfully canceled the event named '{eventName}'".EmbedMessage());
-                else
-                    await ReplyAsync(embed: $"The cancelation of the event named '{eventName}'failed.".EmbedMessage());
+                    messageToReplyWith = $"The cancelation of the event named '{eventName}' failed.";
+                
+                await ReplyAsync(embed: messageToReplyWith.EmbedMessage());
             }
 
             /// <summary>
@@ -121,7 +122,7 @@ namespace Tarscord.Core.Modules
                 params IUser[] users)
             {
                 if (users.Length == 0)
-                    users = new[] {Context.User};
+                    users = new[] { Context.User };
 
                 List<string> confirmAttendance = await _eventService.ConfirmAttendance(eventName, users);
 
