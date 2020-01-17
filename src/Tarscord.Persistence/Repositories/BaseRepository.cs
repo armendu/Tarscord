@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper.Contrib.Extensions;
+using Tarscord.Persistence.Exceptions;
 using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Persistence.Repositories
@@ -19,9 +20,8 @@ namespace Tarscord.Persistence.Repositories
         public async Task<IQueryable<T>> FindBy(Func<T, bool> predicate)
         {
             IEnumerable<T> results = await _connection.Connection.GetAllAsync<T>();
-            results = results?.Where(predicate);
 
-            return results?.AsQueryable();
+            return results.Where(predicate).AsQueryable();
         }
 
         public async Task<IQueryable<T>> GetAllAsync()
@@ -35,19 +35,34 @@ namespace Tarscord.Persistence.Repositories
         {
             int noRowsAffected = await _connection.Connection.InsertAsync(item);
 
-            return noRowsAffected != 0 ? item : null;
+            if (noRowsAffected == 0)
+            {
+                throw new OperationFailedException();
+            }
+
+            return item;
         }
 
         public async Task<T> UpdateItem(T item)
         {
-            await _connection.Connection.UpdateAsync(item);
+            bool modificationSucceeded = await _connection.Connection.UpdateAsync(item);
+
+            if (!modificationSucceeded)
+            {
+                throw new OperationFailedException();
+            }
 
             return item;
         }
 
         public async Task DeleteItem(T item)
         {
-            await _connection.Connection.DeleteAsync(item);
+            bool deletionSucceeded = await _connection.Connection.DeleteAsync(item);
+
+            if (!deletionSucceeded)
+            {
+                throw new OperationFailedException();
+            }
         }
     }
 }
