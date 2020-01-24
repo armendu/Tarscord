@@ -20,7 +20,7 @@ namespace Tarscord.Core.Services
         {
             if (_timer == null)
                 StartTimerAsync();
-            
+
             var reminderInfo = new ReminderInfo()
             {
                 User = user,
