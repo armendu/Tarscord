@@ -2,6 +2,7 @@
 using System.Data.SQLite;
 using Dapper;
 using Microsoft.Extensions.Configuration;
+using Tarscord.Persistence.Helpers;
 
 namespace Tarscord.Persistence
 {
@@ -15,20 +16,18 @@ namespace Tarscord.Persistence
 
             Connection = new SQLiteConnection($"Data Source={dbPath}");
 
+            // If the database file exists, don't create a new one
             if (System.IO.File.Exists(dbPath)) return;
 
+            OpenAndSetupDatabase();
+        }
+
+        private void OpenAndSetupDatabase()
+        {
             Connection.Open();
-            // TODO: Remove this hardcoded string
-            string sql =
-                "CREATE TABLE EventInfos (Id INTEGER PRIMARY KEY, " +
-                "EventOrganizer NVARCHAR(100), EventOrganizerId INTEGER, " +
-                "EventName NVARCHAR(100) NOT NULL UNIQUE, EventDate datetime, " +
-                "EventDescription NVARCHAR(100), IsActive bool, " +
-                "Created datetime, Updated datetime);" +
-                "CREATE TABLE EventAttendees (Id INTEGER PRIMARY KEY, AttendeeId INTEGER, " +
-                "EventInfoId INTEGER, AttendeeName NVARCHAR(100), Confirmed bool, " +
-                "Created datetime, Updated datetime);";
-            Connection.Execute(sql);
+
+            string setupQuery = DatabaseSetupQueries.GetSetupQuery();
+            Connection.Execute(setupQuery);
         }
     }
 }

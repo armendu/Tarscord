@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper.Contrib.Extensions;
+using Tarscord.Persistence.Entities;
 using Tarscord.Persistence.Exceptions;
 using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Persistence.Repositories
 {
-    public class BaseRepository<T> : IBaseRepository<T> where T : class
+    public class BaseRepository<T> : IBaseRepository<T> where T : EntityBase
     {
         protected readonly IDatabaseConnection _connection;
 

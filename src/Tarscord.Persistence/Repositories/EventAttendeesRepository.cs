@@ -14,6 +14,7 @@ namespace Tarscord.Persistence.Repositories
 
         public async Task<IList<EventAttendee>> InsertAllAsync(IList<EventAttendee> items)
         {
+            // TODO: Better throw an exception
             int noRowsAffected = await _connection.Connection.InsertAsync(items);
 
             return noRowsAffected != 0 ? items : null;
