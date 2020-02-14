@@ -20,7 +20,8 @@ namespace Tarscord.Core.Modules
         /// Usage: remind {minutes} {messages}?
         /// </summary>
         [Command("remind"), Summary("Sets a reminder")]
-        public async Task SetReminderAsync([Summary("The number in minutes")] double minutes,
+        public async Task SetReminderAsync(
+            [Summary("The number in minutes")] double minutes,
             [Summary("The (optional) messages")] params string[] messages)
         {
             if (minutes <= 0)
@@ -29,7 +30,7 @@ namespace Tarscord.Core.Modules
             var user = Context.User;
             var dateToRemind = DateTime.UtcNow.AddMinutes(minutes);
 
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
             foreach (var message in messages)
             {
@@ -41,7 +42,7 @@ namespace Tarscord.Core.Modules
             // Tell the user that he will be notified
             await ReplyAsync(
                 embed: $"Reminder set for {dateToRemind:U}".EmbedMessage(
-                    "You will be reminded via a personal messages."));
+                    "You will be reminded via a personal messages.")).ConfigureAwait(false);
         }
     }
 }

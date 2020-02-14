@@ -12,7 +12,8 @@ namespace Tarscord.Core.Modules
         /// Usage: dare {user} {minutes}?
         /// </summary>
         [Command("dare"), Summary("Sends a sarcastic message based on the sarcasm level")]
-        public async Task SendSarcasticMessageAsync([Summary("The user to be muted")] IUser user = null)
+        public async Task SendSarcasticMessageAsync(
+            [Summary("The user to be muted")] IUser user = null)
         {
             // TODO: Check for sarcasm level
             using (Context.Channel.EnterTypingState())

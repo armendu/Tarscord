@@ -13,32 +13,32 @@ namespace Tarscord.Core.Modules
         /// Usage: mute {user} {minutes}?
         /// </summary>
         [Command("mute"), Summary("Mutes a user for a specified time")]
-        public async Task MuteUserAsync([Summary("The user to be muted")] IUser user = null,
+        public async Task MuteUserAsync(
+            [Summary("The user to be muted")] IUser user = null,
             [Summary("Minutes for which the user is muted")]
             int minutes = 1)
         {
-            await ExecuteCommandAsync(user, CommandType.Mute, minutes);
+            await ExecuteCommandAsync(user, CommandType.Mute, minutes).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Usage: unmute {user} {minutes}?
+        /// Usage: unmute {user}
         /// </summary>
         [Command("unmute"), Summary("Unmutes a user")]
         public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser user = null)
         {
-            await ExecuteCommandAsync(user, CommandType.Unmute);
+            await ExecuteCommandAsync(user, CommandType.Unmute).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Usage: denyreacting {user} {minutes}?
         /// </summary>
         [Command("denyreacting"), Summary("Mutes a user for a specified time")]
-        public async Task DenyReactingAsync([Summary("The user to be that's going to be denied of reacting")]
-            IUser user = null,
-            [Summary("Minutes for which the user cannot react")]
-            int minutes = 1)
+        public async Task DenyReactingAsync(
+            [Summary("The user to be that's going to be denied of reacting")] IUser user = null,
+            [Summary("Minutes for which the user cannot react")] int minutes = 1)
         {
-            await ExecuteCommandAsync(user, CommandType.DenyReacting, minutes);
+            await ExecuteCommandAsync(user, CommandType.DenyReacting, minutes).ConfigureAwait(false);
         }
 
         private async Task ExecuteCommandAsync(IUser user, CommandType action, int minutes = 0)
@@ -79,8 +79,8 @@ namespace Tarscord.Core.Modules
                             break;
                     }
 
-                    await channel.AddPermissionOverwriteAsync(user, overwritePermissions);
-                    await ReplyAsync(embed: message.EmbedMessage());
+                    await channel.AddPermissionOverwriteAsync(user, overwritePermissions).ConfigureAwait(false);
+                    await ReplyAsync(embed: message.EmbedMessage()).ConfigureAwait(false);
                 }
             }
         }

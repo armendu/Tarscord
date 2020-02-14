@@ -10,6 +10,7 @@ namespace Tarscord.Core.Modules
     {
         private static readonly RNGCryptoServiceProvider Generator = new RNGCryptoServiceProvider();
 
+        // TODO: Move to a helper/util class
         private static int GenerateNumber(int minimumValue, int maximumValue)
         {
             byte[] randomNumber = new byte[1];
@@ -37,7 +38,8 @@ namespace Tarscord.Core.Modules
         /// <returns>The generated random number</returns>
         [Command("random"), Summary("Generates a random number between two numbers")]
         [Alias("r")]
-        public async Task GenerateRandomNumberAsync([Summary("The lower limit")] int min,
+        public async Task GenerateRandomNumberAsync(
+            [Summary("The lower limit")] int min,
             [Summary("The upper limit")] int max)
         {
             string generatedNumber;
@@ -50,7 +52,7 @@ namespace Tarscord.Core.Modules
                 throw new Exception("Wrong command usage. Try: random lower-limit upper-limit");
             }
 
-            await ReplyAsync(embed: generatedNumber.EmbedMessage());
+            await ReplyAsync(embed: generatedNumber.EmbedMessage()).ConfigureAwait(false);
         }
     }
 }
