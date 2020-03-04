@@ -47,7 +47,7 @@ namespace Tarscord.Core.Modules
             {
                 var eventsInformation = new StringBuilder();
 
-                for (int i = 0; i <= events.Count; i++)
+                for (int i = 0; i < events.Count; i++)
                 {
                     eventsInformation.Append(
                             i + 1).Append(". '").Append(events[i].EventName).Append("' created by '")
