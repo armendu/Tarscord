@@ -2,7 +2,7 @@
 
 namespace Tarscord.Persistence.Entities
 {
-    public class EventInfo: EntityBase
+    public class EventInfo : EntityBase
     {
         public string EventOrganizer { get; set; }
         public ulong EventOrganizerId { get; set; }

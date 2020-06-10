@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using System.ComponentModel.DataAnnotations;
 using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Modules
@@ -15,7 +15,8 @@ namespace Tarscord.Core.Modules
         /// </summary>
         [Command("mute"), Summary("Mutes a user for a specified time")]
         public async Task MuteUserAsync(
-            [Summary("The user to be muted")] IUser user = null,
+            [Summary("The user to be muted"), Required(ErrorMessage = "Please provide member of the channel.")]
+            IUser user,
             [Summary("Minutes for which the user is muted")]
             int minutes = 1)
         {
@@ -26,7 +27,9 @@ namespace Tarscord.Core.Modules
         /// Usage: unmute {user}
         /// </summary>
         [Command("unmute"), Summary("Unmutes a user")]
-        public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser user = null)
+        public async Task UnmuteUserAsync(
+            [Summary("The user to be unmuted"), Required(ErrorMessage = "Please provide member of the channel.")]
+            IUser user = null)
         {
             await ExecuteCommandAsync(user, CommandType.Unmute).ConfigureAwait(false);
         }
@@ -36,7 +39,8 @@ namespace Tarscord.Core.Modules
         /// </summary>
         [Command("denyreacting"), Summary("Mutes a user for a specified time")]
         public async Task DenyReactingAsync(
-            [Summary("The user to be that's going to be denied of reacting")] IUser user = null,
+            [Summary("The user to be that's going to be denied of reacting"),
+             Required(ErrorMessage = "Please provide member of the channel.")] IUser user = null,
             [Summary("Minutes for which the user cannot react")] int minutes = 1)
         {
             await ExecuteCommandAsync(user, CommandType.DenyReacting, minutes).ConfigureAwait(false);
@@ -45,9 +49,6 @@ namespace Tarscord.Core.Modules
         private async Task ExecuteCommandAsync(IUser user, CommandType action, int minutes = 0)
         {
             using var typingState = Context.Channel.EnterTypingState();
-
-            if (user == null)
-                throw new Exception("Please provide member of the channel.");
 
             // TODO: After the specified minutes, the user should be un muted.
             if (Context.Channel is IGuildChannel channel)

@@ -12,9 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\" />
     <Folder Include="Interfaces\" />
     <Folder Include="Repositories\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tarscord.Persistence.Entities\Tarscord.Persistence.Entities.csproj" />
   </ItemGroup>
 
 </Project>

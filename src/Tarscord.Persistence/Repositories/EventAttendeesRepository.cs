@@ -1,4 +1,5 @@
 ﻿using Dapper.Contrib.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tarscord.Persistence.Entities;
@@ -14,10 +15,12 @@ namespace Tarscord.Persistence.Repositories
 
         public async Task<IList<EventAttendee>> InsertAllAsync(IList<EventAttendee> items)
         {
-            // TODO: Better throw an exception
             int noRowsAffected = await _connection.Connection.InsertAsync(items);
 
-            return noRowsAffected != 0 ? items : null;
+            if (noRowsAffected == 0)
+                throw new OperationCanceledException();
+
+            return items;
         }
     }
 }
