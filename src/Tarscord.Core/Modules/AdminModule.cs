@@ -7,6 +7,7 @@ using Tarscord.Core.Extensions;
 namespace Tarscord.Core.Modules
 {
     [RequireOwner]
+    [Name("Admin commands")]
     public class AdminModule : ModuleBase
     {
         /// <summary>
@@ -43,45 +44,44 @@ namespace Tarscord.Core.Modules
 
         private async Task ExecuteCommandAsync(IUser user, CommandType action, int minutes = 0)
         {
-            using (Context.Channel.EnterTypingState())
+            using var typingState = Context.Channel.EnterTypingState();
+
+            if (user == null)
+                throw new Exception("Please provide member of the channel.");
+
+            // TODO: After the specified minutes, the user should be un muted.
+            if (Context.Channel is IGuildChannel channel)
             {
-                if (user == null)
-                    throw new Exception("Please provide member of the channel.");
+                OverwritePermissions? possiblePermissions = channel.GetPermissionOverwrite(user);
+                OverwritePermissions overwritePermissions = new OverwritePermissions();
 
-                // TODO: After the specified minutes, the user should be un muted.
-                if (Context.Channel is IGuildChannel channel)
+                string messageToBeShownByBot = null;
+
+                switch (action)
                 {
-                    OverwritePermissions? possiblePermissions = channel.GetPermissionOverwrite(user);
-                    OverwritePermissions overwritePermissions = new OverwritePermissions();
+                    case CommandType.Mute:
+                        overwritePermissions = possiblePermissions?.Modify(sendMessages: PermValue.Deny) ??
+                                               new OverwritePermissions(sendMessages: PermValue.Deny);
+                        messageToBeShownByBot = $"The user '{user.Username}' was muted.";
+                        break;
 
-                    string message = null;
+                    case CommandType.Unmute:
+                        if (possiblePermissions is OverwritePermissions permissions)
+                            overwritePermissions = permissions.Modify(sendMessages: PermValue.Allow);
 
-                    switch (action)
-                    {
-                        case CommandType.Mute:
-                            overwritePermissions = possiblePermissions?.Modify(sendMessages: PermValue.Deny) ??
-                                                   new OverwritePermissions(sendMessages: PermValue.Deny);
-                            message = $"The user '{user.Username}' was muted.";
-                            break;
+                        messageToBeShownByBot = $"The user '{user.Username}' was unmuted.";
+                        break;
 
-                        case CommandType.Unmute:
-                            if (possiblePermissions is OverwritePermissions permissions)
-                                overwritePermissions = permissions.Modify(sendMessages: PermValue.Allow);
+                    case CommandType.DenyReacting:
+                        overwritePermissions = possiblePermissions?.Modify(addReactions: PermValue.Deny)
+                                               ?? new OverwritePermissions(addReactions: PermValue.Deny);
 
-                            message = $"The user '{user.Username}' was unmuted.";
-                            break;
-
-                        case CommandType.DenyReacting:
-                            overwritePermissions = possiblePermissions?.Modify(addReactions: PermValue.Deny)
-                                                   ?? new OverwritePermissions(addReactions: PermValue.Deny);
-
-                            message = $"The user '{user.Username}' has been stopped from reacting.";
-                            break;
-                    }
-
-                    await channel.AddPermissionOverwriteAsync(user, overwritePermissions).ConfigureAwait(false);
-                    await ReplyAsync(embed: message.EmbedMessage()).ConfigureAwait(false);
+                        messageToBeShownByBot = $"The user '{user.Username}' has been stopped from reacting.";
+                        break;
                 }
+
+                await channel.AddPermissionOverwriteAsync(user, overwritePermissions).ConfigureAwait(false);
+                await ReplyAsync(embed: messageToBeShownByBot.EmbedMessage()).ConfigureAwait(false);
             }
         }
 

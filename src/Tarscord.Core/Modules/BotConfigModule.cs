@@ -4,6 +4,7 @@ using Discord.Commands;
 namespace Tarscord.Core.Modules
 {
     [RequireOwner]
+    [Name("Configuration commands")]
     public class BotConfigModule : ModuleBase
     {
         /// <summary>

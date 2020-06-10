@@ -7,6 +7,7 @@ using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules
 {
+    [Name("Commands to create reminders")]
     public class ReminderModule : ModuleBase
     {
         private readonly TimerService _timerService;

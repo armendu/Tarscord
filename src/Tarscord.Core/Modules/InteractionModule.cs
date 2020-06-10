@@ -6,6 +6,7 @@ using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Modules
 {
+    [Name("Commands to interact with the bot")]
     public class InteractionModule : ModuleBase
     {
         /// <summary>

@@ -6,6 +6,7 @@ using Tarscord.Core.Helpers;
 
 namespace Tarscord.Core.Modules
 {
+    [Name("Commands to generate random numbers")]
     public class RandomNumberModule : ModuleBase
     {
         /// <summary>

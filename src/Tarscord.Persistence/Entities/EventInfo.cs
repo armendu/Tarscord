@@ -15,11 +15,11 @@ namespace Tarscord.Persistence.Entities
         {
             return $"Organizer:\t {EventOrganizer}\n" +
                    $"Name:\t {EventName}\n" +
-                   $"Date and time:\t {EventDate}\n" +
+                   $"Date and time:\t {EventDate:F}\n" +
                    $"Description:\t {EventDescription}\n" +
                    $"Is active:\t {IsActive}\n" +
-                   $"Date created:\t {Created}\n" +
-                   $"Date updated:\t {Updated}\n";
+                   $"Date created:\t {Created:s}\n" +
+                   $"Date updated:\t {Updated:s}\n";
         }
     }
 }

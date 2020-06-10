@@ -12,6 +12,7 @@ using Tarscord.Persistence.Entities;
 
 namespace Tarscord.Core.Modules
 {
+    [Name("Commands to create events")]
     public class EventGroupModule
     {
         [Group("event")]
