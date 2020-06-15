@@ -5,7 +5,8 @@ namespace Tarscord.Persistence.Repositories
 {
     public class EventRepository : BaseRepository<EventInfo>, IEventRepository
     {
-        public EventRepository(IDatabaseConnection connection) : base(connection)
+        public EventRepository(IDatabaseConnection connection)
+            : base(connection)
         {
         }
     }

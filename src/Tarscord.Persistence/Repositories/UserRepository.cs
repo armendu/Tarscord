@@ -5,7 +5,8 @@ namespace Tarscord.Persistence.Repositories
 {
     public class UserRepository : BaseRepository<User>, IUserRepository
     {
-        public UserRepository(IDatabaseConnection connection) : base(connection)
+        public UserRepository(IDatabaseConnection connection)
+            : base(connection)
         {
         }
     }

@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Discord;
+using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Commands;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Services;
 using Tarscord.Persistence.Entities;

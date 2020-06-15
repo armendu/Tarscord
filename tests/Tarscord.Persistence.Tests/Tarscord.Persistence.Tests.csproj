@@ -15,4 +15,12 @@
     </PackageReference>
   </ItemGroup>
 
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>..\..\_stylecop\StyleCopRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\_stylecop\stylecop.json" Link="Properties\stylecop.json" />
+  </ItemGroup>
+
 </Project>

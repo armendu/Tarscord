@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Tarscord.Persistence.Interfaces;
-
-namespace Tarscord.Core.Services
+﻿namespace Tarscord.Core.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Tarscord.Persistence.Interfaces;
+
     public class AdminService
     {
         private readonly IUserRepository _userRepository;

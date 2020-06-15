@@ -9,7 +9,8 @@ namespace Tarscord.Persistence.Repositories
 {
     public class EventAttendeesRepository : BaseRepository<EventAttendee>, IEventAttendeesRepository
     {
-        public EventAttendeesRepository(IDatabaseConnection connection) : base(connection)
+        public EventAttendeesRepository(IDatabaseConnection connection)
+            : base(connection)
         {
         }
 
@@ -18,7 +19,9 @@ namespace Tarscord.Persistence.Repositories
             int noRowsAffected = await _connection.Connection.InsertAsync(items);
 
             if (noRowsAffected == 0)
+            {
                 throw new OperationCanceledException();
+            }
 
             return items;
         }

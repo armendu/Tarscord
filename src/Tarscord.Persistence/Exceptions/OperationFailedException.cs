@@ -8,11 +8,13 @@ namespace Tarscord.Persistence.Exceptions
         {
         }
 
-        public OperationFailedException(string message) : base(message)
+        public OperationFailedException(string message)
+            : base(message)
         {
         }
 
-        public OperationFailedException(string message, Exception innerException) : base(message, innerException)
+        public OperationFailedException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
     }

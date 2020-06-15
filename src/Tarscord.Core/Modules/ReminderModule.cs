@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Discord.Commands;
+using System;
 using System.Text;
 using System.Threading.Tasks;
-using Discord.Commands;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Services;
 
