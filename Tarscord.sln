@@ -13,7 +13,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Persistence.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Persistence.Entities", "src\Tarscord.Persistence.Entities\Tarscord.Persistence.Entities.csproj", "{D800A1A3-2274-4716-B59F-B818FCA38D60}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Persistence.Mapping", "src\Tarscord.Persistence.Mapping\Tarscord.Persistence.Mapping.csproj", "{958FB4B3-476A-46BC-88D9-3E29D365C111}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Application.Mapping", "src\Tarscord.Application.Mapping\Tarscord.Application.Mapping.csproj", "{958FB4B3-476A-46BC-88D9-3E29D365C111}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Application.Models", "src\Tarscord.Application.Models\Tarscord.Application.Models.csproj", "{D2A52BEF-4902-4C1D-A0E6-1637A85CD354}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Application.Services", "src\Tarscord.Application.Services\Tarscord.Application.Services.csproj", "{A29071B4-1591-4DC2-A680-DA4654D99542}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Persistence", "Persistence", "{4948CE66-3309-40BB-8B0A-AFAC222EF8A4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{D8970922-BEFA-4B48-9057-23D212853295}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.Application.ML", "Tarscord.Application.ML\Tarscord.Application.ML.csproj", "{AD10AD74-63E4-4961-817C-A4B8CAD9A227}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,11 +55,32 @@ Global
 		{958FB4B3-476A-46BC-88D9-3E29D365C111}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{958FB4B3-476A-46BC-88D9-3E29D365C111}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{958FB4B3-476A-46BC-88D9-3E29D365C111}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2A52BEF-4902-4C1D-A0E6-1637A85CD354}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2A52BEF-4902-4C1D-A0E6-1637A85CD354}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2A52BEF-4902-4C1D-A0E6-1637A85CD354}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2A52BEF-4902-4C1D-A0E6-1637A85CD354}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A29071B4-1591-4DC2-A680-DA4654D99542}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A29071B4-1591-4DC2-A680-DA4654D99542}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A29071B4-1591-4DC2-A680-DA4654D99542}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A29071B4-1591-4DC2-A680-DA4654D99542}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD10AD74-63E4-4961-817C-A4B8CAD9A227}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD10AD74-63E4-4961-817C-A4B8CAD9A227}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD10AD74-63E4-4961-817C-A4B8CAD9A227}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD10AD74-63E4-4961-817C-A4B8CAD9A227}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {69310E05-3069-48D7-AC36-8585D6210C56}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DF74A589-8594-47E5-BA94-A5CED69ABBB2} = {4948CE66-3309-40BB-8B0A-AFAC222EF8A4}
+		{D800A1A3-2274-4716-B59F-B818FCA38D60} = {4948CE66-3309-40BB-8B0A-AFAC222EF8A4}
+		{73195D06-D7ED-4D4B-AC09-942F79ECA780} = {4948CE66-3309-40BB-8B0A-AFAC222EF8A4}
+		{D2A52BEF-4902-4C1D-A0E6-1637A85CD354} = {D8970922-BEFA-4B48-9057-23D212853295}
+		{A29071B4-1591-4DC2-A680-DA4654D99542} = {D8970922-BEFA-4B48-9057-23D212853295}
+		{958FB4B3-476A-46BC-88D9-3E29D365C111} = {D8970922-BEFA-4B48-9057-23D212853295}
+		{AD10AD74-63E4-4961-817C-A4B8CAD9A227} = {D8970922-BEFA-4B48-9057-23D212853295}
 	EndGlobalSection
 EndGlobal

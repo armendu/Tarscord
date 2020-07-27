@@ -30,7 +30,7 @@ namespace Tarscord.Core
             await startup.RunAsync();
         }
 
-        public async Task RunAsync()
+        private async Task RunAsync()
         {
             // Create a new instance of a service collection
             var services = new ServiceCollection();
@@ -71,6 +71,7 @@ namespace Tarscord.Core
             .AddScoped<IEventRepository, EventRepository>()
             .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>();
+            // Add service for loans (small money loans)
         }
     }
 }

@@ -22,7 +22,19 @@
       ]
     },
     "namingRules": {
-      "allowedHungarianPrefixes": [ "db" ]
+      "allowedHungarianPrefixes": [
+        "db"
+      ]
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": [
+        "class",
+        "interface",
+        "struct"
+      ]
+    },
+    "readabilityRules": {
+      "allowBuiltInTypeAliases": true
     }
   }
 }

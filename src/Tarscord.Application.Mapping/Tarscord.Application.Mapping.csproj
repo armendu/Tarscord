@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
+        <RootNamespace>Tarscord.Persistence.Mapping</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
