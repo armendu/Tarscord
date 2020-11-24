@@ -6,8 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Tarscord.Persistence.Mapping\Tarscord.Persistence.Mapping.csproj" />
-    <ProjectReference Include="..\src\Tarscord.Persistence\Tarscord.Persistence.csproj" />
+    <ProjectReference Include="..\Tarscord.Persistence\Tarscord.Persistence.csproj" />
     <ProjectReference Include="..\Tarscord.Application.Models\Tarscord.Application.Models.csproj" />
     <ProjectReference Include="..\Tarscord.Persistence\Tarscord.Persistence.csproj" />
   </ItemGroup>

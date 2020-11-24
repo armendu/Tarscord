@@ -15,10 +15,6 @@
     <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.0.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Tarscord.Common\Tarscord.Common.csproj" />
-  </ItemGroup>
     
     <PropertyGroup>
         <CodeAnalysisRuleSet>..\..\_stylecop\StyleCopRules.ruleset</CodeAnalysisRuleSet>

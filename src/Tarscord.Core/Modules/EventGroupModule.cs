@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Services;
-using Tarscord.Persistence.Entities;
 
 namespace Tarscord.Core.Modules
 {
