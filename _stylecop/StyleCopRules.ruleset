@@ -23,6 +23,10 @@
     <Rule Id="SA1629" Action="None" />
     <Rule Id="SA1649" Action="None" />
     <Rule Id="SA1652" Action="None" />
+    <Rule Id="SA1309" Action="None" />
+    <Rule Id="SA1663" Action="None" />
+    <Rule Id="SA1633" Action="None" />
+    <Rule Id="SA1600" Action="None" />
   </Rules>
   <Rules AnalyzerId="Microsoft.NetCore.Analyzers" RuleNamespace="Microsoft.NetCore.Analyzers">
     <Rule Id="CA1304" Action="Info" />

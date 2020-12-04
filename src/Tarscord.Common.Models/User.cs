@@ -1,4 +1,4 @@
-﻿namespace Tarscord.Application.Models
+﻿namespace Tarscord.Common.Models
 {
     public class User
     {

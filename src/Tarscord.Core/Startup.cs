@@ -1,10 +1,14 @@
-﻿using Discord;
+﻿using AutoMapper;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
+using Tarscord.Application.Services.Interfaces;
+using Tarscord.Application.Services.Services;
+using Tarscord.Core.Mapping;
 using Tarscord.Core.Services;
 using Tarscord.Persistence;
 using Tarscord.Persistence.Interfaces;
@@ -66,8 +70,10 @@ namespace Tarscord.Core
             .AddSingleton<StartupService>()
             .AddSingleton<LoggingService>()
             .AddSingleton<TimerService>()
-            .AddSingleton<EventService>()
+            .AddLogging()
+            .AddScoped<IEventService, EventService>()
             .AddSingleton(Configuration)
+            .AddAutoMapper(typeof(MappingProfile))
             .AddScoped<IEventRepository, EventRepository>()
             .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>();

@@ -6,8 +6,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tarscord.Application.Services.Interfaces;
+using Tarscord.Common.Models;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules
 {
@@ -17,9 +18,9 @@ namespace Tarscord.Core.Modules
         [Group("event")]
         public class EventModule : ModuleBase
         {
-            private readonly EventService _eventService;
+            private readonly IEventService _eventService;
 
-            public EventModule(EventService eventService)
+            public EventModule(IEventService eventService)
             {
                 _eventService = eventService;
             }
@@ -30,7 +31,7 @@ namespace Tarscord.Core.Modules
             [Command("list"), Summary("Lists all events")]
             public async Task ListEventsAsync()
             {
-                List<EventInfo> events = await _eventService.GetAllEvents().ConfigureAwait(false);
+                var events = await _eventService.GetAllEvents().ConfigureAwait(false);
                 string messageToReplyWith = "No active events were found";
 
                 if (events?.Any() == true)
@@ -43,15 +44,16 @@ namespace Tarscord.Core.Modules
                 await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
             }
 
-            private string FormatEventInformation(List<EventInfo> events)
+            private string FormatEventInformation(IEnumerable<EventInfo> events)
             {
                 var eventsInformation = new StringBuilder();
+                var eventsAsList = events.ToList();
 
-                for (int i = 0; i < events.Count; i++)
+                for (int i = 0; i < eventsAsList.Count; i++)
                 {
                     eventsInformation.Append(
-                            i + 1).Append(". '").Append(events[i].EventName).Append("' created by '")
-                        .Append(events[i].EventOrganizer).Append("'\n");
+                            i + 1).Append(". '").Append(eventsAsList[i].EventName).Append("' created by '")
+                        .Append(eventsAsList[i].EventOrganizer).Append("'\n");
                 }
 
                 return eventsInformation.ToString();
@@ -77,7 +79,7 @@ namespace Tarscord.Core.Modules
             }
 
             /// <summary>
-            /// Usage: event create {user}
+            /// Usage: event create {Event Name}, {DateTime of Event}, {Description}
             /// </summary>
             [Command("create"), Summary("Create an event")]
             [Alias("add", "make", "generate")]
@@ -93,7 +95,7 @@ namespace Tarscord.Core.Modules
                 DateTime.TryParse(dateTime, out DateTime parsedDateTime);
 
                 EventInfo createdEvent =
-                    await _eventService.CreateEvent(Context.User, eventName, concatenatedDescription, parsedDateTime)
+                    await _eventService.CreateEvent(Context.User.ToCommonUser(), eventName, concatenatedDescription, parsedDateTime)
                         .ConfigureAwait(false);
 
                 if (createdEvent != null)
@@ -113,7 +115,7 @@ namespace Tarscord.Core.Modules
             public async Task CancelEventAsync([Summary("The event name")] string eventName)
             {
                 string messageToReplyWith = $"You have successfully canceled the event named '{eventName}'";
-                EventInfo result = await _eventService.CancelEvent(Context.User, eventName);
+                EventInfo result = await _eventService.CancelEvent(Context.User.ToCommonUser(), eventName);
 
                 if (result != null)
                     messageToReplyWith = $"The cancellation of the event named '{eventName}' failed.";
@@ -128,20 +130,23 @@ namespace Tarscord.Core.Modules
             [Command("confirm"), Summary("Confirm your attendance")]
             public async Task ConfirmAsync(
                 [Summary("The event name")] string eventName,
-                [Summary("The (optional) user to confirm for")] params IUser[] users)
+                [Summary("The (optional) user to confirm for")]
+                params IUser[] users)
             {
                 if (users.Length == 0)
                     users = new[] {Context.User};
 
-                List<string> confirmAttendance =
-                    await _eventService.ConfirmAttendance(eventName, users).ConfigureAwait(false);
+                IEnumerable<string> confirmAttendance =
+                    await _eventService.ConfirmAttendance(eventName, users.ToCommonUsers()).ConfigureAwait(false);
 
                 if (confirmAttendance.Any())
                 {
                     StringBuilder stringBuilder = new StringBuilder();
-                    for (int i = 1; i <= confirmAttendance.Count; i++)
+                    var confirmAttendanceAsList = confirmAttendance.ToList();
+
+                    for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
                     {
-                        stringBuilder.Append($"{i}. {confirmAttendance[i - 1]}\n");
+                        stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
                     }
 
                     await ReplyAsync(
@@ -160,12 +165,13 @@ namespace Tarscord.Core.Modules
             [Alias("unattend")]
             public async Task CancelAttendanceAsync(
                 [Summary("The event name")] string eventName,
-                [Summary("The (optional) user to confirm for")] IUser user = null)
+                [Summary("The (optional) user to confirm for")]
+                IUser user = null)
             {
                 if (user == null)
                     user = Context.User;
 
-                bool canceledAttendance = await _eventService.CancelAttendance(eventName, user).ConfigureAwait(false);
+                bool canceledAttendance = await _eventService.CancelAttendance(eventName, user.ToCommonUser()).ConfigureAwait(false);
 
                 if (canceledAttendance)
                 {
@@ -184,11 +190,12 @@ namespace Tarscord.Core.Modules
             [Command("confirmed"), Summary("Shows confirmed attendees.")]
             public async Task ShowConfirmedAsync([Summary("The event name")] string eventName)
             {
-                List<string> attendees = await _eventService.GetConfirmedAttendees(eventName).ConfigureAwait(false);
+                IEnumerable<string> attendees = await _eventService.GetConfirmedAttendees(eventName).ConfigureAwait(false);
 
                 if (attendees == null)
                 {
-                    await ReplyAsync(embed: $"The event named '{eventName}' does not exist".EmbedMessage()).ConfigureAwait(false);
+                    await ReplyAsync(embed: $"The event named '{eventName}' does not exist".EmbedMessage())
+                        .ConfigureAwait(false);
                     return;
                 }
 
@@ -199,9 +206,10 @@ namespace Tarscord.Core.Modules
                 }
 
                 var stringBuilder = new StringBuilder();
-                for (int i = 1; i <= attendees.Count; i++)
+                var attendeesAsList = attendees.ToList();
+                for (int i = 1; i <= attendeesAsList.Count; i++)
                 {
-                    stringBuilder.Append($"{i}. {attendees[i - 1]}\n");
+                    stringBuilder.Append($"{i}. {attendeesAsList[i - 1]}\n");
                 }
 
                 await ReplyAsync(

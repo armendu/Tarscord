@@ -1,9 +1,15 @@
 ﻿using System;
 
-namespace Tarscord.Persistence.Entities
+namespace Tarscord.Common.Models
 {
-    public class EventInfo : EntityBase
+    public class EventInfo
     {
+        public string Id { get; set; }
+
+        public DateTime Created { get; set; }
+
+        public DateTime Updated { get; set; }
+
         public string EventOrganizer { get; set; }
 
         public ulong EventOrganizerId { get; set; }

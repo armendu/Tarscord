@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Tarscord.Application.Models;
-using EventInfo = Tarscord.Application.Models.EventInfo;
+using Tarscord.Common.Models;
 
-namespace Tarscord.Common.Services.Interfaces
+using EventInfo = Tarscord.Common.Models.EventInfo;
+
+namespace Tarscord.Application.Services.Interfaces
 {
     public interface IEventService
     {
-        public Task<List<EventInfo>> GetAllEvents();
+        Task<IEnumerable<EventInfo>> GetAllEvents();
 
-        public Task<EventInfo> GetEventInformation(string eventName);
+        Task<EventInfo> GetEventInformation(string eventName);
 
-        public Task<EventInfo> CreateEvent(
+        Task<EventInfo> CreateEvent(
             User organizer,
             string eventName,
             string eventDescription,
-            DateTime dateTime);
+            DateTime? dateTime);
 
-        public Task<EventInfo> CancelEvent(User organizer, string eventName);
+        Task<EventInfo> CancelEvent(User organizer, string eventName);
 
-        Task<List<string>> ConfirmAttendance(string eventName, User[] users);
+        Task<IEnumerable<string>> ConfirmAttendance(string eventName, IEnumerable<User> users);
 
-        public Task<List<string>> GetConfirmedAttendees(string eventName);
+        Task<IEnumerable<string>> GetConfirmedAttendees(string eventName);
 
         Task<bool> CancelAttendance(string eventName, User user);
     }

@@ -1,44 +1,57 @@
-﻿using System;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tarscord.Application.Models;
+using Tarscord.Application.Services.Interfaces;
+using Tarscord.Persistence.Entities;
 using Tarscord.Persistence.Interfaces;
+
+using EventInfo = Tarscord.Common.Models.EventInfo;
+using PersistenceEventInfo = Tarscord.Persistence.Entities.EventInfo;
+using User = Tarscord.Common.Models.User;
 
 namespace Tarscord.Application.Services.Services
 {
-    public class EventServices
+    public class EventService: IEventService
     {
-        // TODO: Add ILoggerSerive
         private readonly IEventRepository _eventRepository;
         private readonly IEventAttendeesRepository _eventAttendeesRepository;
+        private readonly IMapper _mapper;
+        private readonly ILogger<EventService> _logger;
 
-        public EventServices(IEventRepository eventRepository, IEventAttendeesRepository eventAttendeesRepository)
+        public EventService(
+            IEventRepository eventRepository,
+            IEventAttendeesRepository eventAttendeesRepository,
+            IMapper mapper,
+            ILogger<EventService> logger)
         {
             _eventRepository = eventRepository;
             _eventAttendeesRepository = eventAttendeesRepository;
+            _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<List<EventInfo>> GetAllEvents()
+        public async Task<IEnumerable<EventInfo>> GetAllEvents()
         {
             var result = await _eventRepository.GetAllAsync();
 
             // Remove IsActive if possible
-            return result.Any() ? result.Where(info => info.IsActive).ToList() : null;
+            return result.Any() ? _mapper.Map<IEnumerable<EventInfo>>(result.Where(info => info.IsActive)) : null;
         }
 
         public async Task<EventInfo> GetEventInformation(string eventName)
         {
             var eventInfos = await _eventRepository.FindBy(info => info.EventName == eventName);
 
-            return eventInfos.FirstOrDefault();
+            return _mapper.Map<EventInfo>(eventInfos.FirstOrDefault());
         }
 
-        public async Task<EventInfo> CreateEvent(IUser organizer, string eventName, string eventDescription,
-            DateTime dateTime)
+        public async Task<EventInfo> CreateEvent(User organizer, string eventName, string eventDescription, DateTime? dateTime)
         {
             // TODO: Add exception handling
-            var eventInfo = new EventInfo
+            var eventInfo = new PersistenceEventInfo
             {
                 EventOrganizer = organizer.Username,
                 EventOrganizerId = organizer.Id,
@@ -47,10 +60,11 @@ namespace Tarscord.Application.Services.Services
                 EventDescription = eventDescription,
                 IsActive = true,
                 Created = DateTime.UtcNow,
-                Updated = DateTime.UtcNow
+                Updated = DateTime.UtcNow,
             };
 
-            return await _eventRepository.InsertAsync(eventInfo);
+            var createdEvent = await _eventRepository.InsertAsync(eventInfo);
+            return _mapper.Map<EventInfo>(createdEvent);
         }
 
         public async Task<EventInfo> CancelEvent(User organizer, string eventName)
@@ -71,10 +85,10 @@ namespace Tarscord.Application.Services.Services
 
             await _eventRepository.UpdateItem(eventInfoToUpdate);
 
-            return eventInfoToUpdate;
+            return _mapper.Map<EventInfo>(eventInfoToUpdate);
         }
 
-        public async Task<List<string>> ConfirmAttendance(string eventName, User[] users)
+        public async Task<IEnumerable<string>> ConfirmAttendance(string eventName, IEnumerable<User> users)
         {
             var result = await _eventRepository.FindBy(info => info.EventName == eventName);
 
@@ -107,7 +121,7 @@ namespace Tarscord.Application.Services.Services
             return attendeesToAdd.Select(a => a.AttendeeName).ToList();
         }
 
-        public async Task<List<string>> GetConfirmedAttendees(string eventName)
+        public async Task<IEnumerable<string>> GetConfirmedAttendees(string eventName)
         {
             var eventInfo = await _eventRepository.FindBy(info => info.EventName == eventName);
 
@@ -119,6 +133,7 @@ namespace Tarscord.Application.Services.Services
                     attendee.EventInfoId == eventInfo.FirstOrDefault()?.Id);
 
             return attendees.Any() ? attendees.Select(a => a.AttendeeName).ToList() : null;
+
         }
 
         public async Task<bool> CancelAttendance(string eventName, User user)

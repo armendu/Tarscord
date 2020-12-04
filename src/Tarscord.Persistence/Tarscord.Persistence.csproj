@@ -17,16 +17,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="..\..\_stylecop\stylecop.json" Link="Properties\stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Interfaces\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tarscord.Application.Mapping\Tarscord.Application.Mapping.csproj" />
     <ProjectReference Include="..\Tarscord.Persistence.Entities\Tarscord.Persistence.Entities.csproj" />
   </ItemGroup>
 

@@ -23,7 +23,6 @@
     },
     "namingRules": {
       "allowedHungarianPrefixes": [
-        "db"
       ]
     },
     "maintainabilityRules": {

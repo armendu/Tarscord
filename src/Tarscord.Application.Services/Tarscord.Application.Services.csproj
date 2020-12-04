@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Tarscord.Common.Models\Tarscord.Common.Models.csproj" />
     <ProjectReference Include="..\Tarscord.Persistence\Tarscord.Persistence.csproj" />
-    <ProjectReference Include="..\Tarscord.Application.Models\Tarscord.Application.Models.csproj" />
     <ProjectReference Include="..\Tarscord.Persistence\Tarscord.Persistence.csproj" />
   </ItemGroup>
 
@@ -16,7 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="..\..\_stylecop\stylecop.json" Link="Properties\stylecop.json" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
   </ItemGroup>
 
 </Project>
