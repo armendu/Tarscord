@@ -14,8 +14,11 @@
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-    <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.0.1" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+    <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.1.0" />
+    <PackageReference Include="Roslynator.Analyzers" Version="3.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
     
     <PropertyGroup>

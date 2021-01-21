@@ -18,9 +18,9 @@ namespace Tarscord.Core.Modules
         }
 
         /// <summary>
-        /// Usage: remind {minutes} {messages}?
+        /// Usage: remindme {minutes} {messages}?
         /// </summary>
-        [Command("remind"), Summary("Sets a reminder")]
+        [Command("remindme"), Summary("Sets a reminder")]
         public async Task SetReminderAsync(
             [Summary("The number in minutes")] double minutes,
             [Summary("The (optional) messages")] params string[] messages)

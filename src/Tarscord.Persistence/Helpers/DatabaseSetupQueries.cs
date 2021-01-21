@@ -4,7 +4,7 @@
     {
         private const string EventInfoQuery = "CREATE TABLE EventInfos (Id INTEGER PRIMARY KEY, " +
                                               "EventOrganizer NVARCHAR(100), EventOrganizerId INTEGER, " +
-                                              "EventName NVARCHAR(100) NOT NULL UNIQUE, EventDate datetime, " +
+                                              "EventName NVARCHAR(100) NOT NULL, EventDate datetime, " +
                                               "EventDescription NVARCHAR(100), IsActive bool, " +
                                               "Created datetime, Updated datetime);";
 

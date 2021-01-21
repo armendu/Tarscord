@@ -9,7 +9,7 @@ namespace Tarscord.Application.Services.Interfaces
 {
     public interface IEventService
     {
-        Task<IEnumerable<EventInfo>> GetAllEvents();
+        Task<IEnumerable<EventInfo>> GetAllEvents(bool isActive = true);
 
         Task<EventInfo> GetEventInformation(string eventName);
 

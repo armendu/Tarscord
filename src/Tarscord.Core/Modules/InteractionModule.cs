@@ -20,7 +20,7 @@ namespace Tarscord.Core.Modules
             using (Context.Channel.EnterTypingState())
             {
                 if (user == null)
-                    throw new Exception("Please provide member of the channel.");
+                    throw new Exception("Please provide a member of the channel.");
 
                 await ReplyAsync(embed: $"I dare you to write that message {user.Username}".EmbedMessage());
             }

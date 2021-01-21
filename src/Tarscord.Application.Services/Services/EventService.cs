@@ -7,14 +7,13 @@ using System.Threading.Tasks;
 using Tarscord.Application.Services.Interfaces;
 using Tarscord.Persistence.Entities;
 using Tarscord.Persistence.Interfaces;
-
 using EventInfo = Tarscord.Common.Models.EventInfo;
 using PersistenceEventInfo = Tarscord.Persistence.Entities.EventInfo;
 using User = Tarscord.Common.Models.User;
 
 namespace Tarscord.Application.Services.Services
 {
-    public class EventService: IEventService
+    public class EventService : IEventService
     {
         private readonly IEventRepository _eventRepository;
         private readonly IEventAttendeesRepository _eventAttendeesRepository;
@@ -33,12 +32,11 @@ namespace Tarscord.Application.Services.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<EventInfo>> GetAllEvents()
+        public async Task<IEnumerable<EventInfo>> GetAllEvents(bool isActive = true)
         {
             var result = await _eventRepository.GetAllAsync();
 
-            // Remove IsActive if possible
-            return result.Any() ? _mapper.Map<IEnumerable<EventInfo>>(result.Where(info => info.IsActive)) : null;
+            return _mapper.Map<IEnumerable<EventInfo>>(result.Where(info => info.IsActive == isActive));
         }
 
         public async Task<EventInfo> GetEventInformation(string eventName)
@@ -48,7 +46,11 @@ namespace Tarscord.Application.Services.Services
             return _mapper.Map<EventInfo>(eventInfos.FirstOrDefault());
         }
 
-        public async Task<EventInfo> CreateEvent(User organizer, string eventName, string eventDescription, DateTime? dateTime)
+        public async Task<EventInfo> CreateEvent(
+            User organizer,
+            string eventName,
+            string eventDescription,
+            DateTime? dateTime)
         {
             // TODO: Add exception handling
             var eventInfo = new PersistenceEventInfo
@@ -133,7 +135,6 @@ namespace Tarscord.Application.Services.Services
                     attendee.EventInfoId == eventInfo.FirstOrDefault()?.Id);
 
             return attendees.Any() ? attendees.Select(a => a.AttendeeName).ToList() : null;
-
         }
 
         public async Task<bool> CancelAttendance(string eventName, User user)
