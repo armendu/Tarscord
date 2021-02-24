@@ -124,7 +124,7 @@ namespace Tarscord.Core.Modules
             }
 
             /// <summary>
-            /// Usage: event confirm {eventName} {user?} 
+            /// Usage: event confirm {eventName} {user?}
             /// </summary>
             /// <returns>The number squared.</returns>
             [Command("confirm"), Summary("Confirm your attendance")]
