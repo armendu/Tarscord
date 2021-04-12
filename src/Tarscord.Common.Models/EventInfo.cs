@@ -2,7 +2,7 @@
 
 namespace Tarscord.Common.Models
 {
-    public class EventInfo
+    public class EventInfo : BaseModel
     {
         public string Id { get; set; }
 

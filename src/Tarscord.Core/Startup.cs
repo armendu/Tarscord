@@ -72,12 +72,13 @@ namespace Tarscord.Core
             .AddSingleton<TimerService>()
             .AddLogging()
             .AddScoped<IEventService, EventService>()
+            .AddScoped<ILoanService, LoanService>()
             .AddSingleton(Configuration)
             .AddAutoMapper(typeof(MappingProfile))
             .AddScoped<IEventRepository, EventRepository>()
             .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
+            .AddScoped<ILoanRepository, LoanRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>();
-            // Add service for loans (small money loans)
         }
     }
 }

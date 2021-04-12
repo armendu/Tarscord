@@ -12,6 +12,10 @@
                                               "EventInfoId INTEGER, AttendeeName NVARCHAR(100), Confirmed bool, " +
                                               "Created datetime, Updated datetime);";
 
+        // private const string LoanQuery = "CREATE TABLE Loans (Id INTEGER PRIMARY KEY, AttendeeId INTEGER, " +
+        //                                            "EventInfoId INTEGER, AttendeeName NVARCHAR(100), Confirmed bool, " +
+        //                                            "Created datetime, Updated datetime);";
+
         public static string GetSetupQuery()
         {
             return EventInfoQuery + EventAttendeesQuery;

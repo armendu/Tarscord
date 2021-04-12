@@ -1,7 +1,13 @@
-﻿namespace Tarscord.Persistence.Repositories
+﻿using Tarscord.Persistence.Entities;
+using Tarscord.Persistence.Interfaces;
+
+namespace Tarscord.Persistence.Repositories
 {
-    public class LoanRepository
+    public class LoanRepository : BaseRepository<Loan>, ILoanRepository
     {
-        
+        public LoanRepository(IDatabaseConnection connection)
+            : base(connection)
+        {
+        }
     }
 }

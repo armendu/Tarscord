@@ -9,10 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="..\..\_stylecop\stylecop.json" Link="Properties\stylecop.json" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="Roslynator.Analyzers" Version="3.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
