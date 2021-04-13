@@ -12,13 +12,14 @@
                                               "EventInfoId INTEGER, AttendeeName NVARCHAR(100), Confirmed bool, " +
                                               "Created datetime, Updated datetime);";
 
-        // private const string LoanQuery = "CREATE TABLE Loans (Id INTEGER PRIMARY KEY, AttendeeId INTEGER, " +
-        //                                            "EventInfoId INTEGER, AttendeeName NVARCHAR(100), Confirmed bool, " +
-        //                                            "Created datetime, Updated datetime);";
+        private const string LoanQuery = "CREATE TABLE Loans (Id INTEGER PRIMARY KEY, LoanedFrom INTEGER," +
+                                         "LoanedFromUsername NVARCHAR(100), LoanedTo INTEGER, " +
+                                         "LoanedToUsername NVARCHAR(100), Description NVARCHAR(1000), ValueLoaned INTEGER, " +
+                                         "Confirmed BOOL, Created DATETIME, Updated DATETIME);";
 
         public static string GetSetupQuery()
         {
-            return EventInfoQuery + EventAttendeesQuery;
+            return EventInfoQuery + EventAttendeesQuery + LoanQuery;
         }
     }
 }

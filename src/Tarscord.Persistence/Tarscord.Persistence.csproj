@@ -15,15 +15,6 @@
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <CodeAnalysisRuleSet>..\..\_stylecop\StyleCopRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Tarscord.Persistence.Entities\Tarscord.Persistence.Entities.csproj" />
   </ItemGroup>

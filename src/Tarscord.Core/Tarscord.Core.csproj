@@ -20,10 +20,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-    
-    <PropertyGroup>
-        <CodeAnalysisRuleSet>..\..\_stylecop\StyleCopRules.ruleset</CodeAnalysisRuleSet>
-    </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Tarscord.Application.Services\Tarscord.Application.Services.csproj" />

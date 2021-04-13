@@ -17,12 +17,25 @@ namespace Tarscord.Core.Modules
         }
 
         /// <summary>
-        /// Usage: random {lower limit} {upper limit}
+        /// Usage: loan {user}
         /// </summary>
         /// <returns>The generated random number</returns>
         [Command("loan"), Summary("Loans a user some money")]
         [Alias("l")]
         public async Task LoanToUserAsync(
+            [Summary("The user to loan money to")] IUser user,
+            [Summary("The value of the money being lent")] float moneyBeingLent)
+        {
+            await ReplyAsync(embed: "Money Loaned".EmbedMessage()).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Usage: random {lower limit} {upper limit}
+        /// </summary>
+        /// <returns>The generated random number</returns>
+        [Command("payback"), Summary("Loans a user some money")]
+        [Alias("return", "removeloan", "deleteloan", "payloan")]
+        public async Task ShowLoansAsync(
             [Summary("The user to loan money to")] IUser user,
             [Summary("The value of the money being lent")] float moneyBeingLent)
         {
