@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Tarscord.Application.Services.Interfaces;
 using Tarscord.Common.Models;
+using Tarscord.Persistence.Entities;
 using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Application.Services.Services
@@ -24,9 +26,11 @@ namespace Tarscord.Application.Services.Services
             _logger = logger;
         }
 
-        public Task<IEnumerable<LoanInfo>> GetAllLoans(bool isActive = true)
+        public async Task<IEnumerable<LoanInfo>> GetAllLoans(bool isConfirmed = true)
         {
-            throw new System.NotImplementedException();
+            var result = await _loanRepository.GetAllAsync();
+
+            return result.Select(loan => _mapper.Map<LoanInfo>(loan));
         }
     }
 }

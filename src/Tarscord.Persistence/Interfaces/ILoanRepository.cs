@@ -1,6 +1,8 @@
-﻿namespace Tarscord.Persistence.Interfaces
+﻿using Tarscord.Persistence.Entities;
+
+namespace Tarscord.Persistence.Interfaces
 {
-    public interface ILoanRepository
+    public interface ILoanRepository: IBaseRepository<Loan>
     {
     }
 }

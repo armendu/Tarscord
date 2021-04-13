@@ -6,6 +6,6 @@ namespace Tarscord.Application.Services.Interfaces
 {
     public interface ILoanService
     {
-        Task<IEnumerable<LoanInfo>> GetAllLoans(bool isActive = true);
+        Task<IEnumerable<LoanInfo>> GetAllLoans(bool isConfirmed = true);
     }
 }

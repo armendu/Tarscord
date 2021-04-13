@@ -8,6 +8,8 @@ namespace Tarscord.Core.Mapping
         public MappingProfile()
         {
             CreateMap<Persistence.Entities.EventInfo, EventInfo>();
+
+            CreateMap<Persistence.Entities.EventInfo, LoanInfo>();
         }
     }
 }
