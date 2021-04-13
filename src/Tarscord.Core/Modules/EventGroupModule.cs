@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,10 +20,12 @@ namespace Tarscord.Core.Modules
         public class EventModule : ModuleBase
         {
             private readonly IEventService _eventService;
+            private readonly IMediator _mediator;
 
-            public EventModule(IEventService eventService)
+            public EventModule(IEventService eventService, IMediator mediator)
             {
                 _eventService = eventService;
+                _mediator = mediator;
             }
 
             /// <summary>

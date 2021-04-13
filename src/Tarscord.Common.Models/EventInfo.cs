@@ -1,8 +1,9 @@
-﻿using System;
+﻿using MediatR;
+using System;
 
 namespace Tarscord.Common.Models
 {
-    public class EventInfo : BaseModel
+    public class EventInfo : BaseModel, IRequest<string>
     {
         public string Id { get; set; }
 

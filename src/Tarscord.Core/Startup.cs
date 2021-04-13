@@ -2,6 +2,7 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -78,7 +79,8 @@ namespace Tarscord.Core
             .AddScoped<IEventRepository, EventRepository>()
             .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
             .AddScoped<ILoanRepository, LoanRepository>()
-            .AddSingleton<IDatabaseConnection, DatabaseConnection>();
+            .AddSingleton<IDatabaseConnection, DatabaseConnection>()
+            .AddMediatR(typeof(Startup));
         }
     }
 }
