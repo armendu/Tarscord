@@ -7,8 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using Tarscord.Application.Services.Interfaces;
-using Tarscord.Application.Services.Services;
 using Tarscord.Core.Mapping;
 using Tarscord.Core.Services;
 using Tarscord.Persistence;
@@ -72,8 +70,6 @@ namespace Tarscord.Core
             .AddSingleton<LoggingService>()
             .AddSingleton<TimerService>()
             .AddLogging()
-            .AddScoped<IEventService, EventService>()
-            .AddScoped<ILoanService, LoanService>()
             .AddSingleton(Configuration)
             .AddAutoMapper(typeof(MappingProfile))
             .AddScoped<IEventRepository, EventRepository>()

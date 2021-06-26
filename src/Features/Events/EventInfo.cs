@@ -1,9 +1,11 @@
-﻿using MediatR;
-using System;
+﻿using System;
+using Discord;
+using MediatR;
+using Tarscord.Common.Models;
 
-namespace Tarscord.Common.Models
+namespace Tarscord.Core.Features.Events
 {
-    public class EventInfo : BaseModel, IRequest<string>
+    public class EventInfo : BaseModel, IRequest<Embed>
     {
         public string Id { get; set; }
 

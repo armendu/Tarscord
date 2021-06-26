@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Tarscord.Common.Models;
+using Tarscord.Core.Features.Events;
+using Tarscord.Core.Models;
 
 namespace Tarscord.Core.Mapping
 {

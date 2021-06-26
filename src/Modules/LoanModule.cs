@@ -1,23 +1,25 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
-using Tarscord.Application.Services.Interfaces;
-using Tarscord.Common.Models;
+using MediatR;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Events;
+using Tarscord.Core.Models;
 
 namespace Tarscord.Core.Modules
 {
     [Name("Commands to handle money loaning")]
     public class LoanModule : ModuleBase
     {
-        private readonly ILoanService _loanService;
+        private readonly IMediator _mediator;
 
-        public LoanModule(ILoanService loanService)
+        public LoanModule(IMediator mediator)
         {
-            _loanService = loanService;
+            _mediator = mediator;
         }
 
         /// <summary>
@@ -26,11 +28,10 @@ namespace Tarscord.Core.Modules
         /// <returns>The list of loans.</returns>
         [Command("list"), Summary("Shows the list of loans")]
         [Alias("show")]
-        public async Task ShowLoansAsync()
+        public async Task ShowLoansAsync(CancellationToken cancellationToken = default)
         {
-            var loans = await _loanService.GetAllLoans();
-            await ReplyAsync(embed: "Money Loaned".EmbedMessage()).ConfigureAwait(false);
-            
+            var messageToReply = _mediator.Send(new Details.Query(), cancellationToken);
+
             string messageToReplyWith = "No active events were found";
 
             if (loans?.Any() == true)
@@ -42,7 +43,7 @@ namespace Tarscord.Core.Modules
 
             await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
         }
-        
+
         private string FormatEventInformation(IEnumerable<LoanInfo> loans)
         {
             var eventsInformation = new StringBuilder();

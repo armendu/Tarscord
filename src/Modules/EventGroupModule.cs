@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using Tarscord.Application.Services.Interfaces;
-using Tarscord.Common.Models;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Events;
 
 namespace Tarscord.Core.Modules
 {
@@ -19,12 +19,10 @@ namespace Tarscord.Core.Modules
         [Group("event")]
         public class EventModule : ModuleBase
         {
-            private readonly IEventService _eventService;
             private readonly IMediator _mediator;
 
-            public EventModule(IEventService eventService, IMediator mediator)
+            public EventModule(IMediator mediator)
             {
-                _eventService = eventService;
                 _mediator = mediator;
             }
 
@@ -32,34 +30,11 @@ namespace Tarscord.Core.Modules
             /// Usage: event list
             /// </summary>
             [Command("list"), Summary("Lists all events")]
-            public async Task ListEventsAsync()
+            public async Task ListEventsAsync(CancellationToken cancellationToken = default)
             {
-                var events = await _eventService.GetAllEvents().ConfigureAwait(false);
-                string messageToReplyWith = "No active events were found";
+                var messageToReplyWith = await _mediator.Send(new Details.Query(), cancellationToken);
 
-                if (events?.Any() == true)
-                {
-                    string formattedEventInformation = FormatEventInformation(events);
-
-                    messageToReplyWith = $"Here are all the events:\n{formattedEventInformation}";
-                }
-
-                await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
-            }
-
-            private string FormatEventInformation(IEnumerable<EventInfo> events)
-            {
-                var eventsInformation = new StringBuilder();
-                var eventsAsList = events.ToList();
-
-                for (int i = 0; i < eventsAsList.Count; i++)
-                {
-                    eventsInformation.Append(
-                            i + 1).Append(". '").Append(eventsAsList[i].EventName).Append("' created by '")
-                        .Append(eventsAsList[i].EventOrganizer).Append("'\n");
-                }
-
-                return eventsInformation.ToString();
+                await ReplyAsync(embed: messageToReplyWith).ConfigureAwait(false);
             }
 
             /// <summary>
@@ -67,10 +42,16 @@ namespace Tarscord.Core.Modules
             /// </summary>
             [Command("show"), Summary("Show information about an event")]
             [Alias("info", "get", "display")]
-            public async Task ShowEventInformationAsync([Summary("The event name")] string eventName)
+            public async Task ShowEventInformationAsync(
+                [Summary("The event Id")] string eventId,
+                CancellationToken cancellationToken = default)
             {
-                Embed embeddedMessageToReplyWith = $"The event named '{eventName}' does not exist".EmbedMessage();
-                EventInfo eventInformation = await _eventService.GetEventInformation(eventName).ConfigureAwait(false);
+                Embed embeddedMessageToReplyWith = $"The event with Id '{eventId}' does not exist".EmbedMessage();
+
+                var eventInformation = await _mediator.Send(new Details.Query()
+                {
+                    EventId = eventId
+                }, cancellationToken);
 
                 if (eventInformation != null)
                 {
@@ -92,22 +73,23 @@ namespace Tarscord.Core.Modules
                 [Summary("The event date and time")] string dateTime = "",
                 [Summary("The event description")] params string[] eventDescription)
             {
-                Embed embeddedMessageToReplyWith = "The event creation failed".EmbedMessage();
-
                 string concatenatedDescription = string.Join(" ", eventDescription);
                 DateTime.TryParse(dateTime, out DateTime parsedDateTime);
 
-                EventInfo createdEvent =
-                    await _eventService.CreateEvent(Context.User.ToCommonUser(), eventName, concatenatedDescription, parsedDateTime)
-                        .ConfigureAwait(false);
-
-                if (createdEvent != null)
+                var eventInfo = new EventInfo()
                 {
-                    embeddedMessageToReplyWith =
-                        "The event was successfully created".EmbedMessage(createdEvent.ToString());
-                }
+                    EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
+                    EventOrganizer = Context.User.ToCommonUser()?.Username,
+                    EventName = eventName,
+                    EventDescription = concatenatedDescription,
+                    EventDate = parsedDateTime,
+                    IsActive = true,
+                    Created = DateTime.UtcNow,
+                    Updated = DateTime.UtcNow,
+                };
 
-                await ReplyAsync(embed: embeddedMessageToReplyWith).ConfigureAwait(false);
+                var messageToReturn = await _mediator.Send(eventInfo);
+                await ReplyAsync(embed: messageToReturn).ConfigureAwait(false);
             }
 
             /// <summary>
