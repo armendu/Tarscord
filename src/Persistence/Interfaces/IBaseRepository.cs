@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Tarscord.Persistence.Interfaces
@@ -7,9 +7,9 @@ namespace Tarscord.Persistence.Interfaces
     public interface IBaseRepository<T>
         where T : class
     {
-        Task<IQueryable<T>> FindBy(Func<T, bool> predicate);
+        Task<IEnumerable<T>> FindBy(Func<T, bool> predicate);
 
-        Task<IQueryable<T>> GetAllAsync();
+        Task<IEnumerable<T>> GetAllAsync();
 
         Task<T> InsertAsync(T item);
 

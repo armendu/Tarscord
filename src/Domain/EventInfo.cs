@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tarscord.Persistence.Entities
+namespace Tarscord.Core.Domain
 {
     public class EventInfo : EntityBase
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace Tarscord.Persistence.Entities
+namespace Tarscord.Core.Domain
 {
     public abstract class EntityBase
     {
-        public string Id { get; set; }
+        public ulong Id { get; set; }
 
         public DateTime Created { get; set; }
 

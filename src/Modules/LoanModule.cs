@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
-using Tarscord.Core.Models;
 
 namespace Tarscord.Core.Modules
 {
@@ -26,38 +25,38 @@ namespace Tarscord.Core.Modules
         /// Usage: loan list
         /// </summary>
         /// <returns>The list of loans.</returns>
-        [Command("list"), Summary("Shows the list of loans")]
-        [Alias("show")]
-        public async Task ShowLoansAsync(CancellationToken cancellationToken = default)
-        {
-            var messageToReply = _mediator.Send(new Details.Query(), cancellationToken);
+        // [Command("list"), Summary("Shows the list of loans")]
+        // [Alias("show")]
+        // public async Task ShowLoansAsync(CancellationToken cancellationToken = default)
+        // {
+        //     var messageToReply = _mediator.Send(new Details.Query(), cancellationToken);
+        //
+        //     string messageToReplyWith = "No active events were found";
+        //
+        //     if (loans?.Any() == true)
+        //     {
+        //         string formattedEventInformation = FormatEventInformation(loans);
+        //
+        //         messageToReplyWith = $"Here are all the events:\n{formattedEventInformation}";
+        //     }
+        //
+        //     await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+        // }
 
-            string messageToReplyWith = "No active events were found";
-
-            if (loans?.Any() == true)
-            {
-                string formattedEventInformation = FormatEventInformation(loans);
-
-                messageToReplyWith = $"Here are all the events:\n{formattedEventInformation}";
-            }
-
-            await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
-        }
-
-        private string FormatEventInformation(IEnumerable<LoanInfo> loans)
-        {
-            var eventsInformation = new StringBuilder();
-            var eventsAsList = loans.ToList();
-
-            for (int i = 0; i < eventsAsList.Count; i++)
-            {
-                // TODO: Continue from here
-                eventsInformation.Append(
-                        i + 1).Append(". '").Append("'\n");
-            }
-
-            return eventsInformation.ToString();
-        }
+        // private string FormatEventInformation(IEnumerable<LoanInfo> loans)
+        // {
+        //     var eventsInformation = new StringBuilder();
+        //     var eventsAsList = loans.ToList();
+        //
+        //     for (int i = 0; i < eventsAsList.Count; i++)
+        //     {
+        //         // TODO: Continue from here
+        //         eventsInformation.Append(
+        //                 i + 1).Append(". '").Append("'\n");
+        //     }
+        //
+        //     return eventsInformation.ToString();
+        // }
 
         /// <summary>
         /// Usage: loan {user}

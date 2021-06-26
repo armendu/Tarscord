@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Tarscord.Persistence.Entities;
+using Tarscord.Core.Domain;
 
 namespace Tarscord.Persistence.Interfaces
 {

@@ -1,6 +1,6 @@
-using System.Collections.Generic;
+using Tarscord.Core.Domain;
 
 namespace Tarscord.Core.Features.Events
 {
-    public record EventInfoListEnvelope(IEnumerable<EventInfo> EventInfo);
+    public record EventInfoEnvelope(EventInfo EventInfo);
 }

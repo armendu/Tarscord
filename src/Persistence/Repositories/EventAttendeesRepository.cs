@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Tarscord.Persistence.Entities;
+using Tarscord.Core.Domain;
 using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Persistence.Repositories

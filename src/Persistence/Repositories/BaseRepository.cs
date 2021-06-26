@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tarscord.Persistence.Entities;
+using Tarscord.Core.Domain;
 using Tarscord.Persistence.Exceptions;
 using Tarscord.Persistence.Interfaces;
 
@@ -19,18 +19,18 @@ namespace Tarscord.Persistence.Repositories
             _connection = connection;
         }
 
-        public async Task<IQueryable<T>> FindBy(Func<T, bool> predicate)
+        public async Task<IEnumerable<T>> FindBy(Func<T, bool> predicate)
         {
             IEnumerable<T> results = await _connection.Connection.GetAllAsync<T>();
 
-            return results.Where(predicate).AsQueryable();
+            return results.Where(predicate);
         }
 
-        public async Task<IQueryable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
             IEnumerable<T> items = await _connection.Connection.GetAllAsync<T>();
 
-            return items.AsQueryable();
+            return items;
         }
 
         public async Task<T> InsertAsync(T item)

@@ -1,7 +1,7 @@
 ﻿using Discord;
 using System.Collections.Generic;
 using System.Linq;
-using Tarscord.Core.Models;
+using Tarscord.Core.Domain;
 
 namespace Tarscord.Core.Extensions
 {

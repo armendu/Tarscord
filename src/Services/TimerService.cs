@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Models;
 
 namespace Tarscord.Core.Services
 {

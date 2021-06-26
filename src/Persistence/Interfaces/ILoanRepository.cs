@@ -1,4 +1,4 @@
-﻿using Tarscord.Persistence.Entities;
+﻿using Tarscord.Core.Domain;
 
 namespace Tarscord.Persistence.Interfaces
 {

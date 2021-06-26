@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Tarscord.Core\Tarscord.Core.csproj" />
+    <ProjectReference Include="..\src\Tarscord.Core.csproj" />
   </ItemGroup>
 
 </Project>
