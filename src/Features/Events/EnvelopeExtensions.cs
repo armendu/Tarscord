@@ -17,7 +17,22 @@ namespace Tarscord.Core.Features.Events
                     .Append(events.EventInfo[i].EventOrganizer).Append("'\n");
             }
 
+            if (eventsInformation.Length == 0)
+            {
+                return "No events found".EmbedMessage();
+            }
+
             return eventsInformation.ToString().EmbedMessage();
+        }
+
+        public static Embed ToEmbeddedMessage(this EventInfoEnvelope events)
+        {
+            if (events.EventInfo == null)
+            {
+                return "Event does not exist".EmbedMessage();
+            }
+
+            return $"{events.EventInfo.EventName} created by '{events.EventInfo.EventOrganizer}'".EmbedMessage();
         }
     }
 }

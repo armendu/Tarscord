@@ -1,4 +1,4 @@
-﻿namespace Tarscord.Persistence.Helpers
+﻿namespace Tarscord.Core.Persistence.Helpers
 {
     public static class DatabaseSetupQueries
     {

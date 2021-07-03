@@ -23,14 +23,8 @@ namespace Tarscord.Core.Features.Events
             {
                 var events =
                     await _eventRepository.GetAllAsync().ConfigureAwait(false);
-                var listOfEvents = events.ToList();
 
-                if (!listOfEvents.Any())
-                {
-                    return null;
-                }
-
-                return new EventInfoListEnvelope(listOfEvents);
+                return new EventInfoListEnvelope(events.ToList());
             }
         }
     }

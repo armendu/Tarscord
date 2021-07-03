@@ -6,6 +6,13 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>Tarscord.Core</AssemblyName>
     <RootNamespace>Tarscord.Core</RootNamespace>
+    <Title>Tarscord</Title>
+    <Authors>Armend Ukëhaxhaj</Authors>
+    <Copyright>Armend Ukëhaxhaj</Copyright>
+    <PackageProjectUrl>https://github.com/armendu/Tarscord</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/armendu/Tarscord/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/armendu/Tarscord</RepositoryUrl>
+    <PackageTags>.NET</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

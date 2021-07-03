@@ -33,8 +33,6 @@ namespace Tarscord.Core.Features.Events
 
             public async Task<EventInfoEnvelope> Handle(Query message, CancellationToken cancellationToken)
             {
-                string messageToReplyWith = "No active events were found";
-
                 var events = await _eventRepository.FindBy(eventInfo => eventInfo.Id == message.EventId)
                     .ConfigureAwait(false);
 

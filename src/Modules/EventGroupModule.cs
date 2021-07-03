@@ -1,14 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
 using MediatR;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 
 namespace Tarscord.Core.Modules
@@ -30,36 +24,27 @@ namespace Tarscord.Core.Modules
             /// Usage: event list
             /// </summary>
             [Command("list"), Summary("Lists all events")]
-            public async Task ListEventsAsync(CancellationToken cancellationToken = default)
+            public async Task ListEventsAsync()
             {
-                var eventInfoList = await _mediator.Send(new List.Query(), cancellationToken);
+                var eventInfoList = await _mediator.Send(new List.Query());
 
-                await ReplyAsync(embed: eventInfoList.ToEmbeddedMessage()).ConfigureAwait(false);
+                await ReplyAsync(embed: eventInfoList?.ToEmbeddedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>
-            /// Usage: event list
+            /// Usage: event display {Event Id}
             /// </summary>
             [Command("show"), Summary("Show information about an event")]
             [Alias("info", "get", "display")]
             public async Task ShowEventInformationAsync(
-                [Summary("The event Id")] ulong eventId,
-                CancellationToken cancellationToken = default)
+                [Summary("The event Id")] ulong eventId)
             {
-                Embed embeddedMessageToReplyWith = $"The event with Id '{eventId}' does not exist".EmbedMessage();
-
                 var eventInformation = await _mediator.Send(new Details.Query()
                 {
                     EventId = eventId
-                }, cancellationToken);
+                });
 
-                if (eventInformation != null)
-                {
-                    embeddedMessageToReplyWith =
-                        "Here is the event's information:".EmbedMessage(eventInformation.ToString());
-                }
-
-                await ReplyAsync(embed: embeddedMessageToReplyWith).ConfigureAwait(false);
+                await ReplyAsync(embed: eventInformation.ToEmbeddedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>

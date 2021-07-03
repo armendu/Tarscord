@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using System.Data;
 using System.Data.SQLite;
-using Tarscord.Persistence.Helpers;
+using Tarscord.Core.Persistence.Helpers;
 
 namespace Tarscord.Persistence
 {
