@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>Tarscord.Core</AssemblyName>
+    <RootNamespace>Tarscord.Core</RootNamespace>
+    <Title>Tarscord</Title>
+    <Authors>Armend Ukëhaxhaj</Authors>
+    <Copyright>Armend Ukëhaxhaj</Copyright>
+    <PackageProjectUrl>https://github.com/armendu/Tarscord</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/armendu/Tarscord/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/armendu/Tarscord</RepositoryUrl>
+    <PackageTags>.NET</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    <PackageReference Include="Dapper" Version="2.0.90" />
+    <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+    <PackageReference Include="Discord.Net" Version="2.4.0" />
+    <PackageReference Include="FluentValidation" Version="10.2.3" />
+    <PackageReference Include="MediatR" Version="9.0.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+    <PackageReference Include="NetEscapades.Configuration.Yaml" Version="2.1.0" />
+    <PackageReference Include="Roslynator.Analyzers" Version="3.2.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Data.SQLite" Version="1.0.114.4" />
+  </ItemGroup>
+  
+  <ItemGroup>
+      <None Update="Resources\config.yml">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\messages.yml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+  </ItemGroup>
+</Project>

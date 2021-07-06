@@ -1,6 +1,0 @@
-﻿prefix: '?'
-tokens:
-    discord: ""
-sarcasm-level: 0
-humor-level: 0
-database-file: "Tarscord.DB"
