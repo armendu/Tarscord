@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using Tarscord.Core.Mapping;
+using Tarscord.Core.Helpers;
 using Tarscord.Core.Services;
 using Tarscord.Persistence;
 using Tarscord.Persistence.Interfaces;

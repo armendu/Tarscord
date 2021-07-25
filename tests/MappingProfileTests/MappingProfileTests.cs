@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Tarscord.Core.Mapping;
+using Tarscord.Core.Helpers;
 using Xunit;
 
 namespace Tarscord.Core.Tests.MappingProfileTests

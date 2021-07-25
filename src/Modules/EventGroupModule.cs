@@ -1,8 +1,10 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using Discord.Commands;
 using MediatR;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 
 namespace Tarscord.Core.Modules
@@ -58,23 +60,26 @@ namespace Tarscord.Core.Modules
                 [Summary("The event date and time")] string dateTime = "",
                 [Summary("The event description")] params string[] eventDescription)
             {
-                // string concatenatedDescription = string.Join(" ", eventDescription);
-                // DateTime.TryParse(dateTime, out DateTime parsedDateTime);
-                //
-                // var eventInfo = new Create.Command()
-                // {
-                //     EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
-                //     EventOrganizer = Context.User.ToCommonUser()?.Username,
-                //     EventName = eventName,
-                //     EventDescription = concatenatedDescription,
-                //     EventDate = parsedDateTime,
-                //     IsActive = true,
-                //     Created = DateTime.UtcNow,
-                //     Updated = DateTime.UtcNow,
-                // };
-                //
-                // var messageToReturn = await _mediator.Send(eventInfo);
-                // await ReplyAsync(embed: messageToReturn).ConfigureAwait(false);
+                string concatenatedDescription = string.Join(" ", eventDescription);
+                DateTime.TryParse(dateTime, out DateTime parsedDateTime);
+
+                var eventInfo = new Create.Command()
+                {
+                    Event = new Create.EventInfo()
+                    {
+                        EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
+                        EventOrganizer = Context.User.ToCommonUser()?.Username,
+                        EventName = eventName,
+                        EventDescription = concatenatedDescription,
+                        EventDate = parsedDateTime,
+                        IsActive = true,
+                        Created = DateTime.UtcNow,
+                        Updated = DateTime.UtcNow,
+                    }
+                };
+
+                var createdEvent = await _mediator.Send(eventInfo);
+                await ReplyAsync(embed: createdEvent.ToEmbeddedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>

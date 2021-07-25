@@ -25,14 +25,14 @@ namespace Tarscord.Core.Features.Events
             return eventsInformation.ToString().EmbedMessage();
         }
 
-        public static Embed ToEmbeddedMessage(this EventInfoEnvelope events)
+        public static Embed ToEmbeddedMessage(this EventInfoEnvelope eventInfoEnvelope)
         {
-            if (events.EventInfo == null)
+            if (eventInfoEnvelope.EventInfo == null)
             {
                 return "Event does not exist".EmbedMessage();
             }
 
-            return $"{events.EventInfo.EventName} created by '{events.EventInfo.EventOrganizer}'".EmbedMessage();
+            return $"{eventInfoEnvelope.EventInfo.EventName} created by '{eventInfoEnvelope.EventInfo.EventOrganizer}'".EmbedMessage();
         }
     }
 }
