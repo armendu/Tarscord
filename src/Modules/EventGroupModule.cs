@@ -37,7 +37,7 @@ namespace Tarscord.Core.Modules
             /// Usage: event display {Event Id}
             /// </summary>
             [Command("show"), Summary("Show information about an event")]
-            [Alias("info", "get", "display")]
+            [Alias("info", "get", "display", "details")]
             public async Task ShowEventInformationAsync(
                 [Summary("The event Id")] ulong eventId)
             {
@@ -108,28 +108,28 @@ namespace Tarscord.Core.Modules
                 [Summary("The (optional) user to confirm for")]
                 params IUser[] users)
             {
-                // if (users.Length == 0)
-                //     users = new[] {Context.User};
-                //
-                // IEnumerable<string> confirmAttendance =
-                //     await _eventService.ConfirmAttendance(eventName, users.ToCommonUsers()).ConfigureAwait(false);
-                //
-                // if (confirmAttendance.Any())
-                // {
-                //     StringBuilder stringBuilder = new StringBuilder();
-                //     var confirmAttendanceAsList = confirmAttendance.ToList();
-                //
-                //     for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
-                //     {
-                //         stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
-                //     }
-                //
-                //     await ReplyAsync(
-                //         embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
-                //             .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
-                // }
-                // else
-                //     await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
+                if (users.Length == 0)
+                    users = new[] {Context.User};
+
+                IEnumerable<string> confirmAttendance =
+                    await _eventService.ConfirmAttendance(eventName, users.ToCommonUsers()).ConfigureAwait(false);
+
+                if (confirmAttendance.Any())
+                {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    var confirmAttendanceAsList = confirmAttendance.ToList();
+
+                    for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
+                    {
+                        stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
+                    }
+
+                    await ReplyAsync(
+                        embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
+                            .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+                }
+                else
+                    await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>

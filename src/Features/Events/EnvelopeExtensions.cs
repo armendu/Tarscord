@@ -1,5 +1,6 @@
 using System.Text;
 using Discord;
+using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Features.Events
@@ -10,11 +11,12 @@ namespace Tarscord.Core.Features.Events
         {
             var eventsInformation = new StringBuilder();
 
-            for (int i = 0; i < events.EventInfo.Count; i++)
+            foreach (var eventInfo in events.EventInfo)
             {
-                eventsInformation.Append(
-                        i + 1).Append(". '").Append(events.EventInfo[i].EventName).Append("' created by '")
-                    .Append(events.EventInfo[i].EventOrganizer).Append("'\n");
+                eventsInformation
+                    .Append("'").Append(eventInfo.Id).Append("': ")
+                    .Append(eventInfo.EventName)
+                    .Append(" by user: ").Append(eventInfo.EventOrganizer).Append(".\n");
             }
 
             if (eventsInformation.Length == 0)
