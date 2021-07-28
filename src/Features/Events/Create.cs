@@ -40,7 +40,7 @@ namespace Tarscord.Core.Features.Events
         {
             public CommandValidator()
             {
-                // RuleFor(x => x.Event).NotNull().SetValidator(new UserDataValidator());
+                RuleFor(x => x.Event).NotNull();
             }
         }
 
@@ -57,8 +57,10 @@ namespace Tarscord.Core.Features.Events
 
             public async Task<EventInfoEnvelope> Handle(Command message, CancellationToken cancellationToken)
             {
-                return null;
-                // return new EventInfoEnvelope();
+                var createdEvent = await _eventRepository.InsertAsync(_mapper.Map<Domain.EventInfo>(message.Event))
+                    .ConfigureAwait(false);
+
+                return new EventInfoEnvelope(createdEvent);
             }
         }
     }

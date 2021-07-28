@@ -38,21 +38,6 @@ namespace Tarscord.Core.Features.Events
 
                 return new EventInfoEnvelope(events.FirstOrDefault());
             }
-
-            // private string FormatEventInformation(IEnumerable<EventInfo> events)
-            // {
-            //     var eventsInformation = new StringBuilder();
-            //     var eventsAsList = events.ToList();
-            //
-            //     for (int i = 0; i < eventsAsList.Count; i++)
-            //     {
-            //         eventsInformation.Append(
-            //                 i + 1).Append(". '").Append(eventsAsList[i].EventName).Append("' created by '")
-            //             .Append(eventsAsList[i].EventOrganizer).Append("'\n");
-            //     }
-            //
-            //     return eventsInformation.ToString();
-            // }
         }
     }
 }

@@ -1,9 +1,16 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using Discord.Commands;
 using MediatR;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.EventAttendees;
 using Tarscord.Core.Features.Events;
+using EventAttendanceDetails = Tarscord.Core.Features.EventAttendees.Details;
+using EventAttendanceList = Tarscord.Core.Features.EventAttendees.List;
 
 namespace Tarscord.Core.Modules
 {
@@ -26,7 +33,7 @@ namespace Tarscord.Core.Modules
             [Command("list"), Summary("Lists all events")]
             public async Task ListEventsAsync()
             {
-                var eventInfoList = await _mediator.Send(new List.Query());
+                var eventInfoList = await _mediator.Send(new Features.Events.List.Query());
 
                 await ReplyAsync(embed: eventInfoList?.ToEmbeddedMessage()).ConfigureAwait(false);
             }
@@ -35,11 +42,11 @@ namespace Tarscord.Core.Modules
             /// Usage: event display {Event Id}
             /// </summary>
             [Command("show"), Summary("Show information about an event")]
-            [Alias("info", "get", "display")]
+            [Alias("info", "get", "display", "details")]
             public async Task ShowEventInformationAsync(
                 [Summary("The event Id")] ulong eventId)
             {
-                var eventInformation = await _mediator.Send(new Details.Query()
+                var eventInformation = await _mediator.Send(new Features.Events.Details.Query()
                 {
                     EventId = eventId
                 });
@@ -58,23 +65,26 @@ namespace Tarscord.Core.Modules
                 [Summary("The event date and time")] string dateTime = "",
                 [Summary("The event description")] params string[] eventDescription)
             {
-                // string concatenatedDescription = string.Join(" ", eventDescription);
-                // DateTime.TryParse(dateTime, out DateTime parsedDateTime);
-                //
-                // var eventInfo = new Create.Command()
-                // {
-                //     EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
-                //     EventOrganizer = Context.User.ToCommonUser()?.Username,
-                //     EventName = eventName,
-                //     EventDescription = concatenatedDescription,
-                //     EventDate = parsedDateTime,
-                //     IsActive = true,
-                //     Created = DateTime.UtcNow,
-                //     Updated = DateTime.UtcNow,
-                // };
-                //
-                // var messageToReturn = await _mediator.Send(eventInfo);
-                // await ReplyAsync(embed: messageToReturn).ConfigureAwait(false);
+                string concatenatedDescription = string.Join(" ", eventDescription);
+                DateTime.TryParse(dateTime, out DateTime parsedDateTime);
+
+                var eventInfo = new Create.Command()
+                {
+                    Event = new Create.EventInfo()
+                    {
+                        EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
+                        EventOrganizer = Context.User.ToCommonUser()?.Username,
+                        EventName = eventName,
+                        EventDescription = concatenatedDescription,
+                        EventDate = parsedDateTime,
+                        IsActive = true,
+                        Created = DateTime.UtcNow,
+                        Updated = DateTime.UtcNow,
+                    }
+                };
+
+                var createdEvent = await _mediator.Send(eventInfo);
+                await ReplyAsync(embed: createdEvent.ToEmbeddedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>
@@ -94,22 +104,30 @@ namespace Tarscord.Core.Modules
             }
 
             /// <summary>
-            /// Usage: event confirm {eventName} {user?}
+            /// Usage: event confirm {Event Id} {User?}
             /// </summary>
-            /// <returns>The number squared.</returns>
+            /// <returns>The confirmed attendees.</returns>
             [Command("confirm"), Summary("Confirm your attendance")]
             public async Task ConfirmAsync(
-                [Summary("The event name")] string eventName,
+                [Summary("The event name")] ulong eventId,
                 [Summary("The (optional) user to confirm for")]
                 params IUser[] users)
             {
-                // if (users.Length == 0)
-                //     users = new[] {Context.User};
-                //
-                // IEnumerable<string> confirmAttendance =
-                //     await _eventService.ConfirmAttendance(eventName, users.ToCommonUsers()).ConfigureAwait(false);
-                //
-                // if (confirmAttendance.Any())
+                if (users.Length == 0)
+                    users = new[] {Context.User};
+
+                var confirmAttendance = await _mediator.Send(new Update.Command()
+                {
+                    EventAttendance = new Update.EventAttendance()
+                    {
+                        Confirmation = true,
+                        AttendeeIds = users.Select(u => u.Id).ToList(),
+                        AttendeeNames = users.Select(u => u.Username).ToList(),
+                        EventId = eventId
+                    }
+                });
+
+                // if (confirmAttendance.EventAttendee Any())
                 // {
                 //     StringBuilder stringBuilder = new StringBuilder();
                 //     var confirmAttendanceAsList = confirmAttendance.ToList();
@@ -154,37 +172,40 @@ namespace Tarscord.Core.Modules
             }
 
             /// <summary>
-            /// Usage: event confirmed {eventName}
+            /// Usage: event confirmed {Event Id}
             /// </summary>
             /// <returns>The number squared.</returns>
             [Command("confirmed"), Summary("Shows confirmed attendees.")]
-            public async Task ShowConfirmedAsync([Summary("The event name")] string eventName)
+            public async Task ShowConfirmedAsync([Summary("The Event Id")] ulong eventId)
             {
-                // IEnumerable<string> attendees = await _eventService.GetConfirmedAttendees(eventName).ConfigureAwait(false);
-                //
-                // if (attendees == null)
-                // {
-                //     await ReplyAsync(embed: $"The event named '{eventName}' does not exist".EmbedMessage())
-                //         .ConfigureAwait(false);
-                //     return;
-                // }
-                //
-                // if (!attendees.Any())
-                // {
-                //     await ReplyAsync(embed: "There are no confirmed attendees".EmbedMessage()).ConfigureAwait(false);
-                //     return;
-                // }
-                //
-                // var stringBuilder = new StringBuilder();
-                // var attendeesAsList = attendees.ToList();
-                // for (int i = 1; i <= attendeesAsList.Count; i++)
-                // {
-                //     stringBuilder.Append($"{i}. {attendeesAsList[i - 1]}\n");
-                // }
-                //
-                // await ReplyAsync(
-                //     embed: "Users who have confirmed their attendance are:"
-                //         .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+                var attendees = await _mediator.Send(new EventAttendanceDetails.Query()
+                {
+                    EventId = eventId
+                });
+
+                var attendeesAsList = attendees.EventAttendee?.ToList();
+                if (attendeesAsList == null)
+                {
+                    await ReplyAsync(embed: $"The event named '{eventId}' does not exist".EmbedMessage())
+                        .ConfigureAwait(false);
+                    return;
+                }
+
+                if (!attendeesAsList.Any())
+                {
+                    await ReplyAsync(embed: "There are no confirmed attendees".EmbedMessage()).ConfigureAwait(false);
+                    return;
+                }
+
+                var stringBuilder = new StringBuilder();
+                for (int i = 1; i <= attendeesAsList.Count; i++)
+                {
+                    stringBuilder.Append($"{i}. {attendeesAsList[i - 1]}\n");
+                }
+
+                await ReplyAsync(
+                    embed: "Users who have confirmed their attendance are:"
+                        .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
             }
         }
     }
