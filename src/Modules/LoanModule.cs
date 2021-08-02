@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
 using MediatR;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Features.Events;
+using Tarscord.Core.Features.Loans;
 
 namespace Tarscord.Core.Modules
 {
@@ -25,23 +22,23 @@ namespace Tarscord.Core.Modules
         /// Usage: loan list
         /// </summary>
         /// <returns>The list of loans.</returns>
-        // [Command("list"), Summary("Shows the list of loans")]
-        // [Alias("show")]
-        // public async Task ShowLoansAsync(CancellationToken cancellationToken = default)
-        // {
-        //     var messageToReply = _mediator.Send(new Details.Query(), cancellationToken);
-        //
-        //     string messageToReplyWith = "No active events were found";
-        //
-        //     if (loans?.Any() == true)
-        //     {
-        //         string formattedEventInformation = FormatEventInformation(loans);
-        //
-        //         messageToReplyWith = $"Here are all the events:\n{formattedEventInformation}";
-        //     }
-        //
-        //     await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
-        // }
+        [Command("list"), Summary("Shows the list of loans")]
+        [Alias("show")]
+        public async Task ShowLoansAsync(CancellationToken cancellationToken = default)
+        {
+            // var messageToReply = _mediator.Send(new Details.Query(), cancellationToken);
+            //
+            // string messageToReplyWith = "No active events were found";
+            //
+            // if (loans?.Any() == true)
+            // {
+            //     string formattedEventInformation = FormatEventInformation(loans);
+            //
+            //     messageToReplyWith = $"Here are all the events:\n{formattedEventInformation}";
+            // }
+            //
+            // await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+        }
 
         // private string FormatEventInformation(IEnumerable<LoanInfo> loans)
         // {
@@ -59,15 +56,22 @@ namespace Tarscord.Core.Modules
         // }
 
         /// <summary>
-        /// Usage: loan {user}
+        /// Usage: loan {user} {amount}
         /// </summary>
         /// <returns>The generated random number</returns>
         [Command("loan"), Summary("Loans a user some money")]
         [Alias("l")]
         public async Task LoanToUserAsync(
             [Summary("The user to loan money to")] IUser user,
-            [Summary("The value of the money being lent")] float moneyBeingLent)
+            [Summary("The amount of the money being lent")] float amount)
         {
+            var createdEvent = await _mediator.Send(new Create.Command()
+            {
+                Loan = new Create.Loan()
+                {
+                }
+            });
+
             await ReplyAsync(embed: "Money Loaned".EmbedMessage()).ConfigureAwait(false);
         }
 

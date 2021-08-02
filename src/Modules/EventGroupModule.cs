@@ -116,7 +116,7 @@ namespace Tarscord.Core.Modules
                 if (users.Length == 0)
                     users = new[] {Context.User};
 
-                var confirmAttendance = await _mediator.Send(new Update.Command()
+                var eventAttendees = await _mediator.Send(new Update.Command()
                 {
                     EventAttendance = new Update.EventAttendance()
                     {
@@ -127,22 +127,22 @@ namespace Tarscord.Core.Modules
                     }
                 });
 
-                // if (confirmAttendance.EventAttendee Any())
-                // {
-                //     StringBuilder stringBuilder = new StringBuilder();
-                //     var confirmAttendanceAsList = confirmAttendance.ToList();
-                //
-                //     for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
-                //     {
-                //         stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
-                //     }
-                //
-                //     await ReplyAsync(
-                //         embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
-                //             .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
-                // }
-                // else
-                //     await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
+                var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
+                if (confirmAttendanceAsList.Any())
+                {
+                    StringBuilder stringBuilder = new StringBuilder();
+
+                    for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
+                    {
+                        stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
+                    }
+
+                    await ReplyAsync(
+                        embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
+                            .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+                }
+                else
+                    await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>
@@ -152,23 +152,32 @@ namespace Tarscord.Core.Modules
             [Command("cancel"), Summary("Confirm your attendance")]
             [Alias("unattend")]
             public async Task CancelAttendanceAsync(
-                [Summary("The event name")] string eventName,
+                [Summary("The event name")] ulong eventId,
                 [Summary("The (optional) user to confirm for")]
-                IUser user = null)
+                params IUser[] users)
             {
-                // if (user == null)
-                //     user = Context.User;
-                //
-                // bool canceledAttendance = await _eventService.CancelAttendance(eventName, user.ToCommonUser()).ConfigureAwait(false);
-                //
-                // if (canceledAttendance)
-                // {
-                //     await ReplyAsync(
-                //         embed: $"You successfully canceled your attendance for the event named '{eventName}'"
-                //             .EmbedMessage()).ConfigureAwait(false);
-                // }
-                // else
-                //     await ReplyAsync(embed: "Attendance cancellation failed".EmbedMessage()).ConfigureAwait(false);
+                users ??= new[] {Context.User};
+
+                var eventAttendees = await _mediator.Send(new Update.Command()
+                {
+                    EventAttendance = new Update.EventAttendance()
+                    {
+                        Confirmation = true,
+                        AttendeeIds = users.Select(u => u.Id).ToList(),
+                        AttendeeNames = users.Select(u => u.Username).ToList(),
+                        EventId = eventId
+                    }
+                });
+
+                var attendeesAsList = eventAttendees.EventAttendee?.ToList();
+                if (attendeesAsList?.Any() ?? false)
+                {
+                    await ReplyAsync(
+                        embed: $"You successfully canceled your attendance for the event with Id '{eventId}'"
+                            .EmbedMessage()).ConfigureAwait(false);
+                }
+                else
+                    await ReplyAsync(embed: "Attendance cancellation failed".EmbedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>
