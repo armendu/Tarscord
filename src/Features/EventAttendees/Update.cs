@@ -4,36 +4,48 @@ using System.Threading.Tasks;
 using AutoMapper;
 using FluentValidation;
 using MediatR;
+using Tarscord.Core.Domain;
 using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Core.Features.EventAttendees
 {
     public class Update
     {
-        public class EventAttendance
+        public class EventAttendees
         {
             public ulong EventId { get; set; }
 
-            public IList<ulong> AttendeeIds { get; set; }
-
-            public IList<string> AttendeeNames { get; set; }
+            public IEnumerable<Attendee> Attendees { get; set; }
 
             public bool Confirmation { get; set; }
         }
 
+        public class Attendee
+        {
+            public ulong Id { get; set; }
+        }
+
         public class Command : IRequest<EventAttendeesEnvelope>
         {
-            public EventAttendance EventAttendance { get; init; }
+            public EventAttendees EventAttendees { get; init; }
         }
 
         public class CommandValidator : AbstractValidator<Command>
         {
             public CommandValidator()
             {
-                RuleFor(x => x.EventAttendance).NotNull();
-                RuleFor(x => x.EventAttendance.AttendeeIds).NotEmpty();
-                RuleFor(x => x.EventAttendance.AttendeeNames).NotEmpty();
-                RuleFor(x => x.EventAttendance.EventId).NotEmpty().GreaterThan((ulong) 0);
+                RuleFor(x => x.EventAttendees).NotNull();
+                RuleFor(x => x.EventAttendees.EventId).GreaterThan((ulong)0);
+                RuleForEach(x => x.EventAttendees.Attendees).NotNull().NotEmpty().SetValidator(new AttendeeValidator());
+            }
+
+            private class AttendeeValidator : AbstractValidator<Attendee>
+            {
+                public AttendeeValidator()
+                {
+                    // TODO: Need to add more validations here.
+                    RuleFor(x => x.Id).GreaterThan((ulong)0);
+                }
             }
         }
 
@@ -50,11 +62,18 @@ namespace Tarscord.Core.Features.EventAttendees
 
             public async Task<EventAttendeesEnvelope> Handle(Command message, CancellationToken cancellationToken)
             {
-                var eventAttendee = await _eventAttendeesRepository
-                    .InsertAllAsync(_mapper.Map<List<Domain.EventAttendee>>(message.EventAttendance))
-                    .ConfigureAwait(false);
+                var updatedAttendees = new List<EventAttendee>();
 
-                return new EventAttendeesEnvelope(eventAttendee);
+                foreach (var attendee in message.EventAttendees.Attendees)
+                {
+                    var eventAttendee = await _eventAttendeesRepository
+                        .UpdateItem(_mapper.Map<EventAttendee>(attendee))
+                        .ConfigureAwait(false);
+
+                    updatedAttendees.Add(eventAttendee);
+                }
+
+                return new EventAttendeesEnvelope(updatedAttendees);
             }
         }
     }

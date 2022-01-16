@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.EventAttendees;
 using Tarscord.Core.Features.Events;
+
 using EventAttendanceDetails = Tarscord.Core.Features.EventAttendees.Details;
 using EventAttendanceList = Tarscord.Core.Features.EventAttendees.List;
 
@@ -113,24 +114,24 @@ namespace Tarscord.Core.Modules
                 [Summary("The (optional) user to confirm for")]
                 params IUser[] users)
             {
-                if (users.Length == 0)
-                    users = new[] {Context.User};
-
-                var confirmAttendance = await _mediator.Send(new Update.Command()
-                {
-                    EventAttendance = new Update.EventAttendance()
-                    {
-                        Confirmation = true,
-                        AttendeeIds = users.Select(u => u.Id).ToList(),
-                        AttendeeNames = users.Select(u => u.Username).ToList(),
-                        EventId = eventId
-                    }
-                });
-
-                // if (confirmAttendance.EventAttendee Any())
+                // if (users.Length == 0)
+                //     users = new[] {Context.User};
+                //
+                // var eventAttendees = await _mediator.Send(new Update.Command()
+                // {
+                //     EventAttendance = new Update.EventAttendance()
+                //     {
+                //         Confirmation = true,
+                //         AttendeeIds = users.Select(u => u.Id).ToList(),
+                //         AttendeeNames = users.Select(u => u.Username).ToList(),
+                //         EventId = eventId
+                //     }
+                // });
+                //
+                // var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
+                // if (confirmAttendanceAsList.Any())
                 // {
                 //     StringBuilder stringBuilder = new StringBuilder();
-                //     var confirmAttendanceAsList = confirmAttendance.ToList();
                 //
                 //     for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
                 //     {
@@ -152,19 +153,28 @@ namespace Tarscord.Core.Modules
             [Command("cancel"), Summary("Confirm your attendance")]
             [Alias("unattend")]
             public async Task CancelAttendanceAsync(
-                [Summary("The event name")] string eventName,
+                [Summary("The event name")] ulong eventId,
                 [Summary("The (optional) user to confirm for")]
-                IUser user = null)
+                params IUser[] users)
             {
-                // if (user == null)
-                //     user = Context.User;
+                // users ??= new[] {Context.User};
                 //
-                // bool canceledAttendance = await _eventService.CancelAttendance(eventName, user.ToCommonUser()).ConfigureAwait(false);
+                // var eventAttendees = await _mediator.Send(new Update.Command()
+                // {
+                //     EventAttendance = new Update.EventAttendance()
+                //     {
+                //         Confirmation = true,
+                //         AttendeeIds = users.Select(u => u.Id).ToList(),
+                //         AttendeeNames = users.Select(u => u.Username).ToList(),
+                //         EventId = eventId
+                //     }
+                // });
                 //
-                // if (canceledAttendance)
+                // var attendeesAsList = eventAttendees.EventAttendee?.ToList();
+                // if (attendeesAsList?.Any() ?? false)
                 // {
                 //     await ReplyAsync(
-                //         embed: $"You successfully canceled your attendance for the event named '{eventName}'"
+                //         embed: $"You successfully canceled your attendance for the event with Id '{eventId}'"
                 //             .EmbedMessage()).ConfigureAwait(false);
                 // }
                 // else

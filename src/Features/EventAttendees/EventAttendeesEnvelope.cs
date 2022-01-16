@@ -3,5 +3,5 @@ using Tarscord.Core.Domain;
 
 namespace Tarscord.Core.Features.EventAttendees
 {
-    public record EventAttendeesEnvelope(IList<EventAttendee> EventAttendee);
+    public record EventAttendeesEnvelope(IEnumerable<EventAttendee> EventAttendee);
 }

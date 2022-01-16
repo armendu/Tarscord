@@ -2,7 +2,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Tarscord.Core.Features.Events;
 using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Core.Features.EventAttendees
