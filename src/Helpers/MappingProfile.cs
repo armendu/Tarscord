@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Tarscord.Core.Domain;
 
-using UpdateEventAttendance = Tarscord.Core.Features.EventAttendees.Update.EventAttendance;
+using UpdateEventAttendance = Tarscord.Core.Features.EventAttendees.Update.EventAttendees;
 using CreateEventInfo = Tarscord.Core.Features.Events.Create.EventInfo;
 using CreateLoan = Tarscord.Core.Features.Loans.Create.Loan;
 
@@ -15,7 +15,7 @@ namespace Tarscord.Core.Helpers
 
             CreateMap<CreateEventInfo, EventInfo>();
 
-            CreateMap<UpdateEventAttendance, Domain.EventAttendee>();
+            CreateMap<UpdateEventAttendance, EventAttendee>();
 
             #endregion
 
