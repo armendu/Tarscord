@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Tarscord.Core.Domain;
-using Tarscord.Core.Features.EventAttendees;
 using Tarscord.Core.Features.Loans;
+
+using LoanUpdate = Tarscord.Core.Features.Loans.Update;
+using EventUpdate = Tarscord.Core.Features.EventAttendees.Update;
 
 namespace Tarscord.Core.Helpers
 {
@@ -13,7 +15,7 @@ namespace Tarscord.Core.Helpers
 
             CreateMap<Tarscord.Core.Features.Events.Create.EventInfo, EventInfo>();
 
-            CreateMap<Update.Attendee, EventAttendee>()
+            CreateMap<EventUpdate.Attendee, EventAttendee>()
                 .ForMember(x => x.Id, opt => opt.Ignore())
                 .ForMember(x => x.Created, opt => opt.Ignore())
                 .ForMember(x => x.Updated, opt => opt.Ignore());
@@ -32,6 +34,15 @@ namespace Tarscord.Core.Helpers
 
             CreateMap<Loan, LoanDto>()
                 .ForMember(x => x.Amount, opt => opt.MapFrom(src => src.AmountLoaned));
+
+            CreateMap<LoanUpdate.Loan, Domain.Loan>()
+                .ForMember(x => x.Description, opt => opt.Ignore())
+                .ForMember(x => x.AmountLoaned, opt => opt.Ignore())
+                .ForMember(x => x.AmountPayed, opt => opt.Ignore())
+                .ForMember(x => x.Confirmed, opt => opt.Ignore())
+                .ForMember(x => x.Id, opt => opt.Ignore())
+                .ForMember(x => x.Created, opt => opt.Ignore())
+                .ForMember(x => x.Updated, opt => opt.Ignore());
 
             #endregion
         }

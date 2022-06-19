@@ -75,20 +75,29 @@ namespace Tarscord.Core.Modules
                 [Summary("The amount of the money being lent")] decimal amount,
                 [Summary("The reason you're loaning the money")] string description)
             {
-                var createdEvent = await _mediator.Send(new Create.Command
+                var loanEnvelope = await _mediator.Send(new Create.Command
                 {
+                    // Loan = new Create.Loan
+                    // {
+                    //     Amount = amount,
+                    //     LoanedTo = user.Id,
+                    //     LoanedToUsername = user.Username,
+                    //     LoanedFrom = Context.User.Id,
+                    //     LoanedFromUsername = Context.User.Username,
+                    //     Description = description
+                    // }
                     Loan = new Create.Loan
                     {
                         Amount = amount,
-                        LoanedTo = user.Id,
-                        LoanedToUsername = user.Username,
-                        LoanedFrom = Context.User.Id,
-                        LoanedFromUsername = Context.User.Username,
+                        LoanedTo = Context.User.Id,
+                        LoanedToUsername = Context.User.Username,
+                        LoanedFrom = user.Id,
+                        LoanedFromUsername = user.Username,
                         Description = description
                     }
                 });
 
-                if (createdEvent.Loan != null)
+                if (loanEnvelope.Loan != null)
                 {
                     await ReplyAsync(embed: "Money Loaned".EmbedMessage()).ConfigureAwait(false);
                 }
@@ -106,10 +115,29 @@ namespace Tarscord.Core.Modules
             [Alias("return", "removeloan", "deleteloan", "payloan")]
             public async Task PaybackToUserAsync(
                 [Summary("The user to loan money to")] IUser user,
-                [Summary("The value of the money being lent")]
-                float moneyBeingLent)
+                [Summary("The value of the money being lent")] decimal amountBeingPayedBack)
             {
-                await ReplyAsync(embed: "Money Loaned".EmbedMessage()).ConfigureAwait(false);
+                var loanEnvelope = await _mediator.Send(new Update.Command
+                {
+                    Loan = new Update.Loan
+                    {
+                        Amount = amountBeingPayedBack,
+                        LoanedTo = user.Id,
+                        LoanedToUsername = user.Username,
+                        LoanedFrom = Context.User.Id,
+                        LoanedFromUsername = Context.User.Username
+                    }
+                });
+
+                var messageToReplyWith = "";
+                if (loanEnvelope.Loan != null)
+                {
+                    var formattedEventInformation =
+                        FormatEventInformation(_mapper.Map<List<LoanDto>>(loanEnvelope.Loan));
+                    messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
+                }
+
+                await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
             }
         }
     }

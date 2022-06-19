@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10</LangVersion>
     <AssemblyName>Tarscord.Core</AssemblyName>
     <RootNamespace>Tarscord.Core</RootNamespace>
     <Title>Tarscord</Title>
