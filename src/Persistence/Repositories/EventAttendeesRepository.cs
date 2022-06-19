@@ -1,11 +1,13 @@
-﻿using Dapper.Contrib.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System;
 using Tarscord.Core.Domain;
+using Tarscord.Persistence;
+using System.Threading.Tasks;
+using Dapper.Contrib.Extensions;
+using System.Collections.Generic;
 using Tarscord.Persistence.Interfaces;
+using Tarscord.Persistence.Repositories;
 
-namespace Tarscord.Persistence.Repositories
+namespace Tarscord.Core.Persistence.Repositories
 {
     public class EventAttendeesRepository : BaseRepository<EventAttendee>, IEventAttendeesRepository
     {

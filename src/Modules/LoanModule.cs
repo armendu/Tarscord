@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
 using MediatR;
@@ -24,9 +23,9 @@ namespace Tarscord.Core.Modules
         /// <returns>The list of loans.</returns>
         [Command("list"), Summary("Shows the list of loans")]
         [Alias("show")]
-        public async Task ShowLoansAsync(CancellationToken cancellationToken = default)
+        public async Task ShowLoansAsync()
         {
-            // var messageToReply = _mediator.Send(new Details.Query(), cancellationToken);
+            // var messageToReply = _mediator.Send(new Details.Query());
             //
             // string messageToReplyWith = "No active events were found";
             //
@@ -69,6 +68,7 @@ namespace Tarscord.Core.Modules
             {
                 Loan = new Create.Loan()
                 {
+                    
                 }
             });
 

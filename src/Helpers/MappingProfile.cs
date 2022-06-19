@@ -1,9 +1,6 @@
 ﻿using AutoMapper;
 using Tarscord.Core.Domain;
-
-using UpdateEventAttendance = Tarscord.Core.Features.EventAttendees.Update.EventAttendees;
-using CreateEventInfo = Tarscord.Core.Features.Events.Create.EventInfo;
-using CreateLoan = Tarscord.Core.Features.Loans.Create.Loan;
+using Tarscord.Core.Features.EventAttendees;
 
 namespace Tarscord.Core.Helpers
 {
@@ -13,15 +10,18 @@ namespace Tarscord.Core.Helpers
         {
             #region Events
 
-            CreateMap<CreateEventInfo, EventInfo>();
+            CreateMap<Tarscord.Core.Features.Events.Create.EventInfo, EventInfo>();
 
-            CreateMap<UpdateEventAttendance, EventAttendee>();
+            CreateMap<Update.Attendee, EventAttendee>()
+                .ForMember(x => x.Id, opt => opt.Ignore())
+                .ForMember(x => x.Created, opt => opt.Ignore())
+                .ForMember(x => x.Updated, opt => opt.Ignore());
 
             #endregion
 
             #region Loans
 
-            CreateMap<CreateLoan, Loan>();
+            //CreateMap<Tarscord.Core.Features.Loans.Create.Loan, Loan>();
 
             #endregion
         }

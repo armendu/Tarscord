@@ -61,7 +61,7 @@ namespace Tarscord.Core.Modules
             [Command("create"), Summary("Create an event")]
             [Alias("add", "make", "generate")]
             public async Task CreateEventAsync(
-                [Summary("The event name"), Required(ErrorMessage = "Please provide a unique name for your event")]
+                [Summary("The event name"), Required(ErrorMessage = "Please provide a name for your event")]
                 string eventName,
                 [Summary("The event date and time")] string dateTime = "",
                 [Summary("The event description")] params string[] eventDescription)
@@ -111,39 +111,43 @@ namespace Tarscord.Core.Modules
             [Command("confirm"), Summary("Confirm your attendance")]
             public async Task ConfirmAsync(
                 [Summary("The event name")] ulong eventId,
-                [Summary("The (optional) user to confirm for")]
-                params IUser[] users)
+                [Summary("The (optional) user to confirm for")] params IUser[] users)
             {
-                // if (users.Length == 0)
-                //     users = new[] {Context.User};
-                //
-                // var eventAttendees = await _mediator.Send(new Update.Command()
-                // {
-                //     EventAttendance = new Update.EventAttendance()
-                //     {
-                //         Confirmation = true,
-                //         AttendeeIds = users.Select(u => u.Id).ToList(),
-                //         AttendeeNames = users.Select(u => u.Username).ToList(),
-                //         EventId = eventId
-                //     }
-                // });
-                //
-                // var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
-                // if (confirmAttendanceAsList.Any())
-                // {
-                //     StringBuilder stringBuilder = new StringBuilder();
-                //
-                //     for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
-                //     {
-                //         stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
-                //     }
-                //
-                //     await ReplyAsync(
-                //         embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
-                //             .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
-                // }
-                // else
-                //     await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
+                if (users.Length == 0)
+                    users = new[] { Context.User };
+
+                var eventAttendees = await _mediator.Send(new Update.Command()
+                {
+                    EventAttendees = new Update.EventAttendees()
+                    {
+                        Confirmation = true,
+                        Attendees = users.Select(u => new Update.Attendee
+                        {
+                            AttendeeId = u.Id,
+                            Confirmed = true,
+                            AttendeeName = u.Username,
+                            EventInfoId = eventId.ToString()
+                        }).ToList(),
+                        EventId = eventId
+                    }
+                });
+
+                var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
+                if (confirmAttendanceAsList.Any())
+                {
+                    StringBuilder stringBuilder = new StringBuilder();
+
+                    for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
+                    {
+                        stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
+                    }
+
+                    await ReplyAsync(
+                        embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
+                            .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+                }
+                else
+                    await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
             }
 
             /// <summary>

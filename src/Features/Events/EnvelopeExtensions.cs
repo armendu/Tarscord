@@ -1,6 +1,5 @@
 using System.Text;
 using Discord;
-using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Features.Events
@@ -14,9 +13,9 @@ namespace Tarscord.Core.Features.Events
             foreach (var eventInfo in events.EventInfo)
             {
                 eventsInformation
-                    .Append("'").Append(eventInfo.Id).Append("': ")
+                    .Append(eventInfo.Id).Append(": '")
                     .Append(eventInfo.EventName)
-                    .Append(" by user: ").Append(eventInfo.EventOrganizer).Append(".\n");
+                    .Append("' by user: ").Append(eventInfo.EventOrganizer).Append(".\n");
             }
 
             if (eventsInformation.Length == 0)
@@ -34,7 +33,9 @@ namespace Tarscord.Core.Features.Events
                 return "Event does not exist".EmbedMessage();
             }
 
-            return $"{eventInfoEnvelope.EventInfo.EventName} created by '{eventInfoEnvelope.EventInfo.EventOrganizer}'".EmbedMessage();
+            return
+                $"'{eventInfoEnvelope.EventInfo.EventName}' created by user {eventInfoEnvelope.EventInfo.EventOrganizer}. Use this Id: {eventInfoEnvelope.EventInfo.Id} to get the details of the event"
+                    .EmbedMessage();
         }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 using Tarscord.Core.Helpers;
+using Tarscord.Core.Persistence.Repositories;
 using Tarscord.Core.Services;
 using Tarscord.Persistence;
 using Tarscord.Persistence.Interfaces;

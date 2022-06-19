@@ -22,7 +22,13 @@ namespace Tarscord.Core.Features.EventAttendees
 
         public class Attendee
         {
-            public ulong Id { get; set; }
+            public string EventInfoId { get; set; }
+
+            public ulong AttendeeId { get; set; }
+
+            public string AttendeeName { get; set; }
+
+            public bool Confirmed { get; set; }
         }
 
         public class Command : IRequest<EventAttendeesEnvelope>
@@ -43,8 +49,9 @@ namespace Tarscord.Core.Features.EventAttendees
             {
                 public AttendeeValidator()
                 {
-                    // TODO: Need to add more validations here.
-                    RuleFor(x => x.Id).GreaterThan((ulong)0);
+                    RuleFor(x => x.EventInfoId).NotNull().NotEmpty();
+                    RuleFor(x => x.AttendeeId).GreaterThan((ulong)0);
+                    RuleFor(x => x.AttendeeName).NotNull().NotEmpty();
                 }
             }
         }
