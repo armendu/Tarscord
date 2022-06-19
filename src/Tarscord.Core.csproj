@@ -38,8 +38,5 @@
       <None Update="Resources\config.yml">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="Resources\messages.yml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
   </ItemGroup>
 </Project>

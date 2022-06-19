@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using MediatR;
@@ -40,6 +39,9 @@ namespace Tarscord.Core
             var services = new ServiceCollection();
             ConfigureServices(services);
 
+            // Setup the Global messages
+            SetupGlobalMessages();
+
             // Build the service provider
             var provider = services.BuildServiceProvider();
 
@@ -78,6 +80,11 @@ namespace Tarscord.Core
             .AddScoped<ILoanRepository, LoanRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>()
             .AddMediatR(typeof(Startup));
+        }
+
+        private void SetupGlobalMessages()
+        {
+            GlobalMessages.EuroSign = Configuration["messages:euro_sign"];
         }
     }
 }
