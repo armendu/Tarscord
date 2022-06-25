@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -7,7 +8,7 @@ using Tarscord.Persistence.Interfaces;
 
 namespace Tarscord.Core.Features.Loans
 {
-    public class Create
+    public class Update
     {
         public class Loan
         {
@@ -16,12 +17,11 @@ namespace Tarscord.Core.Features.Loans
             public string LoanedFromUsername { get; set; }
             public ulong LoanedTo { get; set; }
             public string LoanedToUsername { get; set; }
-            public string Description { get; set; }
         }
 
         public class Command : IRequest<LoanEnvelope>
         {
-            public Loan Loan { get; set; }
+            public Loan Loan { get; init; }
         }
 
         public class CommandValidator : AbstractValidator<Command>
@@ -32,23 +32,34 @@ namespace Tarscord.Core.Features.Loans
             }
         }
 
-        public class Handler : IRequestHandler<Command, LoanEnvelope>
+        public class CommandHandler : IRequestHandler<Command, LoanEnvelope>
         {
             private readonly ILoanRepository _loanRepository;
             private readonly IMapper _mapper;
 
-            public Handler(ILoanRepository loanRepository, IMapper mapper)
+            public CommandHandler(ILoanRepository loanRepository, IMapper mapper)
             {
                 _loanRepository = loanRepository;
                 _mapper = mapper;
             }
 
-            public async Task<LoanEnvelope> Handle(Command message, CancellationToken cancellationToken)
+            public async Task<LoanEnvelope> Handle(Command request, CancellationToken cancellationToken)
             {
-                var createdLoan = await _loanRepository.InsertAsync(_mapper.Map<Domain.Loan>(message.Loan))
-                    .ConfigureAwait(false);
+                var loans = await _loanRepository
+                    .FindBy(x => x.LoanedFrom == request.Loan.LoanedFrom
+                                 && x.LoanedTo == request.Loan.LoanedTo);
 
-                return new LoanEnvelope(createdLoan);
+                var loanToUpdate = loans?.FirstOrDefault();
+                if (loanToUpdate == null)
+                {
+                    return new LoanEnvelope(null);
+                }
+
+                loanToUpdate.AmountPayed += request.Loan.Amount;
+                loanToUpdate.AmountLoaned -= request.Loan.Amount;
+                var updatedLoan = await _loanRepository.UpdateItem(_mapper.Map<Domain.Loan>(loanToUpdate));
+
+                return new LoanEnvelope(updatedLoan);
             }
         }
     }

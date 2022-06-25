@@ -14,8 +14,8 @@
 
         private const string LoanQuery = "CREATE TABLE Loans (Id INTEGER PRIMARY KEY, LoanedFrom INTEGER," +
                                          "LoanedFromUsername NVARCHAR(100), LoanedTo INTEGER, " +
-                                         "LoanedToUsername NVARCHAR(100), Description NVARCHAR(1000), ValueLoaned REAL, " +
-                                         "Confirmed BOOL, Created DATETIME, Updated DATETIME);";
+                                         "LoanedToUsername NVARCHAR(100), Description NVARCHAR(1000), AmountLoaned REAL, " +
+                                         "AmountPayed REAL, Confirmed BOOL, Created DATETIME, Updated DATETIME);";
 
         public static string GetSetupQuery()
         {
