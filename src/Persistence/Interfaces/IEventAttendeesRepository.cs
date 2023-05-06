@@ -2,10 +2,9 @@
 using System.Threading.Tasks;
 using Tarscord.Core.Domain;
 
-namespace Tarscord.Persistence.Interfaces
+namespace Tarscord.Core.Persistence.Interfaces;
+
+public interface IEventAttendeesRepository : IBaseRepository<EventAttendee>
 {
-    public interface IEventAttendeesRepository : IBaseRepository<EventAttendee>
-    {
-        Task<IList<EventAttendee>> InsertAllAsync(IList<EventAttendee> items);
-    }
+    Task<IList<EventAttendee>> InsertAllAsync(IList<EventAttendee> items);
 }

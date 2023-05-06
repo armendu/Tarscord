@@ -2,41 +2,40 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using MediatR;
-using Tarscord.Persistence.Interfaces;
+using Tarscord.Core.Persistence.Interfaces;
 
-namespace Tarscord.Core.Features.EventAttendees
+namespace Tarscord.Core.Features.EventAttendees;
+
+public class Details
 {
-    public class Details
+    public class Query : IRequest<EventAttendeesEnvelope>
     {
-        public class Query : IRequest<EventAttendeesEnvelope>
+        public ulong EventId { get; init; }
+    }
+
+    public class QueryValidator : AbstractValidator<Query>
+    {
+        public QueryValidator()
         {
-            public ulong EventId { get; init; }
+            RuleFor(x => x.EventId).NotNull().NotEmpty().GreaterThan((ulong)0);
+        }
+    }
+
+    public class QueryHandler : IRequestHandler<Query, EventAttendeesEnvelope>
+    {
+        private readonly IEventAttendeesRepository _eventAttendeesRepository;
+
+        public QueryHandler(IEventAttendeesRepository eventAttendeesRepository)
+        {
+            _eventAttendeesRepository = eventAttendeesRepository;
         }
 
-        public class QueryValidator : AbstractValidator<Query>
+        public async Task<EventAttendeesEnvelope> Handle(Query message, CancellationToken cancellationToken)
         {
-            public QueryValidator()
-            {
-                RuleFor(x => x.EventId).NotNull().NotEmpty().GreaterThan((ulong) 0);
-            }
-        }
+            var events = await _eventAttendeesRepository.FindBy(eventInfo => eventInfo.Id == message.EventId)
+                .ConfigureAwait(false);
 
-        public class QueryHandler : IRequestHandler<Query, EventAttendeesEnvelope>
-        {
-            private readonly IEventAttendeesRepository _eventAttendeesRepository;
-
-            public QueryHandler(IEventAttendeesRepository eventAttendeesRepository)
-            {
-                _eventAttendeesRepository = eventAttendeesRepository;
-            }
-
-            public async Task<EventAttendeesEnvelope> Handle(Query message, CancellationToken cancellationToken)
-            {
-                var events = await _eventAttendeesRepository.FindBy(eventInfo => eventInfo.Id == message.EventId)
-                    .ConfigureAwait(false);
-
-                return new EventAttendeesEnvelope(null);
-            }
+            return new EventAttendeesEnvelope(null);
         }
     }
 }

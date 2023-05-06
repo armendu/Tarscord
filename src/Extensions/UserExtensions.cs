@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using Tarscord.Core.Domain;
 
-namespace Tarscord.Core.Extensions
-{
-    public static class UserExtensions
-    {
-        public static User ToCommonUser(this IUser user)
-        {
-            return new User
-            {
-                Id = user.Id,
-                Username = user.Username,
-            };
-        }
+namespace Tarscord.Core.Extensions;
 
-        public static IEnumerable<User> ToCommonUsers(this IUser[] users)
+public static class UserExtensions
+{
+    public static User ToCommonUser(this IUser user)
+    {
+        return new User
         {
-            return users.Select(ToCommonUser);
-        }
+            Id = user.Id,
+            Username = user.Username,
+        };
+    }
+
+    public static IEnumerable<User> ToCommonUsers(this IUser[] users)
+    {
+        return users.Select(ToCommonUser);
     }
 }

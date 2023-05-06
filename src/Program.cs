@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 
-namespace Tarscord.Core
+namespace Tarscord.Core;
+
+class Program
 {
-    class Program
-    {
-        public static Task Main(string[] args)
-            => Startup.RunAsync(args);
-    }
+    public static Task Main(string[] args)
+        => Startup.RunAsync(args);
 }

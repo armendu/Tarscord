@@ -1,8 +1,7 @@
 ﻿using Tarscord.Core.Domain;
 
-namespace Tarscord.Persistence.Interfaces
+namespace Tarscord.Core.Persistence.Interfaces;
+
+public interface ILoanRepository : IBaseRepository<Loan>
 {
-    public interface ILoanRepository: IBaseRepository<Loan>
-    {
-    }
 }

@@ -1,7 +1,6 @@
-namespace Tarscord.Core.Helpers
+namespace Tarscord.Core.Helpers;
+
+public static class GlobalMessages
 {
-    public static class GlobalMessages
-    {
-        public static string EuroSign { get; set; }
-    }
+    public static string EuroSign { get; set; }
 }

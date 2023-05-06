@@ -1,11 +1,10 @@
 using Discord;
 
-namespace Tarscord.Core.Domain
-{
-    public class ReminderInfo
-    {
-        public IUser User { get; set; }
+namespace Tarscord.Core.Domain;
 
-        public string Message { get; set; }
-    }
+public class ReminderInfo
+{
+    public IUser User { get; set; }
+
+    public string Message { get; set; }
 }

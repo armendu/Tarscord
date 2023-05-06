@@ -1,13 +1,12 @@
 ﻿using Tarscord.Core.Domain;
-using Tarscord.Persistence.Interfaces;
+using Tarscord.Core.Persistence.Interfaces;
 
-namespace Tarscord.Persistence.Repositories
+namespace Tarscord.Core.Persistence.Repositories;
+
+public class EventRepository : BaseRepository<EventInfo>, IEventRepository
 {
-    public class EventRepository : BaseRepository<EventInfo>, IEventRepository
+    public EventRepository(IDatabaseConnection connection)
+        : base(connection)
     {
-        public EventRepository(IDatabaseConnection connection)
-            : base(connection)
-        {
-        }
     }
 }

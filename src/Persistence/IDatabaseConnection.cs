@@ -1,9 +1,8 @@
 ﻿using System.Data;
 
-namespace Tarscord.Persistence
+namespace Tarscord.Core.Persistence;
+
+public interface IDatabaseConnection
 {
-    public interface IDatabaseConnection
-    {
-        IDbConnection Connection { get; }
-    }
+    IDbConnection Connection { get; }
 }

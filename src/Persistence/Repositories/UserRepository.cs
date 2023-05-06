@@ -1,13 +1,12 @@
 ﻿using Tarscord.Core.Domain;
-using Tarscord.Persistence.Interfaces;
+using Tarscord.Core.Persistence.Interfaces;
 
-namespace Tarscord.Persistence.Repositories
+namespace Tarscord.Core.Persistence.Repositories;
+
+public class UserRepository : BaseRepository<User>, IUserRepository
 {
-    public class UserRepository : BaseRepository<User>, IUserRepository
+    public UserRepository(IDatabaseConnection connection)
+        : base(connection)
     {
-        public UserRepository(IDatabaseConnection connection)
-            : base(connection)
-        {
-        }
     }
 }

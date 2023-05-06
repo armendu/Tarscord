@@ -2,30 +2,29 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Tarscord.Persistence.Interfaces;
+using Tarscord.Core.Persistence.Interfaces;
 
-namespace Tarscord.Core.Features.Loans
+namespace Tarscord.Core.Features.Loans;
+
+public class List
 {
-    public class List
+    public record Query : IRequest<LoanListEnvelope>;
+
+    public class QueryHandler : IRequestHandler<Query, LoanListEnvelope>
     {
-        public record Query : IRequest<LoanListEnvelope>;
+        private readonly ILoanRepository _loanRepository;
 
-        public class QueryHandler : IRequestHandler<Query, LoanListEnvelope>
+        public QueryHandler(ILoanRepository loanRepository)
         {
-            private readonly ILoanRepository _loanRepository;
+            _loanRepository = loanRepository;
+        }
 
-            public QueryHandler(ILoanRepository loanRepository)
-            {
-                _loanRepository = loanRepository;
-            }
+        public async Task<LoanListEnvelope> Handle(Query message, CancellationToken cancellationToken)
+        {
+            var loans =
+                await _loanRepository.GetAllAsync().ConfigureAwait(false);
 
-            public async Task<LoanListEnvelope> Handle(Query message, CancellationToken cancellationToken)
-            {
-                var loans =
-                    await _loanRepository.GetAllAsync().ConfigureAwait(false);
-
-                return new LoanListEnvelope(loans.ToList());
-            }
+            return new LoanListEnvelope(loans.ToList());
         }
     }
 }

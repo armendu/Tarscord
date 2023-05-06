@@ -1,12 +1,11 @@
 ﻿using Xunit;
 
-namespace Tarscord.Core.Tests.ServicesTests
+namespace Tarscord.Core.Tests.ServicesTests;
+
+public class TimerServiceTests
 {
-    public class TimerServiceTests
+    [Fact]
+    public void ShouldAddReminder()
     {
-        [Fact]
-        public void ShouldAddReminder()
-        {
-        }
     }
 }

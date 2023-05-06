@@ -1,21 +1,20 @@
 ﻿using System;
 
-namespace Tarscord.Persistence.Exceptions
+namespace Tarscord.Core.Persistence.Exceptions;
+
+public class OperationFailedException : Exception
 {
-    public class OperationFailedException : Exception
+    public OperationFailedException() : base()
     {
-        public OperationFailedException() : base()
-        {
-        }
+    }
 
-        public OperationFailedException(string message)
-            : base(message)
-        {
-        }
+    public OperationFailedException(string message)
+        : base(message)
+    {
+    }
 
-        public OperationFailedException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    public OperationFailedException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }
