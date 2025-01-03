@@ -1,30 +1,27 @@
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Tarscord.Core.Persistence.Interfaces;
+using Microsoft.Extensions.Logging;
+using Tarscord.Core.Domain;
+using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
-public class List
+public record GetEventInfosQuery : IRequest<EventInfo>;
+
+public class GetEventInfosQueryHandler : IRequestHandler<GetEventInfosQuery, EventInfo>
 {
-    public record Query : IRequest<EventInfoListEnvelope>;
+    private readonly ILogger<GetEventInfosQueryHandler> _logger;
+    private readonly IDatabaseConnection _databaseConnection;
 
-    public class QueryHandler : IRequestHandler<Query, EventInfoListEnvelope>
+    public GetEventInfosQueryHandler(ILogger<GetEventInfosQueryHandler> logger, IDatabaseConnection databaseConnection)
     {
-        private readonly IEventRepository _eventRepository;
+        _logger = logger;
+        _databaseConnection = databaseConnection;
+    }
 
-        public QueryHandler(IEventRepository eventRepository)
-        {
-            _eventRepository = eventRepository;
-        }
-
-        public async Task<EventInfoListEnvelope> Handle(Query message, CancellationToken cancellationToken)
-        {
-            var events =
-                await _eventRepository.GetAllAsync().ConfigureAwait(false);
-
-            return new EventInfoListEnvelope(events.ToList());
-        }
+    public Task<EventInfo> Handle(GetEventInfosQuery request, CancellationToken cancellationToken)
+    {
+        throw new System.NotImplementedException();
     }
 }

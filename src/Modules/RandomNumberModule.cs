@@ -2,7 +2,6 @@
 using System;
 using System.Threading.Tasks;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Helpers;
 
 namespace Tarscord.Core.Modules;
 
@@ -19,16 +18,16 @@ public class RandomNumberModule : ModuleBase
         [Summary("The lower limit")] int min,
         [Summary("The upper limit")] int max)
     {
-        string generatedNumber;
+        int generatedNumber = 0;
         try
         {
-            generatedNumber = CustomRandomNumberGenerator.GenerateNumber(min, max).ToString();
+            generatedNumber = Random.Shared.Next(min, max);
         }
         catch (Exception)
         {
             throw new Exception("Wrong command usage. Try: random lower-limit upper-limit");
         }
 
-        await ReplyAsync(embed: generatedNumber.EmbedMessage()).ConfigureAwait(false);
+        await ReplyAsync(embed: generatedNumber.ToString().EmbedMessage()).ConfigureAwait(false);
     }
 }

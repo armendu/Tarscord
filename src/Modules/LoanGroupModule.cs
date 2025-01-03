@@ -4,12 +4,8 @@ using System.Text;
 using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
-using AutoMapper;
 using MediatR;
-using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Loans;
-using Tarscord.Core.Helpers;
-using Tarscord.Core.Persistence.Interfaces;
 
 namespace Tarscord.Core.Modules;
 
@@ -20,14 +16,10 @@ class LoanGroupModule
     public class LoanModule : ModuleBase
     {
         private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
-        private readonly IEventRepository _eventRepository;
 
-        public LoanModule(IMediator mediator, IMapper mapper, IEventRepository eventRepository)
+        public LoanModule(IMediator mediator)
         {
             _mediator = mediator;
-            _mapper = mapper;
-            _eventRepository = eventRepository;
         }
 
         /// <summary>
@@ -38,19 +30,19 @@ class LoanGroupModule
         [Alias("show")]
         public async Task ShowLoansAsync()
         {
-            var loanList = await _mediator.Send(new List.Query());
-
-            string messageToReplyWith = "No active loans were found";
-
-            if (loanList.Loans?.Any() == true)
-            {
-                string formattedEventInformation =
-                    FormatEventInformation(_mapper.Map<List<LoanDto>>(loanList.Loans));
-
-                messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
-            }
-
-            await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+            // var loanList = await _mediator.Send(new GetLoansQuery.Query());
+            //
+            // string messageToReplyWith = "No active loans were found";
+            //
+            // if (loanList.Loans?.Any() == true)
+            // {
+            //     string formattedEventInformation =
+            //         FormatEventInformation(_mapper.Map<List<LoanDto>>(loanList.Loans));
+            //
+            //     messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
+            // }
+            //
+            // await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
         }
 
         private string FormatEventInformation(IList<LoanDto> loans)
@@ -62,7 +54,7 @@ class LoanGroupModule
                 messageToReply.Append(i + 1).Append(". '")
                     .Append(loans[i].LoanedToUsername).Append("' owns '")
                     .Append(loans[i].LoanedFromUsername).Append("' ")
-                    .Append(loans[i].Amount).Append(GlobalMessages.EuroSign).Append(".\n");
+                    .Append(loans[i].Amount).Append('€').Append(".\n");
             }
 
             return messageToReply.ToString();
@@ -80,7 +72,7 @@ class LoanGroupModule
             [Summary("The reason you're loaning the money")]
             string description)
         {
-            var items = await _eventRepository.GetAllAsync();
+            // var items = await _eventRepository.GetAllAsync();
             // var loanEnvelope = await _mediator.Send(new Create.Command
             // {
             //     Loan = new Create.Loan
@@ -115,27 +107,27 @@ class LoanGroupModule
             [Summary("The value of the money being lent")]
             decimal amountBeingPayedBack)
         {
-            var loanEnvelope = await _mediator.Send(new Update.Command
-            {
-                Loan = new Update.Loan
-                {
-                    Amount = amountBeingPayedBack,
-                    LoanedTo = user.Id,
-                    LoanedToUsername = user.Username,
-                    LoanedFrom = Context.User.Id,
-                    LoanedFromUsername = Context.User.Username
-                }
-            });
-
-            var messageToReplyWith = "";
-            if (loanEnvelope.Loan != null)
-            {
-                var formattedEventInformation =
-                    FormatEventInformation(_mapper.Map<List<LoanDto>>(loanEnvelope.Loan));
-                messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
-            }
-
-            await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+            // var loanEnvelope = await _mediator.Send(new UpdateLoanCommand
+            // {
+            //     Loan = new UpdateLoanCommand.Loan
+            //     {
+            //         Amount = amountBeingPayedBack,
+            //         LoanedTo = user.Id,
+            //         LoanedToUsername = user.Username,
+            //         LoanedFrom = Context.User.Id,
+            //         LoanedFromUsername = Context.User.Username
+            //     }
+            // });
+            //
+            // var messageToReplyWith = "";
+            // if (loanEnvelope.Loan != null)
+            // {
+            //     var formattedEventInformation =
+            //         FormatEventInformation(_mapper.Map<List<LoanDto>>(loanEnvelope.Loan));
+            //     messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
+            // }
+            //
+            // await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
         }
     }
 }

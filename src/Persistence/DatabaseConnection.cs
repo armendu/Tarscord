@@ -2,7 +2,6 @@
 using System.Data.SQLite;
 using Dapper;
 using Microsoft.Extensions.Configuration;
-using Tarscord.Core.Persistence.Helpers;
 
 namespace Tarscord.Core.Persistence;
 

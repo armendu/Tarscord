@@ -14,11 +14,8 @@ using EventAttendanceList = Tarscord.Core.Features.EventAttendees.List;
 
 namespace Tarscord.Core.Modules;
 
-[Name("Commands to create events")]
-public class EventGroupModule
-{
     [Group("event")]
-    public class EventModule : ModuleBase
+    public class EventModule : ModuleBase<SocketCommandContext>
     {
         private readonly IMediator _mediator;
 
@@ -33,9 +30,9 @@ public class EventGroupModule
         [Command("list"), Summary("Lists all events")]
         public async Task ListEventsAsync()
         {
-            var eventInfoList = await _mediator.Send(new Features.Events.List.Query());
-
-            await ReplyAsync(embed: eventInfoList?.ToEmbeddedMessage()).ConfigureAwait(false);
+            // var eventInfoList = await _mediator.Send(new Features.Events.List.Query());
+            //
+            // await ReplyAsync(embed: eventInfoList?.ToEmbeddedMessage()).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -46,12 +43,12 @@ public class EventGroupModule
         public async Task ShowEventInformationAsync(
             [Summary("The event Id")] ulong eventId)
         {
-            var eventInformation = await _mediator.Send(new Features.Events.Details.Query()
-            {
-                EventId = eventId
-            });
-
-            await ReplyAsync(embed: eventInformation.ToEmbeddedMessage()).ConfigureAwait(false);
+            // var eventInformation = await _mediator.Send(new Features.Events.Details.Query()
+            // {
+            //     EventId = eventId
+            // });
+            //
+            // await ReplyAsync(embed: eventInformation.ToEmbeddedMessage()).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -65,26 +62,20 @@ public class EventGroupModule
             [Summary("The event date and time")] string dateTime = "",
             [Summary("The event description")] params string[] eventDescription)
         {
-            string concatenatedDescription = string.Join(" ", eventDescription);
-            DateTime.TryParse(dateTime, out DateTime parsedDateTime);
+            var concatenatedDescription = string.Join(" ", eventDescription);
 
-            var eventInfo = new Create.Command()
+            var eventInfo = new CreateEventCommand
             {
-                Event = new Create.EventInfo()
-                {
-                    EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
-                    EventOrganizer = Context.User.ToCommonUser()?.Username,
-                    EventName = eventName,
-                    EventDescription = concatenatedDescription,
-                    EventDate = parsedDateTime,
-                    IsActive = true,
-                    Created = DateTime.UtcNow,
-                    Updated = DateTime.UtcNow,
-                }
+                EventOrganizerId = Context.User.ToCommonUser()?.Id ?? 0,
+                EventOrganizer = Context.User.ToCommonUser()?.Username,
+                EventName = eventName,
+                EventDescription = concatenatedDescription,
+                EventDate = dateTime,
+                IsActive = true
             };
 
             var createdEvent = await _mediator.Send(eventInfo);
-            await ReplyAsync(embed: createdEvent.ToEmbeddedMessage()).ConfigureAwait(false);
+            await ReplyAsync(embed: createdEvent.ToMessage().EmbedMessage()).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -113,41 +104,41 @@ public class EventGroupModule
             [Summary("The (optional) user to confirm for")]
             params IUser[] users)
         {
-            if (users.Length == 0)
-                users = new[] { Context.User };
-
-            var eventAttendees = await _mediator.Send(new Update.Command()
-            {
-                EventAttendees = new Update.EventAttendees()
-                {
-                    Confirmation = true,
-                    Attendees = users.Select(u => new Update.Attendee
-                    {
-                        AttendeeId = u.Id,
-                        Confirmed = true,
-                        AttendeeName = u.Username,
-                        EventInfoId = eventId.ToString()
-                    }).ToList(),
-                    EventId = eventId
-                }
-            });
-
-            var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
-            if (confirmAttendanceAsList.Any())
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-
-                for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
-                {
-                    stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
-                }
-
-                await ReplyAsync(
-                    embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
-                        .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
-            }
-            else
-                await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
+            // if (users.Length == 0)
+            //     users = new[] { Context.User };
+            //
+            // var eventAttendees = await _mediator.Send(new Update.Command()
+            // {
+            //     EventAttendees = new Update.EventAttendees()
+            //     {
+            //         Confirmation = true,
+            //         Attendees = users.Select(u => new Update.Attendee
+            //         {
+            //             AttendeeId = u.Id,
+            //             Confirmed = true,
+            //             AttendeeName = u.Username,
+            //             EventInfoId = eventId.ToString()
+            //         }).ToList(),
+            //         EventId = eventId
+            //     }
+            // });
+            //
+            // var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
+            // if (confirmAttendanceAsList.Any())
+            // {
+            //     StringBuilder stringBuilder = new StringBuilder();
+            //
+            //     for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
+            //     {
+            //         stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
+            //     }
+            //
+            //     await ReplyAsync(
+            //         embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
+            //             .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+            // }
+            // else
+            //     await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -192,34 +183,33 @@ public class EventGroupModule
         [Command("confirmed"), Summary("Shows confirmed attendees.")]
         public async Task ShowConfirmedAsync([Summary("The Event Id")] ulong eventId)
         {
-            var attendees = await _mediator.Send(new EventAttendanceDetails.Query()
-            {
-                EventId = eventId
-            });
-
-            var attendeesAsList = attendees.EventAttendee?.ToList();
-            if (attendeesAsList == null)
-            {
-                await ReplyAsync(embed: $"The event named '{eventId}' does not exist".EmbedMessage())
-                    .ConfigureAwait(false);
-                return;
-            }
-
-            if (!attendeesAsList.Any())
-            {
-                await ReplyAsync(embed: "There are no confirmed attendees".EmbedMessage()).ConfigureAwait(false);
-                return;
-            }
-
-            var stringBuilder = new StringBuilder();
-            for (int i = 1; i <= attendeesAsList.Count; i++)
-            {
-                stringBuilder.Append($"{i}. {attendeesAsList[i - 1]}\n");
-            }
-
-            await ReplyAsync(
-                embed: "Users who have confirmed their attendance are:"
-                    .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+            // var attendees = await _mediator.Send(new EventAttendanceDetails.Query()
+            // {
+            //     EventId = eventId
+            // });
+            //
+            // var attendeesAsList = attendees.EventAttendee?.ToList();
+            // if (attendeesAsList == null)
+            // {
+            //     await ReplyAsync(embed: $"The event named '{eventId}' does not exist".EmbedMessage())
+            //         .ConfigureAwait(false);
+            //     return;
+            // }
+            //
+            // if (!attendeesAsList.Any())
+            // {
+            //     await ReplyAsync(embed: "There are no confirmed attendees".EmbedMessage()).ConfigureAwait(false);
+            //     return;
+            // }
+            //
+            // var stringBuilder = new StringBuilder();
+            // for (int i = 1; i <= attendeesAsList.Count; i++)
+            // {
+            //     stringBuilder.Append($"{i}. {attendeesAsList[i - 1]}\n");
+            // }
+            //
+            // await ReplyAsync(
+            //     embed: "Users who have confirmed their attendance are:"
+            //         .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
         }
     }
-}

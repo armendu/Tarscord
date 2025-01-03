@@ -4,15 +4,15 @@ namespace Tarscord.Core.Domain;
 
 public class EventInfo : EntityBase
 {
-    public string EventOrganizer { get; set; }
+    public required string EventOrganizer { get; set; }
 
-    public ulong EventOrganizerId { get; set; }
+    public required ulong EventOrganizerId { get; set; }
 
-    public string EventName { get; set; }
+    public required string EventName { get; set; }
 
     public DateTime? EventDate { get; set; }
 
-    public string EventDescription { get; set; }
+    public required string EventDescription { get; set; }
 
     public bool IsActive { get; set; }
 

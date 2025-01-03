@@ -1,15 +1,11 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
-using Tarscord.Core.Helpers;
 using Tarscord.Core.Persistence;
-using Tarscord.Core.Persistence.Interfaces;
-using Tarscord.Core.Persistence.Repositories;
 using Tarscord.Core.Services;
 
 namespace Tarscord.Core;
@@ -37,9 +33,6 @@ public class Startup
         // Create a new instance of a service collection
         var services = new ServiceCollection();
         ConfigureServices(services);
-
-        // Setup the Global messages
-        SetupGlobalMessages();
 
         // Build the service provider
         var provider = services.BuildServiceProvider();
@@ -73,16 +66,7 @@ public class Startup
             .AddSingleton<TimerService>()
             .AddLogging()
             .AddSingleton(Configuration)
-            .AddAutoMapper(typeof(MappingProfile))
-            .AddScoped<IEventRepository, EventRepository>()
-            .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
-            .AddScoped<ILoanRepository, LoanRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>()
-            .AddMediatR(typeof(Startup));
-    }
-
-    private void SetupGlobalMessages()
-    {
-        GlobalMessages.EuroSign = Configuration["messages:euro_sign"];
+            .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

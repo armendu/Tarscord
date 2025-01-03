@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tarscord.Core.Persistence.Exceptions;
+namespace Tarscord.Core.Exceptions;
 
 public class OperationFailedException : Exception
 {
