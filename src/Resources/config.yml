@@ -1,0 +1,9 @@
+﻿prefix: '?'
+tokens:
+    discord: ""
+sarcasm-level: 0
+humor-level: 0
+tarscord-context: 
+    connection-string: "Host=localhost;Username=root;Password=password;Database=tarscord_db"
+messages:
+    euro_sign: "€"
