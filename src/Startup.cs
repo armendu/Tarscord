@@ -1,11 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Tarscord.Core.Helpers;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Interfaces;
@@ -20,38 +18,24 @@ public class Startup
 
     public Startup(string[] args)
     {
-        var builder = new ConfigurationBuilder() // Create a new instance of the config builder
-            .SetBasePath(AppContext.BaseDirectory) // Specify the default location for the config file
-            .AddYamlFile("Resources/config.yml"); // Add this (yaml encoded) file to the configuration
-        Configuration = builder.Build(); // Build the configuration
+        var builder = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddYamlFile("Resources/config.yml", optional: false, reloadOnChange: true);
+        Configuration = builder.Build();
     }
 
     public static async Task RunAsync(string[] args)
     {
-        var startup = new Startup(args);
-        await startup.RunAsync();
-    }
+        var host = Host.CreateDefaultBuilder(args)
+            .ConfigureServices((context, services) =>
+            {
+                var startup = new Startup(args);
+                startup.ConfigureServices(services);
+                startup.SetupGlobalMessages();
+            })
+            .Build();
 
-    private async Task RunAsync()
-    {
-        // Create a new instance of a service collection
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-
-        // Setup the Global messages
-        SetupGlobalMessages();
-
-        // Build the service provider
-        var provider = services.BuildServiceProvider();
-
-        // Start the logging service, and the command handler service
-        provider.GetRequiredService<LoggingService>();
-        provider.GetRequiredService<CommandHandler>();
-
-        // Start the startup service
-        await provider.GetRequiredService<StartupService>().StartAsync();
-
-        await Task.Delay(-1);
+        await host.RunAsync();
     }
 
     private void ConfigureServices(IServiceCollection services)
@@ -60,12 +44,13 @@ public class Startup
                 new DiscordSocketConfig
                 {
                     LogLevel = LogSeverity.Verbose,
-                    MessageCacheSize = 1000 // Cache 1,000 messages per channel
+                    MessageCacheSize = 1000,
+                    GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
                 }))
             .AddSingleton(new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Verbose,
-                DefaultRunMode = RunMode.Async, // Force all commands to run async by default
+                DefaultRunMode = RunMode.Async,
             }))
             .AddSingleton<CommandHandler>()
             .AddSingleton<StartupService>()
@@ -73,12 +58,12 @@ public class Startup
             .AddSingleton<TimerService>()
             .AddLogging()
             .AddSingleton(Configuration)
-            .AddAutoMapper(typeof(MappingProfile))
+            .AddAutoMapper(typeof(Startup))
             .AddScoped<IEventRepository, EventRepository>()
             .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
             .AddScoped<ILoanRepository, LoanRepository>()
             .AddSingleton<IDatabaseConnection, DatabaseConnection>()
-            .AddMediatR(typeof(Startup));
+            .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 
     private void SetupGlobalMessages()

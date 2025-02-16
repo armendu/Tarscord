@@ -10,8 +10,10 @@ public class MappingProfileTests
     [Fact]
     public void CoreMappingProfile_ShouldSucceed()
     {
-        var config = new MapperConfiguration(cfg => { cfg.AddProfile<MappingProfile>(); });
+        // Arrange
+        var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
 
+        // Act & Assert
         config.AssertConfigurationIsValid();
     }
 }

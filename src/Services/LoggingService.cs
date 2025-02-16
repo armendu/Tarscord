@@ -1,48 +1,28 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using MediatR;
+using Tarscord.Core.Features.Logging;
 
 namespace Tarscord.Core.Services;
 
 public class LoggingService
 {
-    private readonly DiscordSocketClient _discord;
-    private readonly CommandService _commands;
+    private readonly IMediator _mediator;
 
-    private string _logDirectory { get; }
-    private string _logFile => Path.Combine(_logDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.txt");
-
-    public LoggingService(DiscordSocketClient discord, CommandService commands)
+    public LoggingService(
+        DiscordSocketClient discord,
+        CommandService commands,
+        IMediator mediator)
     {
-        _logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+        _mediator = mediator;
 
-        _discord = discord;
-        _commands = commands;
-
-        _discord.Log += OnLogAsync;
-        _commands.Log += OnLogAsync;
+        discord.Log += OnLogAsync;
+        commands.Log += OnLogAsync;
     }
 
     private Task OnLogAsync(LogMessage msg)
     {
-        // Create the log directory if it doesn't exist
-        if (!Directory.Exists(_logDirectory))
-            Directory.CreateDirectory(_logDirectory);
-
-        // Create today's log file if it doesn't exist
-        if (!File.Exists(_logFile))
-            File.Create(_logFile).Dispose();
-
-        string logText =
-            $"{DateTime.UtcNow:hh:mm:ss} [{msg.Severity}] {msg.Source}: {msg.Exception?.ToString() ?? msg.Message}";
-
-        // Write the log text to a file
-        File.AppendAllText(_logFile, logText + "\n");
-
-        // Write the log text to the console
-        return Console.Out.WriteLineAsync(logText);
+        return _mediator.Send(new ProcessLog.Command { LogMessage = msg });
     }
 }

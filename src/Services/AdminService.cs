@@ -2,14 +2,9 @@
 
 namespace Tarscord.Core.Services;
 
-public class AdminService
+public class AdminService(IUserRepository userRepository)
 {
-    private readonly IUserRepository _userRepository;
-
-    public AdminService(IUserRepository userRepository)
-    {
-        _userRepository = userRepository;
-    }
+    private readonly IUserRepository _userRepository = userRepository;
 
     // public async Task MuteUser(string id, int minutesToMute)
     // {

@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace Tarscord.Core.Domain;
+
 public abstract class EntityBase
 {
     public ulong Id { get; set; }
