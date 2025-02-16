@@ -1,4 +1,5 @@
 ﻿using System;
+using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Domain;
 

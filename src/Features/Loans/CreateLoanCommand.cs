@@ -1,10 +1,6 @@
-using System.Threading;
-using System.Threading.Tasks;
-using Dapper.Contrib.Extensions;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Loans;
 

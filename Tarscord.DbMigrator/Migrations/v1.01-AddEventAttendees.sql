@@ -1,11 +1,11 @@
-CREATE TABLE IF NOT EXISTS public.EventAttendees
+CREATE TABLE IF NOT EXISTS public.event_attendees
 (
-    Id           SERIAL PRIMARY KEY,
-    AttendeeId   INTEGER,
-    EventInfoId  INTEGER,
-    AttendeeName VARCHAR(100),
-    Confirmed    BOOLEAN,
-    Created      TIMESTAMP NOT NULL DEFAULT NOW(),
-    Updated      TIMESTAMP          DEFAULT NULL,
-    FOREIGN KEY (EventInfoId) REFERENCES public.EventInfos (Id) ON DELETE CASCADE
+    id            SERIAL PRIMARY KEY,
+    attendee_id   INTEGER,
+    event_info_id INTEGER,
+    attendee_name VARCHAR(100),
+    confirmed     BOOLEAN,
+    created       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated       TIMESTAMP          DEFAULT NULL,
+    FOREIGN KEY (event_info_id) REFERENCES public.event_infos (id) ON DELETE CASCADE
 );

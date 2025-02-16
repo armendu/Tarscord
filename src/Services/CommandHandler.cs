@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
 using MediatR;
-using Tarscord.Core.Features.Commands;
+using Tarscord.Core.Setup;
 
 namespace Tarscord.Core.Services;
 

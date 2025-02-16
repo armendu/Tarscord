@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
 
 namespace Tarscord.Core;
@@ -22,15 +23,27 @@ public class Startup
 
     public static async Task RunAsync(string[] args)
     {
-        var host = Host.CreateDefaultBuilder(args)
-            .ConfigureServices((context, services) =>
-            {
-                var startup = new Startup(args);
-                startup.ConfigureServices(services);
-            })
-            .Build();
+        var startup = new Startup(args);
+        await startup.RunAsync();
+    }
 
-        await host.RunAsync();
+    private async Task RunAsync()
+    {
+        // Create a new instance of a service collection
+        var services = new ServiceCollection();
+        ConfigureServices(services);
+
+        // Build the service provider
+        var provider = services.BuildServiceProvider();
+
+        // Start the logging service, and the command handler service
+        provider.GetRequiredService<LoggingService>();
+        provider.GetRequiredService<CommandHandler>();
+
+        // Start the startup service
+        await provider.GetRequiredService<StartupService>().StartAsync();
+
+        await Task.Delay(-1);
     }
 
     private void ConfigureServices(IServiceCollection services)
@@ -53,6 +66,7 @@ public class Startup
             .AddSingleton<TimerService>()
             .AddLogging()
             .AddSingleton(Configuration)
+            .AddDatabase(Configuration)
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

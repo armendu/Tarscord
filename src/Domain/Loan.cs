@@ -1,16 +1,18 @@
-﻿namespace Tarscord.Core.Domain;
+﻿using Tarscord.Core.Persistence;
+
+namespace Tarscord.Core.Domain;
 
 public class Loan : EntityBase
 {
     public ulong LoanedFrom { get; set; }
 
-    public string LoanedFromUsername { get; set; }
+    public required string LoanedFromUsername { get; set; }
 
     public ulong LoanedTo { get; set; }
 
-    public string LoanedToUsername { get; set; }
+    public required string LoanedToUsername { get; set; }
 
-    public string Description { get; set; }
+    public required string Description { get; set; }
 
     public decimal AmountLoaned { get; set; }
 

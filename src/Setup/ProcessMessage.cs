@@ -3,7 +3,7 @@ using Discord.WebSocket;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
-namespace Tarscord.Core.Features.Commands;
+namespace Tarscord.Core.Setup;
 
 public abstract class ProcessMessage
 {

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tarscord.Core.Domain;
+using Tarscord.Core.Features.Events;
 
 namespace Tarscord.Core.Persistence;
 

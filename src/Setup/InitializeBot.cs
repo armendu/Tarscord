@@ -1,14 +1,11 @@
-using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
-namespace Tarscord.Core.Features.Startup;
+namespace Tarscord.Core.Setup;
 
 public class InitializeBot
 {

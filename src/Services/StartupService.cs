@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Tarscord.Core.Features.Startup;
+using Tarscord.Core.Setup;
 
 namespace Tarscord.Core.Services;
 

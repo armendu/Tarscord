@@ -6,9 +6,19 @@ namespace Tarscord.Core.Persistence;
 
 public static class DatabaseExtensions
 {
-    public static void AddDatabase(this IServiceCollection serviceCollection, IConfiguration configuration)
+    public static IServiceCollection AddDatabase(
+        this IServiceCollection serviceCollection,
+        IConfiguration configuration)
     {
+        var connectionString = configuration.GetSection("tarscord-context:connection-string");
+
+        if (string.IsNullOrEmpty(connectionString.Value))
+        {
+            throw new ArgumentException("Connection string is missing");
+        }
+
         serviceCollection.AddDbContextPool<TarscordContext>(opt =>
-            opt.UseNpgsql(configuration.GetConnectionString("TarscordContext")));
+            opt.UseNpgsql(connectionString.Value));
+        return serviceCollection;
     }
 }
