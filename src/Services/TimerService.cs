@@ -1,26 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
+using MediatR;
 using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Reminders.Commands;
 
 namespace Tarscord.Core.Services;
 
-public class TimerService
+public class TimerService(IMediator mediator, ITimer timer) : IDisposable
 {
-    private static readonly SortedList<DateTime, ReminderInfo> ReminderInfos =
-        new SortedList<DateTime, ReminderInfo>();
+    private static readonly SortedList<DateTime, ReminderInfo> ReminderInfos = new();
 
-    private Timer _timer;
+    private ITimer _timer = timer;
+    private bool _disposed;
 
     public void AddReminder(DateTime dateToRemind, IUser user, string message)
     {
-        if (_timer == null)
-            StartTimerAsync();
-
         var reminderInfo = new ReminderInfo()
         {
             User = user,
@@ -32,7 +26,7 @@ public class TimerService
 
     public async Task NotifyUserWithMessageAsync()
     {
-        if (!ReminderInfos.Any())
+        if (ReminderInfos.Count == 0)
         {
             await StopTimerAsync();
             return;
@@ -42,12 +36,8 @@ public class TimerService
 
         if (dateTime < DateTime.UtcNow)
         {
-            var userInfo = reminderInfo.User;
-
-            if (userInfo is IUser currentUser)
-            {
-                await currentUser.SendMessageAsync(embed: "Reminder".EmbedMessage(reminderInfo.Message));
-            }
+            var currentUser = reminderInfo.User;
+            await currentUser.SendMessageAsync(embed: "Reminder".EmbedMessage(reminderInfo.Message));
 
             ReminderInfos.Remove(dateTime);
         }
@@ -55,28 +45,38 @@ public class TimerService
 
     public Task StartTimerAsync()
     {
-        _timer = new Timer(CheckReminders, null, TimeSpan.Zero,
-            TimeSpan.FromSeconds(10));
+        _timer = new Timer(
+            async void (_) => await mediator.Send(new NotifyUser.Command()),
+            null,
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(10)
+        );
 
         return Task.CompletedTask;
     }
 
-    private async void CheckReminders(object state)
+    private Task StopTimerAsync()
     {
-        // Send message if a reminder is set
-        await NotifyUserWithMessageAsync();
-    }
-
-    public Task StopTimerAsync(CancellationToken cancellationToken = default)
-    {
-        // Stop the timer
-        _timer?.Change(Timeout.Infinite, 0);
-
+        _timer.Change(new TimeSpan(Timeout.Infinite), new TimeSpan(0));
         return Task.CompletedTask;
     }
 
     public void Dispose()
     {
-        _timer?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            _timer.Dispose();
+        }
+
+        _disposed = true;
     }
 }

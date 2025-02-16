@@ -2,19 +2,20 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using MediatR;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Services;
+using Tarscord.Core.Features.Reminders.Commands;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to create reminders")]
 public class ReminderModule : ModuleBase
 {
-    private readonly TimerService _timerService;
+    private readonly IMediator _mediator;
 
-    public ReminderModule()
+    public ReminderModule(IMediator mediator)
     {
-        _timerService = new TimerService();
+        _mediator = mediator;
     }
 
     /// <summary>
@@ -32,13 +33,17 @@ public class ReminderModule : ModuleBase
         var dateToRemind = DateTime.UtcNow.AddMinutes(minutes);
 
         var stringBuilder = new StringBuilder();
-
         foreach (var message in messages)
         {
             stringBuilder.Append($"{message} ");
         }
 
-        _timerService.AddReminder(dateToRemind, user, stringBuilder.ToString());
+        await _mediator.Send(new AddReminder.Command
+        {
+            DateToRemind = dateToRemind,
+            User = user,
+            Message = stringBuilder.ToString()
+        });
 
         // Tell the user that he will be notified
         await ReplyAsync(
