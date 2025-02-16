@@ -102,11 +102,12 @@ class LoanGroupModule
         /// <returns>The generated random number</returns>
         [Command("payback"), Summary("Pays back the amount to the loaner")]
         [Alias("return", "removeloan", "deleteloan", "payloan")]
-        public async Task PaybackToUserAsync(
+        public async Task PaybackToUser(
             [Summary("The user to loan money to")] IUser user,
             [Summary("The value of the money being lent")]
             decimal amountBeingPayedBack)
         {
+            await Task.CompletedTask;
             // var loanEnvelope = await _mediator.Send(new UpdateLoanCommand
             // {
             //     Loan = new UpdateLoanCommand.Loan
