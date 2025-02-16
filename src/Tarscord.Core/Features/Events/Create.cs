@@ -77,7 +77,7 @@ internal sealed class CreateEventCommandHandler : IRequestHandler<Create, OneOf<
             EventDate = dateOfEvent.Value.ToUniversalTime(),
             EventDescription = request.EventDescription,
             IsActive = true,
-            Created = DateTime.UtcNow // Possibly replace with TimeProvider
+            Created = DateTime.UtcNow // Possibly replace with TimeProvider or remove altogether
         }, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);

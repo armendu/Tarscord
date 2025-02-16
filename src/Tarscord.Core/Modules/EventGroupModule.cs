@@ -23,9 +23,10 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("list"), Summary("Lists all events")]
     public async Task ListEventsAsync()
     {
-        // var eventInfoList = await _mediator.Send(new Features.Events.List.Query());
-        //
-        // await ReplyAsync(embed: eventInfoList?.ToEmbeddedMessage()).ConfigureAwait(false);
+        // TODO: Continue from here and think of a better name for this.
+        var eventInfoList = await _mediator.Send(new List());
+
+        await ReplyAsync(embed: eventInfoList.EventInfos[0].EventName.EmbedMessage()).ConfigureAwait(false);
     }
 
     /// <summary>

@@ -1,25 +1,30 @@
-using System.Threading;
-using System.Threading.Tasks;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Tarscord.Core.Domain;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
-public record GetEventInfosQuery : IRequest<EventInfo>;
+internal record List : IRequest<ListResponse>;
 
-public class GetEventInfosQueryHandler : IRequestHandler<GetEventInfosQuery, EventInfo>
+// Shouldn't reference EventInfo directly though
+internal record ListResponse(IReadOnlyList<EventInfo> EventInfos);
+
+internal class GetEventInfosQueryHandler : IRequestHandler<List, ListResponse>
 {
     private readonly ILogger<GetEventInfosQueryHandler> _logger;
+    private readonly TarscordContext _context;
 
-    public GetEventInfosQueryHandler(ILogger<GetEventInfosQueryHandler> logger)
+    public GetEventInfosQueryHandler(ILogger<GetEventInfosQueryHandler> logger, TarscordContext context)
     {
         _logger = logger;
+        _context = context;
     }
 
-    public Task<EventInfo> Handle(GetEventInfosQuery request, CancellationToken cancellationToken)
+    public async Task<ListResponse> Handle(List request, CancellationToken cancellationToken)
     {
-        throw new System.NotImplementedException();
+        var eventInfos = await _context.EventInfos.ToListAsync(cancellationToken: cancellationToken);
+
+        return new ListResponse(eventInfos);
     }
 }
