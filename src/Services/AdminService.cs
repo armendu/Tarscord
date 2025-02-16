@@ -1,11 +1,9 @@
-﻿using Tarscord.Core.Persistence.Interfaces;
+﻿using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Services;
 
-public class AdminService(IUserRepository userRepository)
+public class AdminService
 {
-    private readonly IUserRepository _userRepository = userRepository;
-
     // public async Task MuteUser(string id, int minutesToMute)
     // {
     //     var userToMute =

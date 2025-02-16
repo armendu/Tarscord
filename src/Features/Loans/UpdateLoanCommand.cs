@@ -28,12 +28,10 @@ public class CommandValidator : AbstractValidator<UpdateLoanCommand>
 public class UpdateLoanCommandHandler : IRequestHandler<UpdateLoanCommand, LoanDto>
 {
     private readonly ILogger<CreateLoanCommandHandler> _logger;
-    private readonly IDatabaseConnection _databaseConnection;
 
-    public UpdateLoanCommandHandler(ILogger<CreateLoanCommandHandler> logger, IDatabaseConnection databaseConnection)
+    public UpdateLoanCommandHandler(ILogger<CreateLoanCommandHandler> logger)
     {
         _logger = logger;
-        _databaseConnection = databaseConnection;
     }
 
     // public async Task<LoanDto> Handle(UpdateLoanCommandCommand request, CancellationToken cancellationToken)

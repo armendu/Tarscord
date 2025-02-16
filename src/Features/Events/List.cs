@@ -12,12 +12,10 @@ public record GetEventInfosQuery : IRequest<EventInfo>;
 public class GetEventInfosQueryHandler : IRequestHandler<GetEventInfosQuery, EventInfo>
 {
     private readonly ILogger<GetEventInfosQueryHandler> _logger;
-    private readonly IDatabaseConnection _databaseConnection;
 
-    public GetEventInfosQueryHandler(ILogger<GetEventInfosQueryHandler> logger, IDatabaseConnection databaseConnection)
+    public GetEventInfosQueryHandler(ILogger<GetEventInfosQueryHandler> logger)
     {
         _logger = logger;
-        _databaseConnection = databaseConnection;
     }
 
     public Task<EventInfo> Handle(GetEventInfosQuery request, CancellationToken cancellationToken)

@@ -12,14 +12,11 @@ public record GetLoansQuery : IRequest<IEnumerable<LoanDto>>;
 public class GetLoansQueryHandler : IRequestHandler<GetLoansQuery, IEnumerable<LoanDto>>
 {
     private readonly ILogger<GetLoansQueryHandler> _logger;
-    private readonly IDatabaseConnection _databaseConnection;
 
     public GetLoansQueryHandler(
-        ILogger<GetLoansQueryHandler> logger,
-        IDatabaseConnection databaseConnection)
+        ILogger<GetLoansQueryHandler> logger)
     {
         _logger = logger;
-        _databaseConnection = databaseConnection;
     }
 
     public Task<IEnumerable<LoanDto>> Handle(GetLoansQuery request, CancellationToken cancellationToken)

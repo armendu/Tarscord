@@ -69,29 +69,27 @@ public class CreateEventCommandValidator : AbstractValidator<CreateEventCommand>
 public class CreateEventCommandHandler : IRequestHandler<CreateEventCommand, CreateEventCommandResponse>
 {
     private readonly ILogger<CreateEventCommandHandler> _logger;
-    private readonly IDatabaseConnection _databaseConnection;
 
     public CreateEventCommandHandler(
-        ILogger<CreateEventCommandHandler> logger,
-        IDatabaseConnection databaseConnection)
+        ILogger<CreateEventCommandHandler> logger)
     {
         _logger = logger;
-        _databaseConnection = databaseConnection;
     }
 
     public async Task<CreateEventCommandResponse> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
+        throw new NotImplementedException();
         // DateTime.TryParse(dateTime, out var parsedDateTime);
         // request.EventDate
-        var insertedEntity = await _databaseConnection.Connection.InsertAsync(request);
-
-        var createdEvent = await _databaseConnection.Connection.GetAsync<EventInfo?>(insertedEntity);
-
-        if (createdEvent is null)
-        {
-            // TODO: Handle this case, check if we need to add anything else
-        }
-
-        return CreateEventCommandResponse.MapToResponse(createdEvent);
+        // var insertedEntity = await _databaseConnection.Connection.InsertAsync(request);
+        //
+        // var createdEvent = await _databaseConnection.Connection.GetAsync<EventInfo?>(insertedEntity);
+        //
+        // if (createdEvent is null)
+        // {
+        //     // TODO: Handle this case, check if we need to add anything else
+        // }
+        //
+        // return CreateEventCommandResponse.MapToResponse(createdEvent);
     }
 }

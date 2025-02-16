@@ -29,7 +29,7 @@ public class AdminModule : ModuleBase
     [Command("unmute"), Summary("Unmutes a user")]
     public async Task UnmuteUserAsync(
         [Summary("The user to be unmuted"), Required(ErrorMessage = "Please provide member of the channel.")]
-        IUser user = null)
+        IUser? user = null)
     {
         await ExecuteCommandAsync(user, CommandType.Unmute).ConfigureAwait(false);
     }

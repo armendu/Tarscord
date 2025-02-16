@@ -30,20 +30,17 @@ public class CreateLoanCommandValidator : AbstractValidator<CreateLoanCommand>
 public class CreateLoanCommandHandler : IRequestHandler<CreateLoanCommand, LoanDto>
 {
     private readonly ILogger<CreateLoanCommandHandler> _logger;
-    private readonly IDatabaseConnection _databaseConnection;
 
     public CreateLoanCommandHandler(
-        ILogger<CreateLoanCommandHandler> logger,
-        IDatabaseConnection databaseConnection)
+        ILogger<CreateLoanCommandHandler> logger)
     {
         _logger = logger;
-        _databaseConnection = databaseConnection;
     }
 
     public async Task<LoanDto> Handle(CreateLoanCommand command, CancellationToken cancellationToken)
     {
-        var createdLoan = await _databaseConnection.Connection.InsertAsync(command)
-            .ConfigureAwait(false);
+        // var createdLoan = await _databaseConnection.Connection.InsertAsync(command)
+        //     .ConfigureAwait(false);
 
         return new LoanDto();
     }

@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tarscord.Core", "src\Tarsco
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tarscord.Core.Tests", "tests\Tarscord.Core.Tests.csproj", "{0465984A-3D61-45DC-8316-F818107F1105}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tarscord.DbMigrator", "Tarscord.DbMigrator\Tarscord.DbMigrator.csproj", "{7F849881-B454-405D-9604-C80CB379FE39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0465984A-3D61-45DC-8316-F818107F1105}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0465984A-3D61-45DC-8316-F818107F1105}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0465984A-3D61-45DC-8316-F818107F1105}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F849881-B454-405D-9604-C80CB379FE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F849881-B454-405D-9604-C80CB379FE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F849881-B454-405D-9604-C80CB379FE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F849881-B454-405D-9604-C80CB379FE39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

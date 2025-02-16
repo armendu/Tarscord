@@ -4,10 +4,6 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tarscord.Core.Helpers;
-using Tarscord.Core.Persistence;
-using Tarscord.Core.Persistence.Interfaces;
-using Tarscord.Core.Persistence.Repositories;
 using Tarscord.Core.Services;
 
 namespace Tarscord.Core;
@@ -31,7 +27,6 @@ public class Startup
             {
                 var startup = new Startup(args);
                 startup.ConfigureServices(services);
-                startup.SetupGlobalMessages();
             })
             .Build();
 
@@ -58,16 +53,6 @@ public class Startup
             .AddSingleton<TimerService>()
             .AddLogging()
             .AddSingleton(Configuration)
-            .AddAutoMapper(typeof(Startup))
-            .AddScoped<IEventRepository, EventRepository>()
-            .AddScoped<IEventAttendeesRepository, EventAttendeesRepository>()
-            .AddScoped<ILoanRepository, LoanRepository>()
-            .AddSingleton<IDatabaseConnection, DatabaseConnection>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
-    }
-
-    private void SetupGlobalMessages()
-    {
-        GlobalMessages.EuroSign = Configuration["messages:euro_sign"];
     }
 }

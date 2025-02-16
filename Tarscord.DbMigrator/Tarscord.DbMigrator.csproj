@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Migrations/**/*.sql"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="dbup-postgresql" Version="5.0.40" />
+    </ItemGroup>
+
+</Project>
