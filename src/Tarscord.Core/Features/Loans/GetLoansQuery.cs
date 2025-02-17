@@ -7,9 +7,9 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Loans;
 
-public record GetLoansQuery : IRequest<IEnumerable<LoanDto>>;
+public record GetLoansQuery : IRequest<IEnumerable<LoanEnvelope>>;
 
-public class GetLoansQueryHandler : IRequestHandler<GetLoansQuery, IEnumerable<LoanDto>>
+public class GetLoansQueryHandler : IRequestHandler<GetLoansQuery, IEnumerable<LoanEnvelope>>
 {
     private readonly ILogger<GetLoansQueryHandler> _logger;
 
@@ -19,7 +19,7 @@ public class GetLoansQueryHandler : IRequestHandler<GetLoansQuery, IEnumerable<L
         _logger = logger;
     }
 
-    public Task<IEnumerable<LoanDto>> Handle(GetLoansQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<LoanEnvelope>> Handle(GetLoansQuery request, CancellationToken cancellationToken)
     {
         throw new System.NotImplementedException();
     }

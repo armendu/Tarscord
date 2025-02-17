@@ -1,7 +1,4 @@
-﻿using System;
-using Tarscord.Core.Persistence;
-
-namespace Tarscord.Core.Domain;
+﻿namespace Tarscord.Core.Persistence.Entities;
 
 public class User : EntityBase
 {

@@ -1,9 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
 
@@ -67,6 +67,7 @@ public class Startup
             .AddLogging()
             .AddSingleton(Configuration)
             .AddDatabase(Configuration)
+            .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

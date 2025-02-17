@@ -1,8 +1,8 @@
 ﻿using Discord;
 using MediatR;
-using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Reminders.Commands;
+using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Services;
 

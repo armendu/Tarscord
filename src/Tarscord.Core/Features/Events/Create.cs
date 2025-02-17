@@ -1,40 +1,21 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using OneOf;
-using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Persistence;
+using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Events;
 
-internal record Create(
-    string EventOrganizer,
-    ulong EventOrganizerId,
-    string EventName,
-    string EventDate,
-    string EventDescription
-) : IRequest<OneOf<CreateResponse, FailureResponse>>;
-
-internal record CreateResponse(
-    ulong Id,
-    string EventOrganizer,
-    string EventName,
-    DateTime? EventDate,
-    string? EventDescription
-)
+internal static class Create
 {
-    public static CreateResponse MapToResponse(EventInfo eventInfo) =>
-        new(
-            eventInfo.Id,
-            eventInfo.EventOrganizer,
-            eventInfo.EventName,
-            eventInfo.EventDate,
-            eventInfo.EventDescription
-        );
-
-    public string ToMessage() =>
-        $"'{EventName}' created by user {EventOrganizer}. Use this Id: {Id} to get the details of the event";
-}
+    public record Command(
+        string EventOrganizer,
+        ulong EventOrganizerId,
+        string EventName,
+        string EventDate,
+        string EventDescription
+    ) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>;
 
 // public class CreateEventCommandValidator : AbstractValidator<CreateEventCommand>
 // {
@@ -44,43 +25,43 @@ internal record CreateResponse(
 //     }
 // }
 
-internal sealed class CreateEventCommandHandler : IRequestHandler<Create, OneOf<CreateResponse, FailureResponse>>
-{
-    private readonly ILogger<CreateEventCommandHandler> _logger;
-    private readonly TarscordContext _context;
-
-    public CreateEventCommandHandler(
-        ILogger<CreateEventCommandHandler> logger,
-        TarscordContext context)
+    internal sealed class CreateEventCommandHandler : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
     {
-        _logger = logger;
-        _context = context;
-    }
+        private readonly ILogger<CreateEventCommandHandler> _logger;
+        private readonly TarscordContext _context;
 
-    public async Task<OneOf<CreateResponse, FailureResponse>> Handle(
-        Create request,
-        CancellationToken cancellationToken)
-    {
-        var dateOfEvent = request.EventDate.FromTextToDate();
-        // var validDateProvided = DateTime.TryParse(dateOfEvent, out var parsedDateTime);
-
-        if (!dateOfEvent.HasValue)
+        public CreateEventCommandHandler(
+            ILogger<CreateEventCommandHandler> logger,
+            TarscordContext context)
         {
-            return new FailureResponse("Invalid event date provided");
+            _logger = logger;
+            _context = context;
         }
 
-        var createdEvent = await _context.EventInfos.AddAsync(new EventInfo
+        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            EventOrganizer = request.EventDescription,
-            EventOrganizerId = request.EventOrganizerId.ToString(),
-            EventName = request.EventName,
-            EventDate = dateOfEvent.Value.ToUniversalTime(),
-            EventDescription = request.EventDescription,
-            IsActive = true,
-            Created = DateTime.UtcNow // Possibly replace with TimeProvider or remove altogether
-        }, cancellationToken);
+            var dateOfEvent = command.EventDate.FromTextToDate();
 
-        await _context.SaveChangesAsync(cancellationToken);
-        return CreateResponse.MapToResponse(createdEvent.Entity);
+            if (!dateOfEvent.HasValue)
+            {
+                return new FailureResponse("Invalid event date provided");
+            }
+
+            var createdEvent = await _context.EventInfos.AddAsync(new EventInfo
+            {
+                EventOrganizer = command.EventDescription,
+                EventOrganizerId = command.EventOrganizerId.ToString(),
+                EventName = command.EventName,
+                EventDate = dateOfEvent.Value.ToUniversalTime(),
+                EventDescription = command.EventDescription,
+                IsActive = true,
+                Created = DateTime.UtcNow // Possibly replace with TimeProvider or remove altogether
+            }, cancellationToken);
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return EventInfoEnvelope.FromEntity(createdEvent.Entity);
+        }
     }
 }

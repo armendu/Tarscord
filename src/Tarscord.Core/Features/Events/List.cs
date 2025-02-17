@@ -1,30 +1,36 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
-internal record List : IRequest<ListResponse>;
-
-// Shouldn't reference EventInfo directly though
-internal record ListResponse(IReadOnlyList<EventInfo> EventInfos);
-
-internal class GetEventInfosQueryHandler : IRequestHandler<List, ListResponse>
+internal static class List
 {
-    private readonly ILogger<GetEventInfosQueryHandler> _logger;
-    private readonly TarscordContext _context;
+    public record Query(ulong PerformedByUserId) : IRequest<ListResponse>, IPerformedByUserId;
 
-    public GetEventInfosQueryHandler(ILogger<GetEventInfosQueryHandler> logger, TarscordContext context)
+    public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos);
+
+    public class QueryHandler : IRequestHandler<Query, ListResponse>
     {
-        _logger = logger;
-        _context = context;
-    }
+        private readonly ILogger<QueryHandler> _logger;
+        private readonly TarscordContext _context;
 
-    public async Task<ListResponse> Handle(List request, CancellationToken cancellationToken)
-    {
-        var eventInfos = await _context.EventInfos.ToListAsync(cancellationToken: cancellationToken);
+        public QueryHandler(ILogger<QueryHandler> logger, TarscordContext context)
+        {
+            _logger = logger;
+            _context = context;
+        }
 
-        return new ListResponse(eventInfos);
+        public async Task<ListResponse> Handle(Query request, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Query {Query} executed by {PerformedByUserId}",
+                nameof(List), request.PerformedByUserId);
+
+            var eventInfos = await _context.EventInfos.ToListAsync(cancellationToken: cancellationToken);
+
+            return new ListResponse(eventInfos.ConvertAll(EventInfoEnvelope.FromEntity));
+        }
     }
 }

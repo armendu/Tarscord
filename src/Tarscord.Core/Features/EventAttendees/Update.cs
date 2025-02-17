@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
 using MediatR;
-using Tarscord.Core.Domain;
 
 namespace Tarscord.Core.Features.EventAttendees;
 

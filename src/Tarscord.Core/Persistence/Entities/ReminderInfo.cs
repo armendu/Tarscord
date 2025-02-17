@@ -1,6 +1,6 @@
 using Discord;
 
-namespace Tarscord.Core.Domain;
+namespace Tarscord.Core.Persistence.Entities;
 
 public class ReminderInfo
 {

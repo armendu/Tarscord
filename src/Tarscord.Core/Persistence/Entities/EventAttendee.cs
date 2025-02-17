@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using Tarscord.Core.Persistence;
 
-namespace Tarscord.Core.Domain;
+namespace Tarscord.Core.Persistence.Entities;
 
 [Table("event_attendees")]
 public class EventAttendee : EntityBase

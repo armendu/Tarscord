@@ -41,7 +41,7 @@ public class AdminModule : ModuleBase
     public async Task DenyReactingAsync(
         [Summary("The user to be that's going to be denied of reacting"),
          Required(ErrorMessage = "Please provide member of the channel.")]
-        IUser user = null,
+        IUser? user = null,
         [Summary("Minutes for which the user cannot react")]
         int minutes = 1)
     {
