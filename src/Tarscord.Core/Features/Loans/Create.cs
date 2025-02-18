@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
@@ -10,14 +11,16 @@ namespace Tarscord.Core.Features.Loans;
 
 internal static class Create
 {
-    public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>
+    public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUserId
     {
         public decimal Amount { get; set; }
-        public ulong LoanedFrom { get; set; }
-        public required string LoanedFromUsername { get; set; }
-        public ulong LoanedTo { get; set; }
-        public required string LoanedToUsername { get; set; }
+        public ulong LoanedFromId { get; set; }
+        public required string LoanedFrom { get; set; }
+        public ulong LoanedToId { get; set; }
+        public required string LoanedTo { get; set; }
         public string? Description { get; set; }
+
+        public ulong PerformedByUserId { get; }
     }
 
     public class CreateLoanCommandValidator : AbstractValidator<Command>
@@ -33,12 +36,16 @@ internal static class Create
     {
         private readonly ILogger<CommandHandler> _logger;
         private readonly TarscordContext _context;
+        private readonly TimeProvider _timeProvider;
 
         public CommandHandler(
-            ILogger<CommandHandler> logger, TarscordContext context)
+            ILogger<CommandHandler> logger,
+            TarscordContext context,
+            TimeProvider timeProvider)
         {
             _logger = logger;
             _context = context;
+            _timeProvider = timeProvider;
         }
 
         public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
@@ -47,13 +54,14 @@ internal static class Create
             var createdLoan = await _context.AddAsync(new Loan
             {
                 LoanedFrom = command.LoanedFrom,
-                LoanedFromUsername = command.LoanedFromUsername,
+                LoanedFromId = command.LoanedFromId,
                 LoanedTo = command.LoanedTo,
-                LoanedToUsername = command.LoanedToUsername,
-                Description = "",
+                LoanedToId = command.LoanedToId,
+                Description = command.Description ?? "",
                 AmountLoaned = command.Amount,
                 AmountPayed = 0,
-                Confirmed = false
+                Confirmed = false,
+                Created = _timeProvider.GetUtcNow().UtcDateTime
             }, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);

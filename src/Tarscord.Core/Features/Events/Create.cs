@@ -25,17 +25,20 @@ internal static class Create
 //     }
 // }
 
-    internal sealed class CreateEventCommandHandler : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
+    internal sealed class CommandHandler : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
     {
-        private readonly ILogger<CreateEventCommandHandler> _logger;
+        private readonly ILogger<CommandHandler> _logger;
         private readonly TarscordContext _context;
+        private readonly TimeProvider _timeProvider;
 
-        public CreateEventCommandHandler(
-            ILogger<CreateEventCommandHandler> logger,
-            TarscordContext context)
+        public CommandHandler(
+            ILogger<CommandHandler> logger,
+            TarscordContext context,
+            TimeProvider timeProvider)
         {
             _logger = logger;
             _context = context;
+            _timeProvider = timeProvider;
         }
 
         public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
@@ -57,7 +60,7 @@ internal static class Create
                 EventDate = dateOfEvent.Value.ToUniversalTime(),
                 EventDescription = command.EventDescription,
                 IsActive = true,
-                Created = DateTime.UtcNow // Possibly replace with TimeProvider or remove altogether
+                Created = _timeProvider.GetUtcNow().UtcDateTime
             }, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);

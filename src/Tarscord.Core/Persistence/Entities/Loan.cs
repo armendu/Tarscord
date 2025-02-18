@@ -6,16 +6,16 @@ namespace Tarscord.Core.Persistence.Entities;
 public class Loan : EntityBase
 {
     [Column("loaned_from")]
-    public ulong LoanedFrom { get; set; }
+    public required string LoanedFrom { get; set; }
 
-    [Column("loaned_from_username")]
-    public required string LoanedFromUsername { get; set; }
+    [Column("loaned_from_id")]
+    public ulong LoanedFromId { get; set; }
 
     [Column("loaned_to")]
-    public ulong LoanedTo { get; set; }
+    public required string LoanedTo { get; set; }
 
-    [Column("loaned_to_username")]
-    public required string LoanedToUsername { get; set; }
+    [Column("loaned_to_id")]
+    public ulong LoanedToId { get; set; }
 
     [Column("description")]
     public required string Description { get; set; }

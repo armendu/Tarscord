@@ -67,6 +67,7 @@ public class Startup
             .AddLogging()
             .AddSingleton(Configuration)
             .AddDatabase(Configuration)
+            .AddSingleton(TimeProvider.System)
             .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }

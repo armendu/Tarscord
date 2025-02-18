@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using MediatR;
 using Tarscord.Core.Extensions;
@@ -24,7 +23,7 @@ public class LoanModule : ModuleBase
     /// <returns>The list of loans.</returns>
     [Command("list"), Summary("Shows the list of loans")]
     [Alias("show")]
-    public async Task ShowLoansAsync()
+    public async Task ShowLoans()
     {
         // var loanList = await _mediator.Send(new GetLoansQuery.Query());
         //
@@ -71,10 +70,10 @@ public class LoanModule : ModuleBase
         var response = await _mediator.Send(new Create.Command
         {
             Amount = amount,
-            LoanedTo = user.Id,
-            LoanedToUsername = user.Username,
-            LoanedFrom = Context.User.Id,
-            LoanedFromUsername = Context.User.Username,
+            LoanedToId = user.Id,
+            LoanedTo = user.Username,
+            LoanedFromId = Context.User.Id,
+            LoanedFrom = Context.User.Username,
             Description = string.Join(" ", description)
         });
 
