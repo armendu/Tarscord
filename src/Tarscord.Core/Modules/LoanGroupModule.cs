@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System.Text;
+using Discord;
 using Discord.Commands;
 using MediatR;
 using Tarscord.Core.Extensions;
@@ -25,35 +26,35 @@ public class LoanModule : ModuleBase
     [Alias("show")]
     public async Task ShowLoans()
     {
-        // var loanList = await _mediator.Send(new GetLoansQuery.Query());
-        //
-        // string messageToReplyWith = "No active loans were found";
-        //
-        // if (loanList.Loans?.Any() == true)
-        // {
-        //     string formattedEventInformation =
-        //         FormatEventInformation(_mapper.Map<List<LoanDto>>(loanList.Loans));
-        //
-        //     messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
-        // }
-        //
-        // await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+        var loanList = await _mediator.Send(new List.Query(Context.User.Username));
+
+        var messageToReplyWith = "No active loans were found";
+
+        if (loanList.Loans.Any())
+        {
+            string formattedEventInformation =
+                FormatEventInformation(loanList.Loans);
+
+            messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
+        }
+
+        await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
     }
 
-    // private string FormatEventInformation(IList<LoanDto> loans)
-    // {
-    //     var messageToReply = new StringBuilder();
-    //
-    //     for (int i = 0; i < loans.Count; i++)
-    //     {
-    //         messageToReply.Append(i + 1).Append(". '")
-    //             .Append(loans[i].LoanedToUsername).Append("' owns '")
-    //             .Append(loans[i].LoanedFromUsername).Append("' ")
-    //             .Append(loans[i].Amount).Append('€').Append(".\n");
-    //     }
-    //
-    //     return messageToReply.ToString();
-    // }
+    private static string FormatEventInformation(IReadOnlyList<LoanEnvelope> loans)
+    {
+        var messageToReply = new StringBuilder();
+
+        for (int i = 0; i < loans.Count; i++)
+        {
+            messageToReply.Append(i + 1).Append(". '")
+                .Append(loans[i].LoanedTo).Append("' owns '")
+                .Append(loans[i].LoanedFrom).Append("' ")
+                .Append(loans[i].Amount).Append('€').Append(".\n");
+        }
+
+        return messageToReply.ToString();
+    }
 
     /// <summary>
     /// Usage: loan to {user} {amount}
@@ -74,7 +75,8 @@ public class LoanModule : ModuleBase
             LoanedTo = user.Username,
             LoanedFromId = Context.User.Id,
             LoanedFrom = Context.User.Username,
-            Description = string.Join(" ", description)
+            Description = string.Join(" ", description),
+            PerformedByUser = Context.User.Username
         });
 
         var embeddedMessage = response.Match(

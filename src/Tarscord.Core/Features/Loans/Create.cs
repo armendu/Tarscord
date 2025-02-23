@@ -11,7 +11,7 @@ namespace Tarscord.Core.Features.Loans;
 
 internal static class Create
 {
-    public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUserId
+    public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUser
     {
         public decimal Amount { get; set; }
         public ulong LoanedFromId { get; set; }
@@ -20,7 +20,7 @@ internal static class Create
         public required string LoanedTo { get; set; }
         public string? Description { get; set; }
 
-        public ulong PerformedByUserId { get; }
+        public required string PerformedByUser { get; set; }
     }
 
     public class CreateLoanCommandValidator : AbstractValidator<Command>

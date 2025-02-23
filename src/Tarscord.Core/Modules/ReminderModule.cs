@@ -1,28 +1,19 @@
 ﻿using Discord.Commands;
-using System;
 using System.Text;
-using System.Threading.Tasks;
 using MediatR;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Features.Reminders.Commands;
+using Tarscord.Core.Features.Reminders;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to create reminders")]
-public class ReminderModule : ModuleBase
+public class ReminderModule(IMediator mediator) : ModuleBase
 {
-    private readonly IMediator _mediator;
-
-    public ReminderModule(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
     /// <summary>
     /// Usage: remindme {minutes} {messages}?
     /// </summary>
     [Command("remindme"), Summary("Sets a reminder")]
-    public async Task SetReminderAsync(
+    public async Task SetReminder(
         [Summary("The number in minutes")] double minutes,
         [Summary("The (optional) messages")] params string[] messages)
     {
@@ -38,12 +29,8 @@ public class ReminderModule : ModuleBase
             stringBuilder.Append($"{message} ");
         }
 
-        await _mediator.Send(new AddReminder.Command
-        {
-            DateToRemind = dateToRemind,
-            User = user,
-            Message = stringBuilder.ToString()
-        });
+        await mediator.Send(
+            new Create.Command(dateToRemind, user, stringBuilder.ToString(), Context.User.Username));
 
         // Tell the user that he will be notified
         await ReplyAsync(

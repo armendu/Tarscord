@@ -9,7 +9,7 @@ public abstract class ProcessMessage
 {
     public record Command : IRequest<bool>
     {
-        public SocketMessage Message { get; init; }
+        public required SocketMessage Message { get; init; }
     }
 
     public class Handler(
@@ -21,7 +21,7 @@ public abstract class ProcessMessage
     {
         public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
         {
-            if (request.Message is not SocketUserMessage message) 
+            if (request.Message is not SocketUserMessage message)
                 return false;
 
             // Ignore self when checking commands

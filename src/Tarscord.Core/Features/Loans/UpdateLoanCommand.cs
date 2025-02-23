@@ -12,9 +12,9 @@ public class UpdateLoanCommand : IRequest<LoanEnvelope>
 {
     public decimal Amount { get; set; }
     public ulong LoanedFrom { get; set; }
-    public string LoanedFromUsername { get; set; }
+    public required string LoanedFromUsername { get; set; }
     public ulong LoanedTo { get; set; }
-    public string LoanedToUsername { get; set; }
+    public required string LoanedToUsername { get; set; }
 }
 
 public class CommandValidator : AbstractValidator<UpdateLoanCommand>

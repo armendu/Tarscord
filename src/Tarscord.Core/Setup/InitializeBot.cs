@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Tarscord.Core.Setup;
 
-public class InitializeBot
+public static class InitializeBot
 {
     public record Command : IRequest<Unit>;
 
@@ -32,7 +32,7 @@ public class InitializeBot
 
         public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
         {
-            string discordToken = _config["tokens:discord"];
+            string discordToken = _config["tokens:discord"]!;
             if (string.IsNullOrWhiteSpace(discordToken))
                 throw new Exception("Please enter your bot's token into the `config.yml` file.");
 
@@ -43,4 +43,4 @@ public class InitializeBot
             return Unit.Value;
         }
     }
-} 
+}

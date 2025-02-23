@@ -23,9 +23,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("list"), Summary("Lists all events")]
     public async Task ListEvents()
     {
-        var user = Context.User.ToCommonUser();
-
-        var eventInfoList = await _mediator.Send(new List.Query(user.Id));
+        var eventInfoList = await _mediator.Send(new List.Query(Context.User.Username));
 
         await ReplyAsync(embed: eventInfoList.EventInfos[0].EventName.EmbedMessage()).ConfigureAwait(false);
     }
@@ -80,8 +78,9 @@ public class EventModule : ModuleBase<SocketCommandContext>
     /// </summary>
     [Command("remove"), Summary("Cancel an event")]
     [Alias("delete")]
-    public async Task CancelEventAsync([Summary("The event name")] string eventName)
+    public async Task CancelEvent([Summary("The event name")] string eventName)
     {
+        await Task.CompletedTask;
         // string messageToReplyWith = $"You have successfully canceled the event named '{eventName}'";
         // EventInfo result = await _eventService.CancelEvent(Context.User.ToCommonUser(), eventName);
         //
@@ -96,11 +95,12 @@ public class EventModule : ModuleBase<SocketCommandContext>
     /// </summary>
     /// <returns>The confirmed attendees.</returns>
     [Command("confirm"), Summary("Confirm your attendance")]
-    public async Task ConfirmAsync(
+    public async Task Confirm(
         [Summary("The event name")] ulong eventId,
         [Summary("The (optional) user to confirm for")]
         params IUser[] users)
     {
+        await Task.CompletedTask;
         // if (users.Length == 0)
         //     users = new[] { Context.User };
         //
@@ -144,11 +144,12 @@ public class EventModule : ModuleBase<SocketCommandContext>
     /// <returns>The number squared.</returns>
     [Command("cancel"), Summary("Confirm your attendance")]
     [Alias("unattend")]
-    public async Task CancelAttendanceAsync(
+    public async Task CancelAttendance(
         [Summary("The event name")] ulong eventId,
         [Summary("The (optional) user to confirm for")]
         params IUser[] users)
     {
+        await Task.CompletedTask;
         // users ??= new[] {Context.User};
         //
         // var eventAttendees = await _mediator.Send(new Update.Command()
@@ -180,6 +181,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("confirmed"), Summary("Shows confirmed attendees.")]
     public async Task ShowConfirmed([Summary("The Event Id")] ulong eventId)
     {
+        await Task.CompletedTask;
         // var attendees = await _mediator.Send(new EventAttendanceDetails.Query()
         // {
         //     EventId = eventId

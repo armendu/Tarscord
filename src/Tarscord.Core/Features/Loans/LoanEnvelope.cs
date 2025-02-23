@@ -6,12 +6,12 @@ namespace Tarscord.Core.Features.Loans;
 
 public class LoanEnvelope
 {
-    public decimal Amount { get; set; }
-    public ulong LoanedFromId { get; set; }
-    public string LoanedFrom { get; set; }
-    public ulong LoanedToId { get; set; }
-    public string LoanedTo { get; set; }
-    public string Description { get; set; }
+    public decimal Amount { get; init; }
+    public ulong LoanedFromId { get; init; }
+    public required string LoanedFrom { get; init; }
+    public ulong LoanedToId { get; init; }
+    public required string LoanedTo { get; init; }
+    public string? Description { get; init; }
 
     public static LoanEnvelope FromEntity(Loan loan)
     {
