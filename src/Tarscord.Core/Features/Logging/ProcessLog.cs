@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Tarscord.Core.Features.Logging;
 
-public class ProcessLog
+public static class ProcessLog
 {
     public record Command : IRequest<Unit>
     {
@@ -41,4 +41,4 @@ public class ProcessLog
             return Task.FromResult(Unit.Value);
         }
     }
-} 
+}

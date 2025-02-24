@@ -18,9 +18,9 @@ public class HelpModule : ModuleBase<SocketCommandContext>
     }
 
     [Command("help")]
-    public async Task HelpAsync()
+    public async Task Help()
     {
-        string prefix = _config["prefix"];
+        var prefix = _config["prefix"]!;
         var builder = new EmbedBuilder
         {
             Color = Color.Blue,
@@ -35,7 +35,7 @@ public class HelpModule : ModuleBase<SocketCommandContext>
                 continue;
             }
 
-            string description = null;
+            string? description = null;
             foreach (var cmd in module.Commands)
             {
                 var result = await cmd.CheckPreconditionsAsync(Context);

@@ -27,11 +27,11 @@ public class AdminModule : ModuleBase
     /// Usage: unmute {user}
     /// </summary>
     [Command("unmute"), Summary("Unmutes a user")]
-    public async Task UnmuteUserAsync(
+    public async Task UnmuteUser(
         [Summary("The user to be unmuted"), Required(ErrorMessage = "Please provide member of the channel.")]
         IUser? user = null)
     {
-        await ExecuteCommandAsync(user, CommandType.Unmute).ConfigureAwait(false);
+        await ExecuteCommandAsync(user!, CommandType.Unmute).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -41,11 +41,12 @@ public class AdminModule : ModuleBase
     public async Task DenyReactingAsync(
         [Summary("The user to be that's going to be denied of reacting"),
          Required(ErrorMessage = "Please provide member of the channel.")]
-        IUser user = null,
+        IUser? user = null,
         [Summary("Minutes for which the user cannot react")]
         int minutes = 1)
     {
-        await ExecuteCommandAsync(user, CommandType.DenyReacting, minutes).ConfigureAwait(false);
+        // TODO: Add small validation here
+        await ExecuteCommandAsync(user!, CommandType.DenyReacting, minutes).ConfigureAwait(false);
     }
 
     private async Task ExecuteCommandAsync(IUser user, CommandType action, int minutes = 0)
@@ -58,7 +59,7 @@ public class AdminModule : ModuleBase
             OverwritePermissions? possiblePermissions = channel.GetPermissionOverwrite(user);
             OverwritePermissions overwritePermissions = new OverwritePermissions();
 
-            string messageToBeShownByBot = null;
+            string? messageToBeShownByBot = null;
 
             switch (action)
             {
@@ -84,7 +85,7 @@ public class AdminModule : ModuleBase
             }
 
             await channel.AddPermissionOverwriteAsync(user, overwritePermissions).ConfigureAwait(false);
-            await ReplyAsync(embed: messageToBeShownByBot.EmbedMessage()).ConfigureAwait(false);
+            await ReplyAsync(embed: messageToBeShownByBot!.EmbedMessage()).ConfigureAwait(false);
         }
     }
 

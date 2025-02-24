@@ -14,7 +14,7 @@ public class InteractionModule : ModuleBase
     /// </summary>
     [Command("dare"), Summary("Sends a sarcastic message based on the sarcasm level")]
     public async Task SendSarcasticMessageAsync(
-        [Summary("The user to be muted")] IUser user = null)
+        [Summary("The user to be muted")] IUser? user = null)
     {
         // TODO: Check for sarcasm level
         using (Context.Channel.EnterTypingState())

@@ -1,11 +1,8 @@
-﻿using System;
-using Tarscord.Core.Persistence;
-
-namespace Tarscord.Core.Domain;
+﻿namespace Tarscord.Core.Persistence.Entities;
 
 public class User : EntityBase
 {
-    public string Username { get; set; }
+    public required string Username { get; set; }
 
     public bool IsMuted { get; set; }
 

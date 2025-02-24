@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Tarscord.Core.Persistence;
+namespace Tarscord.Core.Persistence.Entities;
 
 public abstract class EntityBase
 {

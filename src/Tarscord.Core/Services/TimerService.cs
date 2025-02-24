@@ -1,8 +1,8 @@
 ﻿using Discord;
 using MediatR;
-using Tarscord.Core.Domain;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Features.Reminders.Commands;
+using Tarscord.Core.Features.Reminders;
+using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Services;
 
@@ -13,9 +13,10 @@ public class TimerService(IMediator mediator, ITimer timer) : IDisposable
     private ITimer _timer = timer;
     private bool _disposed;
 
-    public void AddReminder(DateTime dateToRemind, IUser user, string message)
+    public async Task AddReminder(DateTime dateToRemind, IUser user, string message)
     {
-        var reminderInfo = new ReminderInfo()
+        await Task.CompletedTask;
+        var reminderInfo = new ReminderInfo
         {
             User = user,
             Message = message
@@ -24,11 +25,11 @@ public class TimerService(IMediator mediator, ITimer timer) : IDisposable
         ReminderInfos.Add(dateToRemind, reminderInfo);
     }
 
-    public async Task NotifyUserWithMessageAsync()
+    public async Task NotifyUserWithMessage()
     {
         if (ReminderInfos.Count == 0)
         {
-            await StopTimerAsync();
+            await StopTimer();
             return;
         }
 
@@ -55,7 +56,7 @@ public class TimerService(IMediator mediator, ITimer timer) : IDisposable
         return Task.CompletedTask;
     }
 
-    private Task StopTimerAsync()
+    private Task StopTimer()
     {
         _timer.Change(new TimeSpan(Timeout.Infinite), new TimeSpan(0));
         return Task.CompletedTask;

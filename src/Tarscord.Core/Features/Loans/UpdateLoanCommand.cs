@@ -8,13 +8,13 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Loans;
 
-public class UpdateLoanCommand : IRequest<LoanDto>
+public class UpdateLoanCommand : IRequest<LoanEnvelope>
 {
     public decimal Amount { get; set; }
     public ulong LoanedFrom { get; set; }
-    public string LoanedFromUsername { get; set; }
+    public required string LoanedFromUsername { get; set; }
     public ulong LoanedTo { get; set; }
-    public string LoanedToUsername { get; set; }
+    public required string LoanedToUsername { get; set; }
 }
 
 public class CommandValidator : AbstractValidator<UpdateLoanCommand>
@@ -25,11 +25,11 @@ public class CommandValidator : AbstractValidator<UpdateLoanCommand>
     }
 }
 
-public class UpdateLoanCommandHandler : IRequestHandler<UpdateLoanCommand, LoanDto>
+public class UpdateLoanCommandHandler : IRequestHandler<UpdateLoanCommand, LoanEnvelope>
 {
-    private readonly ILogger<CreateLoanCommandHandler> _logger;
+    private readonly ILogger<UpdateLoanCommandHandler> _logger;
 
-    public UpdateLoanCommandHandler(ILogger<CreateLoanCommandHandler> logger)
+    public UpdateLoanCommandHandler(ILogger<UpdateLoanCommandHandler> logger)
     {
         _logger = logger;
     }
@@ -53,7 +53,7 @@ public class UpdateLoanCommandHandler : IRequestHandler<UpdateLoanCommand, LoanD
     //     return new LoanDto();
     // }
 
-    public Task<LoanDto> Handle(UpdateLoanCommand request, CancellationToken cancellationToken)
+    public Task<LoanEnvelope> Handle(UpdateLoanCommand request, CancellationToken cancellationToken)
     {
         throw new System.NotImplementedException();
     }
