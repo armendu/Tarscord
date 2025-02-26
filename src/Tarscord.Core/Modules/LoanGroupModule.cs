@@ -62,7 +62,7 @@ public class LoanModule : ModuleBase
     /// <returns>The generated random number</returns>
     [Command("to"), Summary("Loans a user some money")]
     public async Task LoanToUser(
-        [Summary("The user to loan money to")] IUser user,
+        [Summary("The user to loan money to")] IUser? user,
         [Summary("The amount of the money being lent")]
         decimal amount,
         [Summary("The reason you're loaning the money")]
