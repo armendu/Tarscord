@@ -23,12 +23,11 @@ internal static class Create
         public required string PerformedByUser { get; set; }
     }
 
-    public class CreateLoanCommandValidator : AbstractValidator<Command>
+    public class CommandValidator : AbstractValidator<Command>
     {
-        public CreateLoanCommandValidator()
+        public CommandValidator()
         {
-            // TODO: Add proper validation
-            // RuleFor(x => x.Loan).NotNull();
+            RuleFor(x => x.Amount).GreaterThan(0);
         }
     }
 
@@ -41,8 +40,8 @@ internal static class Create
         public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-                nameof(Create.Command), command.PerformedByUser);
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Command), command.PerformedByUser);
 
             var createdLoan = await context.AddAsync(new Loan
             {

@@ -22,7 +22,9 @@ internal static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), request.PerformedByUser);
 
-            var eventInfos = await context.Loans.ToListAsync(cancellationToken: cancellationToken);
+            var eventInfos = await context.Loans
+                .Where(x => x.LoanedFrom ==  request.PerformedByUser || x.LoanedTo == request.PerformedByUser)
+                .ToListAsync(cancellationToken: cancellationToken);
 
             return new ListResponse(eventInfos.ConvertAll(LoanEnvelope.FromEntity));
         }
