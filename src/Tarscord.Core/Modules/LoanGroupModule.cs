@@ -28,29 +28,32 @@ public class LoanModule : ModuleBase
     {
         var loanList = await _mediator.Send(new List.Query(Context.User.Username));
 
-        var messageToReplyWith = "No active loans were found";
-
-        if (loanList.Loans.Any())
+        if (!loanList.Loans.Any())
         {
-            string formattedEventInformation =
-                FormatEventInformation(loanList.Loans);
-
-            messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
+            const string messageToReplyWith = "No active loans were found";
+            await ReplyAsync(embed: messageToReplyWith.EmbedMessage());
         }
 
-        await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+        await ReplyAsync(embed: "Here are all the loans:\n".EmbedMessage(),
+            message: FormatEventInformation(loanList.Loans));
     }
 
     private static string FormatEventInformation(IReadOnlyList<LoanEnvelope> loans)
     {
         var messageToReply = new StringBuilder();
 
-        for (int i = 0; i < loans.Count; i++)
+        for (var i = 0; i < loans.Count; i++)
         {
+            if (loans[i].Amount == loans[i].AmountPaid)
+            {
+                continue;
+            }
             messageToReply.Append(i + 1).Append(". '")
                 .Append(loans[i].LoanedTo).Append("' owns '")
                 .Append(loans[i].LoanedFrom).Append("' ")
-                .Append(loans[i].Amount).Append('€').Append(".\n");
+                .Append(loans[i].Amount).Append('€')
+                .Append(" (from them paid: ").Append(loans[i].AmountPaid)
+                .Append(".\n");
         }
 
         return messageToReply.ToString();
@@ -62,17 +65,25 @@ public class LoanModule : ModuleBase
     /// <returns>The generated random number</returns>
     [Command("to"), Summary("Loans a user some money")]
     public async Task LoanToUser(
-        [Summary("The user to loan money to")] IUser user,
+        [Summary("The user to loan money to")] string user,
         [Summary("The amount of the money being lent")]
         decimal amount,
         [Summary("The reason you're loaning the money")]
         params string[] description)
     {
+        var guildUser = await GetMentionedUser(user);
+
+        if (guildUser is null)
+        {
+            await ReplyAsync(embed: "Invalid user mention. Please mention a user like @username".EmbedMessage());
+            return;
+        }
+
         var response = await _mediator.Send(new Create.Command
         {
             Amount = amount,
-            LoanedToId = user.Id,
-            LoanedTo = user.Username,
+            LoanedToId = guildUser.Id,
+            LoanedTo = guildUser.Username,
             LoanedFromId = Context.User.Id,
             LoanedFrom = Context.User.Username,
             Description = string.Join(" ", description),
@@ -93,31 +104,46 @@ public class LoanModule : ModuleBase
     [Command("payback"), Summary("Pays back the amount to the loaner")]
     [Alias("return", "removeloan", "deleteloan", "payloan")]
     public async Task PaybackToUser(
-        [Summary("The user to loan money to")] IUser user,
+        [Summary("The user to loan money to")] string user,
         [Summary("The value of the money being lent")]
         decimal amountBeingPayedBack)
     {
-        await Task.CompletedTask;
-        // var loanEnvelope = await _mediator.Send(new UpdateLoanCommand
-        // {
-        //     Loan = new UpdateLoanCommand.Loan
-        //     {
-        //         Amount = amountBeingPayedBack,
-        //         LoanedTo = user.Id,
-        //         LoanedToUsername = user.Username,
-        //         LoanedFrom = Context.User.Id,
-        //         LoanedFromUsername = Context.User.Username
-        //     }
-        // });
-        //
-        // var messageToReplyWith = "";
-        // if (loanEnvelope.Loan != null)
-        // {
-        //     var formattedEventInformation =
-        //         FormatEventInformation(_mapper.Map<List<LoanDto>>(loanEnvelope.Loan));
-        //     messageToReplyWith = $"Here are all the loans:\n{formattedEventInformation}";
-        // }
-        //
-        // await ReplyAsync(embed: messageToReplyWith.EmbedMessage()).ConfigureAwait(false);
+        var guildUser = await GetMentionedUser(user);
+
+        if (guildUser is null)
+        {
+            await ReplyAsync(embed: "Invalid user mention. Please mention a user like @username".EmbedMessage());
+            return;
+        }
+
+        var response = await _mediator.Send(new Update.Command
+        {
+            Amount = amountBeingPayedBack,
+            LoanedTo = guildUser.Id,
+            LoanedToUsername = guildUser.Username,
+            LoanedFrom = Context.User.Id,
+            LoanedFromUsername = Context.User.Username,
+            PerformedByUser = Context.User.Username
+        });
+
+        var embeddedMessage = response.Match(
+            eventInfoEnvelope => eventInfoEnvelope.ToEmbeddedMessage(),
+            failureResponse => failureResponse.ErrorMessage.EmbedMessage());
+
+        await ReplyAsync(embed: embeddedMessage);
+    }
+
+    private async Task<IGuildUser?> GetMentionedUser(string userMention)
+    {
+        // Parse the user mention to get the user ID
+        if (!MentionUtils.TryParseUser(userMention, out var userId))
+        {
+            return null;
+        }
+
+        // Get the user from the guild
+        var guildUser = await Context.Guild.GetUserAsync(userId);
+
+        return guildUser ?? null;
     }
 }

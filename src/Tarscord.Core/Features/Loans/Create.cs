@@ -23,35 +23,27 @@ internal static class Create
         public required string PerformedByUser { get; set; }
     }
 
-    public class CreateLoanCommandValidator : AbstractValidator<Command>
+    public class CommandValidator : AbstractValidator<Command>
     {
-        public CreateLoanCommandValidator()
+        public CommandValidator()
         {
-            // TODO: Add proper validation
-            // RuleFor(x => x.Loan).NotNull();
+            RuleFor(x => x.Amount).GreaterThan(0);
         }
     }
 
-    public class CommandHandler : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
+    public class CommandHandler(
+        ILogger<CommandHandler> logger,
+        TarscordContext context,
+        TimeProvider timeProvider)
+        : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
-        private readonly ILogger<CommandHandler> _logger;
-        private readonly TarscordContext _context;
-        private readonly TimeProvider _timeProvider;
-
-        public CommandHandler(
-            ILogger<CommandHandler> logger,
-            TarscordContext context,
-            TimeProvider timeProvider)
-        {
-            _logger = logger;
-            _context = context;
-            _timeProvider = timeProvider;
-        }
-
         public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
             CancellationToken cancellationToken)
         {
-            var createdLoan = await _context.AddAsync(new Loan
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Command), command.PerformedByUser);
+
+            var createdLoan = await context.AddAsync(new Loan
             {
                 LoanedFrom = command.LoanedFrom,
                 LoanedFromId = command.LoanedFromId,
@@ -61,10 +53,10 @@ internal static class Create
                 AmountLoaned = command.Amount,
                 AmountPayed = 0,
                 Confirmed = false,
-                Created = _timeProvider.GetUtcNow().UtcDateTime
+                Created = timeProvider.GetUtcNow().UtcDateTime
             }, cancellationToken);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             return LoanEnvelope.FromEntity(createdLoan.Entity);
         }

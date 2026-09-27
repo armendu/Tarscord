@@ -13,6 +13,8 @@ public class LoanEnvelope
     public required string LoanedTo { get; init; }
     public string? Description { get; init; }
 
+    public decimal AmountPaid { get; init; }
+
     public static LoanEnvelope FromEntity(Loan loan)
     {
         return new LoanEnvelope
@@ -22,7 +24,8 @@ public class LoanEnvelope
             LoanedFromId = loan.LoanedFromId,
             LoanedTo = loan.LoanedTo,
             LoanedToId = loan.LoanedToId,
-            Description = loan.Description
+            Description = loan.Description,
+            AmountPaid = loan.AmountPayed
         };
     }
 
