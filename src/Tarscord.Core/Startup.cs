@@ -39,7 +39,8 @@ public class Startup
         // failure instead of a shared-DbContext bug that only shows under concurrent commands.
         var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
-            ValidateScopes = true
+            ValidateScopes = true,
+            ValidateOnBuild = true
         });
 
         // Start the logging service, and the command handler service
@@ -48,6 +49,9 @@ public class Startup
 
         // Start the startup service
         await provider.GetRequiredService<StartupService>().StartAsync();
+
+        var reminders = provider.GetRequiredService<ReminderDispatcher>();
+        await reminders.StartAsync(CancellationToken.None);
 
         await Task.Delay(-1);
     }
@@ -71,7 +75,7 @@ public class Startup
             .AddSingleton<CommandHandler>()
             .AddSingleton<StartupService>()
             .AddSingleton<LoggingService>()
-            .AddSingleton<TimerService>()
+            .AddSingleton<ReminderDispatcher>()
             .AddLogging(builder => builder.AddSimpleConsole(options => options.TimestampFormat = "HH:mm:ss "))
             .AddSingleton(configuration)
             .AddDatabase(configuration)
@@ -85,6 +89,7 @@ public class Startup
             .AddScoped<IValidator<Features.EventAttendees.List.Query>, Features.EventAttendees.List.QueryValidator>()
             .AddScoped<IValidator<Features.Loans.Create.Command>, Features.Loans.Create.CommandValidator>()
             .AddScoped<IValidator<Features.Loans.Update.Command>, Features.Loans.Update.CommandValidator>()
+            .AddScoped<IValidator<Features.Reminders.Create.Command>, Features.Reminders.Create.CommandValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

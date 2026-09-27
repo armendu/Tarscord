@@ -16,6 +16,7 @@ public class MigrationsTests(PostgresFixture fixture)
     [InlineData("event_attendees")]
     [InlineData("loans")]
     [InlineData("users")]
+    [InlineData("reminders")]
     [InlineData("schemaversions")]
     public async Task Upgrade_AgainstEmptyDatabase_CreatesTable(string tableName)
     {
@@ -43,6 +44,6 @@ public class MigrationsTests(PostgresFixture fixture)
             .SingleAsync();
 
         // Assert
-        applied.Should().Be(4);
+        applied.Should().Be(5);
     }
 }

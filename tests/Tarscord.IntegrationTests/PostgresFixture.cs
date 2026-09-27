@@ -99,8 +99,8 @@ public sealed class PostgresFixture : IAsyncLifetime
         await using var context = CreateContext();
 
         await context.Database.ExecuteSqlRawAsync(
-            "TRUNCATE public.event_attendees, public.event_infos, public.loans, public.users " +
-            "RESTART IDENTITY CASCADE");
+            "TRUNCATE public.event_attendees, public.event_infos, public.loans, public.users, " +
+            "public.reminders RESTART IDENTITY CASCADE");
     }
 
     public TarscordContext CreateContext()

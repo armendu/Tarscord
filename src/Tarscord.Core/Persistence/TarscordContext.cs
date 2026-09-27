@@ -11,6 +11,8 @@ public class TarscordContext(DbContextOptions<TarscordContext> options) : DbCont
 
     public DbSet<Loan> Loans { get; set; }
 
+    public DbSet<Reminder> Reminders { get; set; }
+
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,6 +25,8 @@ public class TarscordContext(DbContextOptions<TarscordContext> options) : DbCont
         modelBuilder.Entity<Loan>().Property(loan => loan.LoanedFromId).HasConversion<long>();
         modelBuilder.Entity<Loan>().Property(loan => loan.LoanedToId).HasConversion<long>();
         modelBuilder.Entity<User>().Property(user => user.DiscordId).HasConversion<long>();
+        modelBuilder.Entity<Reminder>().Property(reminder => reminder.UserId).HasConversion<long>();
+        modelBuilder.Entity<Reminder>().Property(reminder => reminder.ChannelId).HasConversion<long>();
 
         modelBuilder.Entity<Loan>().Property(loan => loan.AmountLoaned).HasPrecision(18, 2);
         modelBuilder.Entity<Loan>().Property(loan => loan.AmountPayed).HasPrecision(18, 2);

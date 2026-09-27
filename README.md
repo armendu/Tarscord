@@ -27,6 +27,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?loan list` (`show`) | Loans you're on either side of |
 | `?loan to <@user> <amount> <why>` | Record that you lent someone money |
 | `?loan payback <@user> <amount>` (`return`, `payloan`, …) | Pay back money you owe |
+| `?remindme <minutes> <message>` | Reminds you in the channel you asked in |
 
 The three parts of `?event create` are separated by commas, because a name and a date are both
 usually several words:
@@ -51,7 +52,6 @@ Owner-only, and the bot needs Manage Roles in the channel to apply them:
 These are registered, so `?help` will offer them, but they don't do what they claim. See
 [CLAUDE.md](CLAUDE.md) for the details:
 
-- `?remindme <minutes> <message>` — throws before it reaches the reminder
 - `?sarcasm-level <n>` — accepts your number and discards it
 
 The `[minutes]` argument on `mute` and `denyreacting` is also accepted and ignored; the mute

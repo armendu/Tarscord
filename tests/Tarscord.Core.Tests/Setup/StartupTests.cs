@@ -97,9 +97,6 @@ public class StartupTests
             .SelectMany(type => type.GetInterfaces())
             .Where(contract => contract.IsGenericType
                                && handlerInterfaces.Contains(contract.GetGenericTypeDefinition()))
-            // TimerService takes an ITimer that nothing registers. The reminder rework deletes it,
-            // and this exclusion goes with it.
-            .Where(contract => !contract.ToString().Contains("Features.Reminders"))
             .Distinct();
 
         var data = new TheoryData<Type>();
