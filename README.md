@@ -143,7 +143,6 @@ Three keys in `src/Tarscord.Core/Resources/config.yml` actually do something:
 | `prefix` | The character that starts a command. Default `?` |
 | `sarcasm-level`, `humor-level` | 0–10, the starting values for the bot's voice |
 | `ollama.url`, `ollama.model` | Where the local model lives, and which one |
-| `messages.euro_sign` | The symbol loan amounts are printed with |
 
 ### The local model
 

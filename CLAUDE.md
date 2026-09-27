@@ -114,7 +114,7 @@ src/Tarscord.Core/
     Modules/                   Discord.Net command modules — the user-facing surface
     Features/<Area>/           one file per operation: the request record and its handler
     Persistence/               TarscordContext, Entities/, AddDatabase()
-    Extensions/                EmbedMessage, FromTextToDate, CurrencySymbol
+    Extensions/                EmbedMessage, FromTextToDate, CommandPrefix, ToEmbeddedMessage
     Resources/config.yml       gitignored; config.example.yml is the defaults layer under it
 src/Tarscord.DbMigrator/       DbUp console app, Migrations/*.sql embedded as resources
                                DatabaseMigrator is public so tests apply the real scripts
@@ -152,11 +152,12 @@ bugs. This is also what the Framework Design Guidelines ask for — see *Code qu
 `logger.LogInformation("{Command} executed by {PerformedByUser}", …)`, structured, not
 interpolated.
 
-**Reuse what's there.** `EmbedMessage()` in `Extensions/Extensions.cs` builds every embed,
-`CurrencySymbol()` in `Extensions/ConfigurationExtensions.cs` reads `messages.euro_sign`, and
+**Reuse what's there.** `EmbedMessage()` in `Extensions/Extensions.cs` builds every embed, and
 `FromTextToDate()` in `Extensions/DateTimeExtensions.cs` parses whatever a person typed as a date.
-Don't hand-roll an `EmbedBuilder` in a module. `HelpModule` is the one exception: it enumerates
-`CommandService` rather than rendering a feature, so it builds its own.
+An envelope implements `IEmbeddedMessage` and a module renders a whole result with
+`response.ToEmbeddedMessage()` from `Extensions/ResponseExtensions.cs`, rather than repeating the
+same two-arm `Match`. Don't hand-roll an `EmbedBuilder` in a module. `HelpModule` is the one
+exception: it enumerates `CommandService` rather than rendering a feature, so it builds its own.
 
 **Take time from `TimeProvider`.** It's registered in `Startup` and injected into every handler
 and extension that needs a clock, which is what makes them testable with `FakeTimeProvider`. Never
@@ -238,9 +239,10 @@ unless `OnModelCreating` converts it to `long` — every Discord id needs that c
 run in `schemaversions`, so changing an applied script does nothing on any database that already has
 it. Add a new numbered file. `v1.03` had to be corrected by `v1.05` for exactly this reason.
 
-**Source is UTF-8 without a BOM, declared in `.editorconfig`.** The tree used to be mixed — 16 files
-with a BOM, the rest without — and an editor reading a non-BOM file that contains `€` or `ë` guesses
-wrong and reports it as loaded in the wrong encoding. Don't reintroduce a BOM.
+**Source is UTF-8 without a BOM, declared in `.editorconfig`, and every `.cs` file is pure ASCII.**
+The tree used to be mixed — 16 files with a BOM, the rest without — and an editor reading a non-BOM
+file containing a non-ASCII character guesses wrong and reports it as loaded in the wrong encoding.
+Don't reintroduce a BOM, and write a symbol like the euro as `\u20AC`.
 
 **`config.yml` is optional; `config.example.yml` is not.** The example file is the defaults layer and
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
@@ -311,10 +313,11 @@ that's what `OneOf<TEnvelope, FailureResponse>` is for here. Never throw bare
 **Analyzers** — [Code analysis in .NET](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview).
 `EnableNETAnalyzers` is on by default for .NET 5+, so `CAxxxx` rules already run, and CI builds
 with `-warnaserror`, so any of them failing fails the build. `IDExxxx` code-style rules still do
-**not** run on a command-line build unless `EnforceCodeStyleInBuild` is set, which is not set, so the
-naming and layout rules above remain conventions rather than machine-checked. `.editorconfig` exists
-but only declares encoding and whitespace; adding severities to it is the next step and was left out
-of scope.
+run too, because `.editorconfig` is the template `dotnet new editorconfig` generates and
+`Directory.Build.props` sets `EnforceCodeStyleInBuild`. The template ships every rule as a
+suggestion, which a build ignores, so two are raised to warnings: `IDE0055` (formatting) and
+`IDE0011` (braces on every `if`). `dotnet format` fixes both automatically. Raise more rather than
+lowering these.
 
 ## Testing
 
