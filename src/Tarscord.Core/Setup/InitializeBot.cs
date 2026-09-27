@@ -13,6 +13,8 @@ public static class InitializeBot
 
     public class Handler : IRequestHandler<Command, Unit>
     {
+        private const string PlaceholderToken = "YOUR_DISCORD_BOT_TOKEN";
+
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
@@ -32,9 +34,17 @@ public static class InitializeBot
 
         public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
         {
-            string discordToken = _config["tokens:discord"]!;
-            if (string.IsNullOrWhiteSpace(discordToken))
-                throw new Exception("Please enter your bot's token into the `config.yml` file.");
+            string? discordToken = _config["tokens:discord"];
+
+            // A missing token is a configuration failure, not something a user can act on in chat, so
+            // this one throws rather than becoming a FailureResponse. It names a specific type: a bare
+            // Exception tells a reader nothing about what went wrong.
+            if (string.IsNullOrWhiteSpace(discordToken) || discordToken == PlaceholderToken)
+            {
+                throw new InvalidOperationException(
+                    "No Discord bot token is configured. Copy Resources/config.example.yml to " +
+                    "Resources/config.yml and put your token in tokens.discord.");
+            }
 
             await _discord.LoginAsync(TokenType.Bot, discordToken);
             await _discord.StartAsync();

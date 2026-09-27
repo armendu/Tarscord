@@ -1,33 +1,31 @@
-﻿using Discord.Commands;
-using System;
-using System.Threading.Tasks;
+using Discord.Commands;
 using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to generate random numbers")]
-public class RandomNumberModule : ModuleBase
+public class RandomNumberModule : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: random {lower limit} {upper limit}
     /// </summary>
-    /// <returns>The generated random number</returns>
     [Command("random"), Summary("Generates a random number between two numbers")]
     [Alias("r")]
     public async Task GenerateRandomNumberAsync(
         [Summary("The lower limit")] int min,
         [Summary("The upper limit")] int max)
     {
-        int generatedNumber = 0;
-        try
+        // Random.Shared.Next throws when min is above max. That was caught as Exception and rethrown
+        // as a new one, which discarded the original and told nobody: RunMode.Async reported the
+        // command as successful and the user saw silence.
+        if (min > max)
         {
-            generatedNumber = Random.Shared.Next(min, max);
-        }
-        catch (Exception)
-        {
-            throw new Exception("Wrong command usage. Try: random lower-limit upper-limit");
+            await ReplyAsync(embed: "The lower limit has to come first. Try: random 1 100".EmbedMessage());
+            return;
         }
 
-        await ReplyAsync(embed: generatedNumber.ToString().EmbedMessage()).ConfigureAwait(false);
+        int generatedNumber = Random.Shared.Next(min, max);
+
+        await ReplyAsync(embed: generatedNumber.ToString().EmbedMessage());
     }
 }
