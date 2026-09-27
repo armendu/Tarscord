@@ -25,7 +25,10 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      # -warnaserror: the tree is warning-clean, and it only stays that way if a warning fails.
+      run: dotnet build --no-restore --configuration Release -warnaserror
 
     - name: Test
+      # The integration suite starts its own PostgreSQL through Testcontainers, using the Docker
+      # daemon the runner already provides, so there is no service container to declare here.
       run: dotnet test --no-build --configuration Release --verbosity normal
