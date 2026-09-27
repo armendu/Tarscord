@@ -253,6 +253,10 @@ the example with a placeholder or nothing will read it. Both are copied to the o
 line. If you add something that talks to the model, it degrades the same way. Nothing that people
 rely on reading — loans, events, help — goes near it.
 
+**Write the database before calling Discord.** `Restrictions/Apply` and `Restrictions/Lift` both do.
+The other order can leave someone muted with no row, which means nothing ever expires it; this way
+round, a failed Discord call leaves a row the sweeper will tidy up. Two tests pin it.
+
 **`?loan payback` picks the most recent open loan.** Not the oldest. That is what the original
 `LastOrDefault` was reaching for, and it is a behaviour choice, not an accident.
 

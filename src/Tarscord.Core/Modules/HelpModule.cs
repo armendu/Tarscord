@@ -1,3 +1,4 @@
+using System.Text;
 using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,9 @@ public class HelpModule : ModuleBase<SocketCommandContext>
             Description = "These are the commands you can use"
         };
 
+        // Keyed by name, so two modules sharing a name become one section.
+        var sections = new Dictionary<string, StringBuilder>();
+
         foreach (var module in _service.Modules)
         {
             // This module lists the others; listing itself as well adds nothing.
@@ -37,25 +41,29 @@ public class HelpModule : ModuleBase<SocketCommandContext>
                 continue;
             }
 
-            string? description = null;
             foreach (var cmd in module.Commands)
             {
                 var result = await cmd.CheckPreconditionsAsync(Context);
-                if (result.IsSuccess)
-                {
-                    description += $"{prefix}{cmd.Aliases.First()} - {cmd.Summary}\n";
-                }
-            }
 
-            if (!string.IsNullOrWhiteSpace(description))
-            {
-                builder.AddField(x =>
+                if (!result.IsSuccess)
                 {
-                    x.Name = module.Name;
-                    x.Value = description;
-                    x.IsInline = false;
-                });
+                    continue;
+                }
+
+                if (!sections.TryGetValue(module.Name, out var commands))
+                {
+                    commands = new StringBuilder();
+                    sections[module.Name] = commands;
+                }
+
+                commands.Append(prefix).Append(cmd.Aliases.First())
+                    .Append(" - ").Append(cmd.Summary).Append('\n');
             }
+        }
+
+        foreach (var (name, commands) in sections)
+        {
+            builder.AddField(name, commands.ToString());
         }
 
         await ReplyAsync(embed: builder.Build());

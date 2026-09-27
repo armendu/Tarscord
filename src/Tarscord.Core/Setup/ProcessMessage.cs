@@ -1,3 +1,4 @@
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using MediatR;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Personality;
+using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Setup;
 
@@ -16,11 +18,15 @@ public static class ProcessMessage
         public required SocketMessage Message { get; init; }
     }
 
+    /// <summary>A bot answering another bot's messages never stops.</summary>
+    internal static bool IsFromPerson(IUser author) => !author.IsBot && !author.IsWebhook;
+
     public class Handler(
         DiscordSocketClient discord,
         CommandService commands,
         IConfigurationRoot config,
         IServiceProvider provider,
+        MentionCooldown cooldown,
         ILogger<Handler> logger)
         : IRequestHandler<Command, bool>
     {
@@ -31,8 +37,7 @@ public static class ProcessMessage
                 return false;
             }
 
-            // Every bot, not just ourselves: two of these would answer each other forever.
-            if (message.Author.IsBot || message.Author.IsWebhook)
+            if (!IsFromPerson(message.Author))
             {
                 return false;
             }
@@ -99,7 +104,7 @@ public static class ProcessMessage
             await context.Channel.SendMessageAsync(embed: result.ErrorReason.EmbedMessage());
         }
 
-        private static async Task AnswerMentionAsync(
+        private async Task AnswerMentionAsync(
             IServiceScope scope,
             SocketCommandContext context,
             int argPos)
@@ -108,6 +113,15 @@ public static class ProcessMessage
 
             if (said.Length == 0)
             {
+                return;
+            }
+
+            // Each reply occupies the model for seconds, so one person cannot queue them up.
+            if (!cooldown.TryReply(context.User.Id))
+            {
+                logger.LogInformation("Mention from {User} ignored, still on cooldown",
+                    context.User.Username);
+
                 return;
             }
 

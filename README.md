@@ -17,7 +17,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?help` / `?help <command>` | List commands, or explain one |
 | `?random <min> <max>` (`?r`) | A random number between two bounds |
 | `?dare <@user>` | Dares someone, in the bot's current voice |
-| `@Tarscord <anything>` | Mention it with no command and it answers |
+| `@Tarscord <anything>` | Mention it with no command and it answers, once every 20s per person |
 | `?event list` | Every event on record |
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
@@ -57,7 +57,7 @@ Owner-only, and the bot needs Manage Roles in the channel to apply them:
 | `?allowreacting <@user>` (`allowreactions`) | Give that back |
 
 Leave `[minutes]` out and the restriction stays until you lift it; give a number and the bot lifts
-it for you when the time is up.
+it for you when the time is up. Expiry is checked every 15 seconds, so it is approximate.
 
 Every command `?help` offers does what it says. If one misbehaves, that's a bug — the
 [CLAUDE.md](CLAUDE.md) list of known-broken commands is history now.

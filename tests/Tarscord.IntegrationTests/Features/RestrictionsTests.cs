@@ -235,6 +235,61 @@ public class RestrictionsTests(PostgresFixture fixture)
         response.Restrictions.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Apply_WhenDiscordRefuses_StillLeavesARowToExpire()
+    {
+        // Touching Discord first could leave someone muted with no row, so nothing ever lifted it.
+
+        // Arrange
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext();
+
+        var channel = Substitute.For<IMessageChannel, IGuildChannel>();
+        channel.Id.Returns(ChannelId);
+        ((IGuildChannel)channel).AddPermissionOverwriteAsync(
+                Arg.Any<IUser>(), Arg.Any<OverwritePermissions>(), Arg.Any<RequestOptions>())
+            .Returns(Task.FromException(new HttpRequestException("Discord is down")));
+
+        var command = new Apply.Command(channel, NewUser(), RestrictionKind.Mute, 10, "alice");
+
+        // Act
+        Func<Task> act = () => NewApplyHandler(context).Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<HttpRequestException>();
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Restrictions.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Lift_WhenNothingIsInForce_LeavesDiscordAlone()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext();
+
+        var channel = Substitute.For<IGuildChannel>();
+        channel.Id.Returns(ChannelId);
+
+        var discord = Substitute.For<IDiscordClient>();
+        discord.GetChannelAsync(ChannelId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
+            .Returns(Task.FromResult<IChannel>(channel));
+
+        var handler = new Lift.CommandHandler(NullLogger<Lift.CommandHandler>.Instance, context,
+            new FakeTimeProvider(Now), discord);
+
+        // Act
+        var response = await handler.Handle(
+            new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("not restricted here");
+
+        await channel.DidNotReceive().AddPermissionOverwriteAsync(
+            Arg.Any<IUser>(), Arg.Any<OverwritePermissions>(), Arg.Any<RequestOptions>());
+    }
+
     private async Task GivenARestriction(double? expiresInMinutes)
     {
         await using var context = fixture.CreateContext();

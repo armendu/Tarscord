@@ -6,7 +6,7 @@ using Tarscord.Core.Features.EventAttendees;
 
 namespace Tarscord.Core.Modules;
 
-[Name("Commands to handle event attendance")]
+[Name("Commands to organize events")]
 [Group("event")]
 public class EventAttendanceModule : ModuleBase<SocketCommandContext>
 {

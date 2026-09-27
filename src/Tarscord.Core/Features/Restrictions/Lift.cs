@@ -42,6 +42,11 @@ internal static class Lift
                                  && !candidate.Lifted,
                     cancellationToken);
 
+            if (inForce is null)
+            {
+                return new FailureResponse("They are not restricted here.");
+            }
+
             if (await discord.GetChannelAsync(command.ChannelId) is not IGuildChannel channel)
             {
                 return new FailureResponse("That channel is gone.");
@@ -54,18 +59,12 @@ internal static class Lift
                 return new FailureResponse("I cannot find that user any more.");
             }
 
-            await AllowInDiscordAsync(channel, user, command.Kind);
-
-            if (inForce is null)
-            {
-                // The permission is back either way, but there was nothing stored to lift.
-                return new FailureResponse($"{user.Username} was not restricted here.");
-            }
-
             inForce.Lifted = true;
             inForce.Updated = timeProvider.GetUtcNow().UtcDateTime;
 
             await context.SaveChangesAsync(cancellationToken);
+
+            await AllowInDiscordAsync(channel, user, command.Kind);
 
             return RestrictionEnvelope.FromEntity(inForce);
         }

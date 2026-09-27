@@ -66,8 +66,6 @@ internal static class Apply
             var now = timeProvider.GetUtcNow().UtcDateTime;
             DateTime? expiresAt = command.Minutes > 0 ? now.AddMinutes(command.Minutes) : null;
 
-            await DenyInDiscordAsync(channel, command.User, command.Kind);
-
             var inForce = await context.Restrictions
                 .FirstOrDefaultAsync(
                     candidate => candidate.UserId == command.User.Id
@@ -99,7 +97,11 @@ internal static class Apply
                 inForce.Updated = now;
             }
 
+            // Stored before Discord is touched: the other order can leave someone muted with no row,
+            // which means nothing ever expires it.
             await context.SaveChangesAsync(cancellationToken);
+
+            await DenyInDiscordAsync(channel, command.User, command.Kind);
 
             return RestrictionEnvelope.FromEntity(inForce);
         }
