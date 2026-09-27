@@ -3,6 +3,8 @@ using MediatR;
 using OneOf;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
@@ -32,7 +34,8 @@ internal static class Update
 
     public class UpdateLoanCommandHandler(
         ILogger<UpdateLoanCommandHandler> logger,
-        TarscordContext context)
+        TarscordContext context,
+        IConfigurationRoot configuration)
         : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
         public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command request, CancellationToken cancellationToken)
@@ -67,7 +70,7 @@ internal static class Update
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return LoanEnvelope.FromEntity(loan);
+            return LoanEnvelope.FromEntity(loan, configuration.CurrencySymbol());
         }
     }
 }

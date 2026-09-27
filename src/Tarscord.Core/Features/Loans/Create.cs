@@ -1,7 +1,9 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
@@ -27,23 +29,39 @@ internal static class Create
     {
         public CommandValidator()
         {
-            RuleFor(x => x.Amount).GreaterThan(0);
+            RuleFor(command => command.Amount)
+                .GreaterThan(0)
+                .WithMessage("A loan has to be for more than nothing.");
+
+            RuleFor(command => command.LoanedToId)
+                .NotEqual(command => command.LoanedFromId)
+                .WithMessage("You cannot loan money to yourself.");
         }
     }
 
     public class CommandHandler(
         ILogger<CommandHandler> logger,
         TarscordContext context,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IConfigurationRoot configuration,
+        IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
         public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
             CancellationToken cancellationToken)
         {
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-                nameof(Command), command.PerformedByUser);
+                nameof(Create), command.PerformedByUser);
 
-            var createdLoan = await context.AddAsync(new Loan
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            var createdLoan = await context.Loans.AddAsync(new Loan
             {
                 LoanedFrom = command.LoanedFrom,
                 LoanedFromId = command.LoanedFromId,
@@ -58,7 +76,7 @@ internal static class Create
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return LoanEnvelope.FromEntity(createdLoan.Entity);
+            return LoanEnvelope.FromEntity(createdLoan.Entity, configuration.CurrencySymbol());
         }
     }
 }

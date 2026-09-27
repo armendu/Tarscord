@@ -15,7 +15,7 @@ public class ListTests
         // sent a second, empty "Here are all the loans" message straight after.
 
         // Arrange
-        var response = new List.ListResponse([], Symbol);
+        var response = new List.ListResponse([]);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -31,7 +31,7 @@ public class ListTests
         // The old wording was "'bob' owns 'alice'", which reads as the opposite of the truth.
 
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)], Symbol);
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)]);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -44,7 +44,7 @@ public class ListTests
     public void ToEmbeddedMessage_ForAPartlyPaidLoan_ShowsWhatIsLeftAndWhatIsPaid()
     {
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 7.50m)], Symbol);
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 7.50m)]);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -57,7 +57,7 @@ public class ListTests
     public void ToEmbeddedMessage_ForAnUnpaidLoan_LeavesOutThePaidPart()
     {
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)], Symbol);
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)]);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -72,7 +72,7 @@ public class ListTests
         // The amount used to be printed with a hard-coded '€' while messages.euro_sign sat unread.
 
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)], "$");
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m, symbol: "$")]);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -86,7 +86,7 @@ public class ListTests
     {
         // Arrange
         var response = new List.ListResponse(
-            [Loan(amount: 20m, paid: 0m), Loan(amount: 30m, paid: 0m)], Symbol);
+            [Loan(amount: 20m, paid: 0m), Loan(amount: 30m, paid: 0m)]);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -95,11 +95,12 @@ public class ListTests
         embed.Description.Should().Contain("1. ").And.Contain("2. ");
     }
 
-    private static LoanEnvelope Loan(decimal amount, decimal paid) =>
+    private static LoanEnvelope Loan(decimal amount, decimal paid, string symbol = Symbol) =>
         new()
         {
             Amount = amount,
             AmountPaid = paid,
+            CurrencySymbol = symbol,
             LoanedFrom = "alice",
             LoanedFromId = 111111111111111111,
             LoanedTo = "bob",

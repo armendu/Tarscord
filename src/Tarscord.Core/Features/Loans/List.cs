@@ -15,7 +15,7 @@ internal static class List
     public record Query(ulong PerformedByUserId, string PerformedByUser)
         : IRequest<ListResponse>, IPerformedByUser;
 
-    public record ListResponse(IReadOnlyList<LoanEnvelope> Loans, string CurrencySymbol)
+    public record ListResponse(IReadOnlyList<LoanEnvelope> Loans)
     {
         public Embed ToEmbeddedMessage()
         {
@@ -26,28 +26,11 @@ internal static class List
 
             for (int position = 1; position <= Loans.Count; position++)
             {
-                var loan = Loans[position - 1];
-
-                lines.Append(position).Append(". ")
-                    .Append(loan.LoanedTo).Append(" owes ").Append(loan.LoanedFrom).Append(' ')
-                    .Append(Money(loan.Outstanding));
-
-                if (loan.AmountPaid > 0)
-                {
-                    lines.Append(" (").Append(Money(loan.AmountPaid))
-                        .Append(" of ").Append(Money(loan.Amount)).Append(" paid)");
-                }
-
-                if (!string.IsNullOrWhiteSpace(loan.Description))
-                    lines.Append(" for ").Append(loan.Description);
-
-                lines.Append('\n');
+                lines.Append(position).Append(". ").Append(Loans[position - 1].ToSummary()).Append('\n');
             }
 
             return "Here are the open loans:".EmbedMessage(lines.ToString());
         }
-
-        private string Money(decimal amount) => $"{amount:0.00}{CurrencySymbol}";
     }
 
     public class QueryHandler(
@@ -69,9 +52,10 @@ internal static class List
                 .OrderBy(loan => loan.Created)
                 .ToListAsync(cancellationToken);
 
+            string currencySymbol = configuration.CurrencySymbol();
+
             return new ListResponse(
-                loans.ConvertAll(LoanEnvelope.FromEntity),
-                configuration.CurrencySymbol());
+                loans.ConvertAll(loan => LoanEnvelope.FromEntity(loan, currencySymbol)));
         }
     }
 }
