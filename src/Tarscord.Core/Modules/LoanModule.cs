@@ -60,9 +60,7 @@ public class LoanModule : ModuleBase
             PerformedByUser = Context.User.Username
         });
 
-        var embeddedMessage = response.Match(
-            eventInfoEnvelope => eventInfoEnvelope.ToEmbeddedMessage(),
-            failureResponse => failureResponse.ErrorMessage.EmbedMessage());
+        var embeddedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embeddedMessage);
     }
@@ -95,9 +93,7 @@ public class LoanModule : ModuleBase
             PerformedByUser = Context.User.Username
         });
 
-        var embeddedMessage = response.Match(
-            eventInfoEnvelope => eventInfoEnvelope.ToEmbeddedMessage(),
-            failureResponse => failureResponse.ErrorMessage.EmbedMessage());
+        var embeddedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embeddedMessage);
     }

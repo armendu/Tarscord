@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tarscord.Core.Features.Loans;
 using Tarscord.Core.Persistence;
@@ -133,6 +132,5 @@ public class LoansListTests(PostgresFixture fixture)
         };
 
     private static List.QueryHandler NewHandler(TarscordContext context) =>
-        new(NullLogger<List.QueryHandler>.Instance, context,
-            new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        new(NullLogger<List.QueryHandler>.Instance, context);
 }

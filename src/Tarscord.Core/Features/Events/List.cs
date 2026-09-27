@@ -1,8 +1,8 @@
+using System.Text;
 using Discord;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence;
@@ -13,26 +13,20 @@ internal static class List
 {
     public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
 
-    public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos)
+    public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos) : IEmbeddedMessage
     {
         public Embed ToEmbeddedMessage()
         {
             if (EventInfos.Count == 0)
+            {
                 return "No events found".EmbedMessage();
+            }
 
             var events = new StringBuilder();
 
             foreach (var eventInfo in EventInfos)
             {
-                events
-                    .Append(eventInfo.EventId).Append(": '")
-                    .Append(eventInfo.EventName)
-                    .Append("' by ").Append(eventInfo.EventOrganizer);
-
-                if (eventInfo.EventDate.HasValue)
-                    events.Append(" on ").Append(eventInfo.EventDate.Value.ToString("f"));
-
-                events.Append('\n');
+                events.Append(eventInfo.ToSummary()).Append('\n');
             }
 
             return "Here are all the events:".EmbedMessage(events.ToString());

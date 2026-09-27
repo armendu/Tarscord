@@ -27,11 +27,15 @@ public static class ProcessMessage
         public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
         {
             if (request.Message is not SocketUserMessage message)
+            {
                 return false;
+            }
 
             // Every bot, not just ourselves: two of these would answer each other forever.
             if (message.Author.IsBot || message.Author.IsWebhook)
+            {
                 return false;
+            }
 
             var context = new SocketCommandContext(discord, message);
 
@@ -43,14 +47,18 @@ public static class ProcessMessage
                                 && message.HasMentionPrefix(discord.CurrentUser, ref argPos);
 
             if (!hasCommandPrefix && !wasMentioned)
+            {
                 return false;
+            }
 
             // One scope per command; TarscordContext is scoped and was shared process-wide.
             using var scope = provider.CreateScope();
             var result = await commands.ExecuteAsync(context, argPos, scope.ServiceProvider);
 
             if (!result.IsSuccess)
+            {
                 await ReportFailureAsync(scope, context, result, wasMentioned, argPos);
+            }
 
             return true;
         }
@@ -78,7 +86,9 @@ public static class ProcessMessage
             {
                 // Only a mention gets an answer; a typo after the prefix stays silent.
                 if (wasMentioned)
+                {
                     await AnswerMentionAsync(scope, context, argPos);
+                }
 
                 return;
             }
@@ -97,7 +107,9 @@ public static class ProcessMessage
             string said = context.Message.Content[argPos..].Trim();
 
             if (said.Length == 0)
+            {
                 return;
+            }
 
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 

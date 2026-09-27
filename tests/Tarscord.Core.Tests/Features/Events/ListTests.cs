@@ -66,7 +66,7 @@ public class ListTests
         // Arrange
         var response = new List.ListResponse(
         [
-            new EventInfoEnvelope(1, Organizer, 123, "Release party", null, "somewhere")
+            new EventInfoEnvelope(1, Organizer, 123, "Release party", null, "somewhere", true)
         ]);
 
         // Act
@@ -78,5 +78,5 @@ public class ListTests
 
     private static EventInfoEnvelope Envelope(int eventId, string eventName) =>
         new(eventId, Organizer, 123456789012345678, eventName,
-            new DateTime(2026, 5, 1, 18, 30, 0, DateTimeKind.Utc), "somewhere");
+            new DateTime(2026, 5, 1, 18, 30, 0, DateTimeKind.Utc), "somewhere", true);
 }

@@ -6,8 +6,6 @@ namespace Tarscord.Core.Tests.Features.Loans;
 
 public class ListTests
 {
-    private const string Symbol = "€";
-
     [Fact]
     public void ToEmbeddedMessage_WithNoLoans_SaysSoOnlyOnce()
     {
@@ -36,7 +34,7 @@ public class ListTests
         var embed = response.ToEmbeddedMessage();
 
         // Assert
-        embed.Description.Should().Contain("bob owes alice 20.00€");
+        embed.Description.Should().Contain("bob owes alice 20.00\u20AC");
     }
 
     [Fact]
@@ -49,7 +47,7 @@ public class ListTests
         var embed = response.ToEmbeddedMessage();
 
         // Assert
-        embed.Description.Should().Contain("12.50€").And.Contain("(7.50€ of 20.00€ paid)");
+        embed.Description.Should().Contain("12.50\u20AC").And.Contain("(7.50\u20AC of 20.00\u20AC paid)");
     }
 
     [Fact]
@@ -66,21 +64,6 @@ public class ListTests
     }
 
     [Fact]
-    public void ToEmbeddedMessage_WithAConfiguredSymbol_UsesItInsteadOfTheEuro()
-    {
-        // The amount used to be printed with a hard-coded '€' while messages.euro_sign sat unread.
-
-        // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m, symbol: "$")]);
-
-        // Act
-        var embed = response.ToEmbeddedMessage();
-
-        // Assert
-        embed.Description.Should().Contain("20.00$").And.NotContain("€");
-    }
-
-    [Fact]
     public void ToEmbeddedMessage_WithSeveralLoans_NumbersThemFromOne()
     {
         // Arrange
@@ -94,12 +77,11 @@ public class ListTests
         embed.Description.Should().Contain("1. ").And.Contain("2. ");
     }
 
-    private static LoanEnvelope Loan(decimal amount, decimal paid, string symbol = Symbol) =>
+    private static LoanEnvelope Loan(decimal amount, decimal paid) =>
         new()
         {
             Amount = amount,
             AmountPaid = paid,
-            CurrencySymbol = symbol,
             LoanedFrom = "alice",
             LoanedFromId = 111111111111111111,
             LoanedTo = "bob",

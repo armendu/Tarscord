@@ -1,9 +1,7 @@
 using FluentValidation;
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneOf;
-using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
@@ -43,7 +41,6 @@ internal static class Create
         ILogger<CommandHandler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IConfigurationRoot configuration,
         IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
@@ -76,7 +73,7 @@ internal static class Create
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return LoanEnvelope.FromEntity(createdLoan.Entity, configuration.CurrencySymbol());
+            return LoanEnvelope.FromEntity(createdLoan.Entity);
         }
     }
 }

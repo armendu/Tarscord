@@ -132,7 +132,7 @@ public class RestrictionsTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task ListExpired_ForARestrictionStillRunning_LeavesItOut()
+    public async Task List_ForARestrictionStillRunning_LeavesItOut()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -140,15 +140,15 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListExpiredHandler(context).Handle(
-            new ListExpired.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task ListExpired_ForARestrictionWithNoExpiry_LeavesItOut()
+    public async Task List_ForARestrictionWithNoExpiry_LeavesItOut()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -156,15 +156,15 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListExpiredHandler(context).Handle(
-            new ListExpired.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task ListExpired_ForARestrictionPastItsExpiry_ReturnsIt()
+    public async Task List_ForARestrictionPastItsExpiry_ReturnsIt()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -172,8 +172,8 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListExpiredHandler(context).Handle(
-            new ListExpired.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().ContainSingle()
@@ -228,8 +228,8 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListExpiredHandler(context).Handle(
-            new ListExpired.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().BeEmpty();
@@ -279,7 +279,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         new(NullLogger<Apply.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
             new Apply.CommandValidator());
 
-    private static ListExpired.QueryHandler NewListExpiredHandler(TarscordContext context) =>
+    private static List.QueryHandler NewListHandler(TarscordContext context) =>
         new(context, new FakeTimeProvider(Now));
 
     private static Lift.CommandHandler NewLiftHandler(TarscordContext context)

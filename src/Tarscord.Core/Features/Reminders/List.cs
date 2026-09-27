@@ -4,16 +4,16 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Reminders;
 
-internal static class ListDue
+internal static class List
 {
-    public record Query : IRequest<ListDueResponse>;
+    public record Query : IRequest<ListResponse>;
 
-    public record ListDueResponse(IReadOnlyList<ReminderEnvelope> Reminders);
+    public record ListResponse(IReadOnlyList<ReminderEnvelope> Reminders);
 
     public class QueryHandler(TarscordContext context, TimeProvider timeProvider)
-        : IRequestHandler<Query, ListDueResponse>
+        : IRequestHandler<Query, ListResponse>
     {
-        public async Task<ListDueResponse> Handle(Query query, CancellationToken cancellationToken)
+        public async Task<ListResponse> Handle(Query query, CancellationToken cancellationToken)
         {
             var now = timeProvider.GetUtcNow().UtcDateTime;
 
@@ -22,7 +22,7 @@ internal static class ListDue
                 .OrderBy(reminder => reminder.RemindAt)
                 .ToListAsync(cancellationToken);
 
-            return new ListDueResponse(due.ConvertAll(ReminderEnvelope.FromEntity));
+            return new ListResponse(due.ConvertAll(ReminderEnvelope.FromEntity));
         }
     }
 }

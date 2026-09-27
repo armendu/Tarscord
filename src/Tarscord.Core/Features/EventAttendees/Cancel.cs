@@ -18,7 +18,7 @@ internal static class Cancel
     {
         public CommandValidator()
         {
-            RuleFor(command => command.EventId).GreaterThan(0).WithMessage(EventMessages.InvalidEventId);
+            RuleFor(command => command.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
 
             RuleFor(command => command.AttendeeIds)
                 .NotEmpty()
@@ -51,7 +51,9 @@ internal static class Cancel
                 .FirstOrDefaultAsync(candidate => candidate.Id == command.EventId, cancellationToken);
 
             if (eventInfo is null)
-                return new FailureResponse(EventMessages.NoSuchEvent(command.EventId));
+            {
+                return new FailureResponse($"There is no event with id {command.EventId}");
+            }
 
             var attendeeIds = command.AttendeeIds.ToList();
 
@@ -61,7 +63,9 @@ internal static class Cancel
                 .ToListAsync(cancellationToken);
 
             if (toRemove.Count == 0)
+            {
                 return new FailureResponse($"No attendance to cancel for '{eventInfo.EventName}'.");
+            }
 
             context.EventAttendees.RemoveRange(toRemove);
             await context.SaveChangesAsync(cancellationToken);

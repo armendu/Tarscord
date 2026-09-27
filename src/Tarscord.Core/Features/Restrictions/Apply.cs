@@ -59,7 +59,9 @@ internal static class Apply
 
             // Overwrites only exist on guild channels; this used to return "" and build an empty embed.
             if (command.ContextChannel is not IGuildChannel channel)
+            {
                 return new FailureResponse("That only works in a server channel.");
+            }
 
             var now = timeProvider.GetUtcNow().UtcDateTime;
             DateTime? expiresAt = command.Minutes > 0 ? now.AddMinutes(command.Minutes) : null;

@@ -1,6 +1,7 @@
-using Discord;
 using System.Text;
+using Discord;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.EventAttendees;
@@ -12,11 +13,14 @@ internal record AttendeeEnvelope(ulong AttendeeId, string AttendeeName, bool Con
 }
 
 internal record AttendeeListEnvelope(string EventName, IReadOnlyList<AttendeeEnvelope> Attendees)
+    : IEmbeddedMessage
 {
     public Embed ToEmbeddedMessage()
     {
         if (Attendees.Count == 0)
+        {
             return $"Nobody has confirmed for '{EventName}' yet".EmbedMessage();
+        }
 
         var names = new StringBuilder();
 

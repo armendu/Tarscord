@@ -35,7 +35,9 @@ internal static class Create
                 nameof(Create), command.PerformedByUser);
 
             if (string.IsNullOrWhiteSpace(command.EventName))
+            {
                 return new FailureResponse("An event needs a name");
+            }
 
             var dateOfEvent = command.EventDate.FromTextToDate(timeProvider);
 

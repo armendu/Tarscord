@@ -70,9 +70,7 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
         var response = await mediator.Send(
             new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username));
 
-        var embedMessage = response.Match(
-            applied => applied.ToAppliedMessage(),
-            failed => failed.ErrorMessage.EmbedMessage());
+        var embedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embedMessage);
     }
@@ -90,9 +88,7 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
         var response = await mediator.Send(
             new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username));
 
-        var embedMessage = response.Match(
-            lifted => lifted.ToLiftedMessage(),
-            failed => failed.ErrorMessage.EmbedMessage());
+        var embedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embedMessage);
     }

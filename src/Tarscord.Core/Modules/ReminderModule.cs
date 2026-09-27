@@ -11,7 +11,7 @@ public class ReminderModule(IMediator mediator) : ModuleBase<SocketCommandContex
     /// <summary>
     /// Usage: remindme {minutes} {message}
     /// </summary>
-    [Command("remindme"), Summary("Reminds you about something in a few minutes")]
+    [Command("remindme"), Summary("Sets a reminder a number of minutes from now")]
     public async Task SetReminder(
         [Summary("How many minutes from now")] double minutes,
         [Summary("What to remind you about")] [Remainder]
@@ -25,9 +25,7 @@ public class ReminderModule(IMediator mediator) : ModuleBase<SocketCommandContex
             minutes,
             Context.User.Username));
 
-        var embedMessage = response.Match(
-            reminder => reminder.ToEmbeddedMessage(),
-            failed => failed.ErrorMessage.EmbedMessage());
+        var embedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embedMessage);
     }

@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Tarscord.Core.Features.Loans;
@@ -107,6 +106,5 @@ public class LoansCreateTests(PostgresFixture fixture)
 
     private static Create.CommandHandler NewHandler(TarscordContext context) =>
         new(NullLogger<Create.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
-            new ConfigurationBuilder().AddInMemoryCollection([]).Build(),
             new Create.CommandValidator());
 }

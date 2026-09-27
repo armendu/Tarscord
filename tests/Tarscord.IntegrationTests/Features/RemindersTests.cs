@@ -92,7 +92,7 @@ public class RemindersTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task ListDue_ForAReminderNotYetDue_LeavesItOut()
+    public async Task List_ForAReminderNotYetDue_LeavesItOut()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -100,15 +100,15 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListDueHandler(context).Handle(
-            new ListDue.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Reminders.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task ListDue_ForAReminderThatIsDue_ReturnsIt()
+    public async Task List_ForAReminderThatIsDue_ReturnsIt()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -116,8 +116,8 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListDueHandler(context).Handle(
-            new ListDue.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Reminders.Should().ContainSingle()
@@ -125,7 +125,7 @@ public class RemindersTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task ListDue_ForAReminderAlreadySent_LeavesItOut()
+    public async Task List_ForAReminderAlreadySent_LeavesItOut()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -133,8 +133,8 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListDueHandler(context).Handle(
-            new ListDue.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Handle(
+            new List.Query(), CancellationToken.None);
 
         // Assert
         response.Reminders.Should().BeEmpty();
@@ -205,7 +205,7 @@ public class RemindersTests(PostgresFixture fixture)
         new(NullLogger<Create.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
             new Create.CommandValidator());
 
-    private static ListDue.QueryHandler NewListDueHandler(TarscordContext context) =>
+    private static List.QueryHandler NewListHandler(TarscordContext context) =>
         new(context, new FakeTimeProvider(Now));
 
     private static Complete.CommandHandler NewCompleteHandler(TarscordContext context) =>

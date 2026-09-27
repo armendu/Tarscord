@@ -3,40 +3,54 @@ using System.Text.RegularExpressions;
 
 namespace Tarscord.Core.Extensions;
 
-public static partial class DateTimeExtensions
+public static class DateTimeExtensions
 {
-    /// <summary>Reads a date the way someone would type it into a chat window.</summary>
-    /// <returns>The instant in UTC, or <c>null</c> when the text isn't a date this understands.</returns>
-    /// <remarks>Day names resolve in the provider's local zone; the result is UTC.</remarks>
+    // Anchored, so "in 5 minutes tomorrow" is rejected rather than matching the first half.
+    private static readonly Regex s_relativeOffset =
+        new(@"^in (\d{1,9}) (minute|hour|day|week|month|year)s?$");
+
+    private static readonly Regex s_nextWeekday =
+        new(@"^next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$");
+
+    /// <summary>Reads a date the way someone would type it, in UTC, or null if it isn't one.</summary>
     public static DateTime? FromTextToDate(this string input, TimeProvider timeProvider)
     {
         if (string.IsNullOrWhiteSpace(input))
+        {
             return null;
+        }
 
         input = input.Trim().ToLowerInvariant();
 
         var localNow = timeProvider.GetLocalNow();
 
         if (input is "today")
+        {
             return StartOfDay(localNow);
+        }
 
         if (input is "tomorrow")
+        {
             return StartOfDay(localNow.AddDays(1));
+        }
 
-        var relative = RelativeOffsetPattern().Match(input);
+        var relative = s_relativeOffset.Match(input);
         if (relative.Success)
+        {
             return FromRelativeOffset(localNow, relative);
+        }
 
-        var weekday = NextWeekdayPattern().Match(input);
+        var weekday = s_nextWeekday.Match(input);
         if (weekday.Success)
+        {
             return FromNextWeekday(localNow, weekday.Groups[1].Value);
+        }
 
         return FromAbsoluteDate(input, timeProvider);
     }
 
     private static DateTime? FromRelativeOffset(DateTimeOffset localNow, Match match)
     {
-        // A number the user typed can be arbitrarily large; both the parse and the arithmetic threw.
         if (!int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture,
                 out int amount))
         {
@@ -58,6 +72,7 @@ public static partial class DateTimeExtensions
         }
         catch (ArgumentOutOfRangeException)
         {
+            // "in 2000000 years" is a number DateTime cannot hold.
             return null;
         }
     }
@@ -73,7 +88,7 @@ public static partial class DateTimeExtensions
 
     private static DateTime? FromAbsoluteDate(string input, TimeProvider timeProvider)
     {
-        // Invariant culture only: the same text has to mean the same date wherever the bot runs.
+        // Invariant culture, so the same text means the same date wherever the bot runs.
         if (!DateTime.TryParse(input, CultureInfo.InvariantCulture,
                 DateTimeStyles.AllowWhiteSpaces, out var parsed))
         {
@@ -81,7 +96,9 @@ public static partial class DateTimeExtensions
         }
 
         if (parsed.Kind == DateTimeKind.Utc)
+        {
             return parsed;
+        }
 
         var unspecified = DateTime.SpecifyKind(parsed, DateTimeKind.Unspecified);
 
@@ -91,11 +108,4 @@ public static partial class DateTimeExtensions
 
     private static DateTime StartOfDay(DateTimeOffset localMoment) =>
         new DateTimeOffset(localMoment.Date, localMoment.Offset).UtcDateTime;
-
-    // Anchored, so "in 5 minutes tomorrow" is rejected rather than quietly matching the first half.
-    [GeneratedRegex(@"^in (\d{1,9}) (minute|hour|day|week|month|year)s?$")]
-    private static partial Regex RelativeOffsetPattern();
-
-    [GeneratedRegex(@"^next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$")]
-    private static partial Regex NextWeekdayPattern();
 }

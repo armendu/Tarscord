@@ -18,7 +18,7 @@ internal static class List
     {
         public QueryValidator()
         {
-            RuleFor(query => query.EventId).GreaterThan(0).WithMessage(EventMessages.InvalidEventId);
+            RuleFor(query => query.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
         }
     }
 
@@ -47,7 +47,9 @@ internal static class List
                 .FirstOrDefaultAsync(candidate => candidate.Id == query.EventId, cancellationToken);
 
             if (eventInfo is null)
-                return new FailureResponse(EventMessages.NoSuchEvent(query.EventId));
+            {
+                return new FailureResponse($"There is no event with id {query.EventId}");
+            }
 
             var attendees = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == query.EventId && attendee.Confirmed)

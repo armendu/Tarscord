@@ -32,14 +32,16 @@ public sealed class ReminderDispatcher(
     {
         // Nothing can be delivered before the gateway is up, and the reminders keep until it is.
         if (discord.ConnectionState != ConnectionState.Connected)
+        {
             return;
+        }
 
         try
         {
             using var scope = scopeFactory.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            var due = await mediator.Send(new ListDue.Query(), cancellationToken);
+            var due = await mediator.Send(new List.Query(), cancellationToken);
 
             foreach (var reminder in due.Reminders)
             {

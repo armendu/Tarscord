@@ -31,7 +31,7 @@ public sealed class RestrictionExpirySweeper(
             using var scope = scopeFactory.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            var expired = await mediator.Send(new ListExpired.Query(), cancellationToken);
+            var expired = await mediator.Send(new List.Query(), cancellationToken);
 
             foreach (var restriction in expired.Restrictions)
             {

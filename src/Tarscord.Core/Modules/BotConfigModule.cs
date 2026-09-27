@@ -33,9 +33,7 @@ public class BotConfigModule(IMediator mediator) : ModuleBase<SocketCommandConte
         var response = await mediator.Send(
             new SetLevels.Command(which, level, Context.User.Username));
 
-        var embedMessage = response.Match(
-            levels => levels.ToEmbeddedMessage(),
-            failed => failed.ErrorMessage.EmbedMessage());
+        var embedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embedMessage);
     }

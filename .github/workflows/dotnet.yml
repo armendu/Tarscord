@@ -16,17 +16,14 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
-        # Explicit, not global-json-file: global.json pins 8.0.0 and rolls forward,
-        # which would leave a runner holding only 8.0.0 unable to build net10.0.
+        # Not global-json-file: global.json pins 8.0.0, which cannot build net10.0.
         dotnet-version: 10.0.x
 
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
-      # The tree is warning-clean and only stays that way if a warning fails the build.
       run: dotnet build --no-restore --configuration Release -warnaserror
 
     - name: Test
-      # The integration suite starts its own PostgreSQL through Testcontainers.
       run: dotnet test --no-build --configuration Release --verbosity normal

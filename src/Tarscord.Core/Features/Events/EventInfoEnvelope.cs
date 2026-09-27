@@ -1,6 +1,7 @@
-using Discord;
 using System.Text;
+using Discord;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Events;
@@ -11,7 +12,8 @@ internal record EventInfoEnvelope(
     ulong EventOrganizerId,
     string EventName,
     DateTime? EventDate,
-    string EventDescription) // TODO: Create an interface to implement for envelopes
+    string EventDescription,
+    bool IsActive) : IEmbeddedMessage
 {
     public static EventInfoEnvelope FromEntity(EventInfo eventInfo)
     {
@@ -21,7 +23,23 @@ internal record EventInfoEnvelope(
             eventInfo.EventOrganizerId,
             eventInfo.EventName,
             eventInfo.EventDate,
-            eventInfo.EventDescription);
+            eventInfo.EventDescription,
+            eventInfo.IsActive);
+    }
+
+    /// <summary>One line, for the list.</summary>
+    public string ToSummary()
+    {
+        var summary = new StringBuilder();
+
+        summary.Append(EventId).Append(": '").Append(EventName).Append("' by ").Append(EventOrganizer);
+
+        if (EventDate.HasValue)
+        {
+            summary.Append(" on ").Append(EventDate.Value.ToString("f"));
+        }
+
+        return summary.ToString();
     }
 
     public Embed ToEmbeddedMessage()
@@ -32,11 +50,17 @@ internal record EventInfoEnvelope(
         details.Append("Organized by: ").Append(EventOrganizer).Append('\n');
 
         if (EventDate.HasValue)
+        {
             details.Append("When: ").Append(EventDate.Value.ToString("f")).Append('\n');
+        }
 
         if (!string.IsNullOrWhiteSpace(EventDescription))
+        {
             details.Append(EventDescription);
+        }
 
-        return EventName.EmbedMessage(details.ToString());
+        string title = IsActive ? EventName : $"{EventName} (cancelled)";
+
+        return title.EmbedMessage(details.ToString());
     }
 }

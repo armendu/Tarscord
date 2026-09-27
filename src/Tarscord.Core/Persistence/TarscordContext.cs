@@ -5,15 +5,15 @@ namespace Tarscord.Core.Persistence;
 
 public class TarscordContext(DbContextOptions<TarscordContext> options) : DbContext(options)
 {
-    public DbSet<EventAttendee> EventAttendees { get; set; }
+    public DbSet<EventAttendee> EventAttendees { get; set; } = null!;
 
-    public DbSet<EventInfo> EventInfos { get; set; }
+    public DbSet<EventInfo> EventInfos { get; set; } = null!;
 
-    public DbSet<Loan> Loans { get; set; }
+    public DbSet<Loan> Loans { get; set; } = null!;
 
-    public DbSet<Reminder> Reminders { get; set; }
+    public DbSet<Reminder> Reminders { get; set; } = null!;
 
-    public DbSet<Restriction> Restrictions { get; set; }
+    public DbSet<Restriction> Restrictions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

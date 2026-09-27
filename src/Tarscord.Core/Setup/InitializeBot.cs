@@ -13,8 +13,6 @@ public static class InitializeBot
 
     public class Handler : IRequestHandler<Command, Unit>
     {
-        private const string PlaceholderToken = "YOUR_DISCORD_BOT_TOKEN";
-
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _discord;
         private readonly CommandService _commands;
@@ -37,7 +35,7 @@ public static class InitializeBot
             string? discordToken = _config["tokens:discord"];
 
             // A configuration failure, not something a user can act on, so it throws.
-            if (string.IsNullOrWhiteSpace(discordToken) || discordToken == PlaceholderToken)
+            if (string.IsNullOrWhiteSpace(discordToken))
             {
                 throw new InvalidOperationException(
                     "No Discord bot token is configured. Copy Resources/config.example.yml to " +

@@ -46,7 +46,9 @@ public sealed class PostgresFixture : IAsyncLifetime
         var result = DatabaseMigrator.Upgrade(ConnectionString);
 
         if (!result.Successful)
+        {
             throw new InvalidOperationException("The database migrations failed.", result.Error);
+        }
     }
 
     /// <summary>Waits until the database answers from the host, not just inside the container.</summary>

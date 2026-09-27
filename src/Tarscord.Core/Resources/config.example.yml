@@ -1,12 +1,12 @@
-# Copy this file to config.yml in the same directory and fill in your own values.
-# config.yml is gitignored; never commit a real token.
+# Defaults for every key. Put your own values in config.yml beside this file, which is read on top
+# of it and is gitignored; never commit a real token.
 
 # Prefix that starts a command, e.g. "?help".
 prefix: '?'
 
 tokens:
-    # Discord Developer Portal -> your application -> Bot -> Reset Token.
-    discord: "YOUR_DISCORD_BOT_TOKEN"
+    # Discord Developer Portal -> your application -> Bot -> Reset Token. Set this in config.yml.
+    discord: ""
 
 # Both 0-10, and both settable at runtime with ?sarcasm-level and ?humor-level.
 sarcasm-level: 0
@@ -20,6 +20,3 @@ ollama:
 
 tarscord-context:
     connection-string: "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"
-
-messages:
-    euro_sign: "€"

@@ -43,12 +43,16 @@ internal static class Lift
                     cancellationToken);
 
             if (await discord.GetChannelAsync(command.ChannelId) is not IGuildChannel channel)
+            {
                 return new FailureResponse("That channel is gone.");
+            }
 
             var user = await discord.GetUserAsync(command.UserId);
 
             if (user is null)
+            {
                 return new FailureResponse("I cannot find that user any more.");
+            }
 
             await AllowInDiscordAsync(channel, user, command.Kind);
 
@@ -71,7 +75,9 @@ internal static class Lift
             var current = channel.GetPermissionOverwrite(user);
 
             if (current is not OverwritePermissions permissions)
+            {
                 return;
+            }
 
             // Inherit, not Allow: stop overriding the channel rather than grant something new.
             var restored = kind switch

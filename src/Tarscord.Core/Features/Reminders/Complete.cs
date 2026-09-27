@@ -17,7 +17,9 @@ internal static class Complete
                 .FirstOrDefaultAsync(candidate => candidate.Id == command.ReminderId, cancellationToken);
 
             if (reminder is null)
+            {
                 return false;
+            }
 
             // One at a time, after delivery, so a failed send is retried next tick.
             reminder.Sent = true;

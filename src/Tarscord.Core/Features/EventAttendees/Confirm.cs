@@ -21,7 +21,7 @@ internal static class Confirm
     {
         public CommandValidator()
         {
-            RuleFor(command => command.EventId).GreaterThan(0).WithMessage(EventMessages.InvalidEventId);
+            RuleFor(command => command.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
 
             RuleFor(command => command.Attendees)
                 .NotEmpty()
@@ -55,10 +55,14 @@ internal static class Confirm
                 .FirstOrDefaultAsync(candidate => candidate.Id == command.EventId, cancellationToken);
 
             if (eventInfo is null)
-                return new FailureResponse(EventMessages.NoSuchEvent(command.EventId));
+            {
+                return new FailureResponse($"There is no event with id {command.EventId}");
+            }
 
             if (!eventInfo.IsActive)
+            {
                 return new FailureResponse($"'{eventInfo.EventName}' has been cancelled.");
+            }
 
             var attendeeIds = command.Attendees.Select(attendee => attendee.AttendeeId).ToList();
 

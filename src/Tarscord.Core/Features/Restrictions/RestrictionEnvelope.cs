@@ -1,5 +1,6 @@
 using Discord;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Restrictions;
@@ -10,27 +11,26 @@ internal record RestrictionEnvelope(
     string Username,
     ulong ChannelId,
     RestrictionKind Kind,
-    DateTime? ExpiresAt)
+    DateTime? ExpiresAt,
+    bool Lifted) : IEmbeddedMessage
 {
     public static RestrictionEnvelope FromEntity(Restriction restriction) =>
         new(restriction.Id, restriction.UserId, restriction.Username, restriction.ChannelId,
-            restriction.Kind, restriction.ExpiresAt);
+            restriction.Kind, restriction.ExpiresAt, restriction.Lifted);
 
-    public Embed ToAppliedMessage()
+    public Embed ToEmbeddedMessage()
     {
-        string what = Kind == RestrictionKind.Mute ? "muted" : "stopped from reacting";
+        if (Lifted)
+        {
+            string restored = Kind == RestrictionKind.Mute ? "unmuted" : "allowed to react again";
 
-        string when = ExpiresAt.HasValue
-            ? $"until {ExpiresAt.Value:f} UTC"
-            : "until someone lifts it";
+            return $"{Username} was {restored}.".EmbedMessage();
+        }
 
-        return $"{Username} was {what} {when}.".EmbedMessage();
-    }
+        string denied = Kind == RestrictionKind.Mute ? "muted" : "stopped from reacting";
 
-    public Embed ToLiftedMessage()
-    {
-        string what = Kind == RestrictionKind.Mute ? "unmuted" : "allowed to react again";
+        string when = ExpiresAt.HasValue ? $"until {ExpiresAt.Value:f} UTC" : "until someone lifts it";
 
-        return $"{Username} was {what}.".EmbedMessage();
+        return $"{Username} was {denied} {when}.".EmbedMessage();
     }
 }

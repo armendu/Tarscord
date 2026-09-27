@@ -9,7 +9,9 @@ internal static class DockerEndpoint
     public static void EnsureConfigured()
     {
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(DockerHostVariable)))
+        {
             return;
+        }
 
         string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 

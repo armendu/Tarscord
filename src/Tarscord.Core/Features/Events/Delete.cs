@@ -17,7 +17,7 @@ internal static class Delete
     {
         public CommandValidator()
         {
-            RuleFor(command => command.EventId).GreaterThan(0).WithMessage(EventMessages.InvalidEventId);
+            RuleFor(command => command.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
         }
     }
 
@@ -47,13 +47,19 @@ internal static class Delete
                 .FirstOrDefaultAsync(candidate => candidate.Id == command.EventId, cancellationToken);
 
             if (eventInfo is null)
-                return new FailureResponse(EventMessages.NoSuchEvent(command.EventId));
+            {
+                return new FailureResponse($"There is no event with id {command.EventId}");
+            }
 
             if (eventInfo.EventOrganizerId != command.RequestedById)
+            {
                 return new FailureResponse($"Only {eventInfo.EventOrganizer} can cancel that event.");
+            }
 
             if (!eventInfo.IsActive)
+            {
                 return new FailureResponse($"'{eventInfo.EventName}' was already cancelled.");
+            }
 
             // Deactivated, not deleted: the attendance rows are a record of who said yes.
             eventInfo.IsActive = false;

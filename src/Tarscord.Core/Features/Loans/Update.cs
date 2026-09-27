@@ -1,10 +1,8 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneOf;
-using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
@@ -13,8 +11,6 @@ namespace Tarscord.Core.Features.Loans;
 
 internal static class Update
 {
-    /// <summary>A payment from the borrower to the lender.</summary>
-    /// <remarks>Named payer and lender because LoanedFrom/LoanedTo held the reverse.</remarks>
     public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUser
     {
         public decimal Amount { get; set; }
@@ -44,7 +40,6 @@ internal static class Update
         ILogger<CommandHandler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IConfigurationRoot configuration,
         IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
@@ -71,8 +66,6 @@ internal static class Update
                 .OrderByDescending(candidate => candidate.Created)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            string currencySymbol = configuration.CurrencySymbol();
-
             if (loan is null)
             {
                 return new FailureResponse(
@@ -84,8 +77,8 @@ internal static class Update
             if (request.Amount > remainingBalance)
             {
                 return new FailureResponse(
-                    $"Paying {request.Amount:0.00}{currencySymbol} would be more than the " +
-                    $"{remainingBalance:0.00}{currencySymbol} still owed.");
+                    $"Paying {request.Amount:0.00} would be more than the " +
+                    $"{remainingBalance:0.00} still owed.");
             }
 
             loan.AmountPayed += request.Amount;
@@ -93,7 +86,7 @@ internal static class Update
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return LoanEnvelope.FromEntity(loan, currencySymbol);
+            return LoanEnvelope.FromEntity(loan);
         }
     }
 }

@@ -19,11 +19,15 @@ public static class ProcessLog
         {
             // Create the log directory if it doesn't exist
             if (!Directory.Exists(LogDirectory))
+            {
                 Directory.CreateDirectory(LogDirectory);
+            }
 
             // Create today's log file if it doesn't exist
             if (!File.Exists(LogFile))
+            {
                 File.Create(LogFile).Dispose();
+            }
 
             string logText = $"{DateTime.UtcNow:hh:mm:ss} [{request.LogMessage.Severity}] {request.LogMessage.Source}: " +
                            $"{request.LogMessage.Exception?.ToString() ?? request.LogMessage.Message}";

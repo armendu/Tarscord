@@ -1,6 +1,6 @@
+using System.Globalization;
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
-using System.Globalization;
 using Tarscord.Core.Extensions;
 using Xunit;
 

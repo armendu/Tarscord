@@ -46,7 +46,9 @@ internal static class Generate
                 string generated = response.Text.Trim();
 
                 if (generated.Length > 0)
+                {
                     return new GeneratedMessageEnvelope(generated, FromModel: true);
+                }
 
                 logger.LogWarning("The model returned an empty reply");
             }

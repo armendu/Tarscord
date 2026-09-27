@@ -18,7 +18,7 @@ public class LoanEnvelopeTests
         var embed = envelope.ToEmbeddedMessage();
 
         // Assert
-        embed.Title.Should().Be("bob owes alice 20.00€ for lunch");
+        embed.Title.Should().Be("bob owes alice 20.00\u20AC for lunch");
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class LoanEnvelopeTests
         var embed = envelope.ToEmbeddedMessage();
 
         // Assert
-        embed.Title.Should().Contain("15.00€").And.Contain("(5.00€ of 20.00€ paid)");
+        embed.Title.Should().Contain("15.00\u20AC").And.Contain("(5.00\u20AC of 20.00\u20AC paid)");
     }
 
     [Fact]
@@ -56,7 +56,6 @@ public class LoanEnvelopeTests
             LoanedFromId = 111111111111111111,
             LoanedTo = "bob",
             LoanedToId = 222222222222222222,
-            Description = "lunch",
-            CurrencySymbol = "€"
+            Description = "lunch"
         };
 }

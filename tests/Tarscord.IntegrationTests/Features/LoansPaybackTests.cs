@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Tarscord.Core.Features.Loans;
@@ -79,7 +78,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         var response = await NewHandler(context).Handle(NewCommand(10m), CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("more than the 5.00€ still owed");
+        response.AsT1.ErrorMessage.Should().Contain("more than the 5.00 still owed");
 
         await using var verification = fixture.CreateContext();
         (await verification.Loans.SingleAsync()).AmountPayed.Should().Be(15m);
@@ -227,6 +226,5 @@ public class LoansPaybackTests(PostgresFixture fixture)
 
     private static Update.CommandHandler NewHandler(TarscordContext context) =>
         new(NullLogger<Update.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
-            new ConfigurationBuilder().AddInMemoryCollection([]).Build(),
             new Update.CommandValidator());
 }

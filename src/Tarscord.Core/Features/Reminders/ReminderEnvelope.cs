@@ -1,5 +1,6 @@
 using Discord;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Reminders;
@@ -10,7 +11,7 @@ internal record ReminderEnvelope(
     ulong ChannelId,
     string Username,
     string Message,
-    DateTime RemindAt)
+    DateTime RemindAt) : IEmbeddedMessage
 {
     public static ReminderEnvelope FromEntity(Reminder reminder) =>
         new(reminder.Id, reminder.UserId, reminder.ChannelId, reminder.Username, reminder.Message,

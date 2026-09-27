@@ -97,7 +97,9 @@ public class StartupTests
         var data = new TheoryData<Type>();
 
         foreach (var service in services)
+        {
             data.Add(service);
+        }
 
         return data;
     }

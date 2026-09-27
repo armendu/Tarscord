@@ -4,16 +4,16 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-internal static class ListExpired
+internal static class List
 {
-    public record Query : IRequest<ListExpiredResponse>;
+    public record Query : IRequest<ListResponse>;
 
-    public record ListExpiredResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
+    public record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
 
     public class QueryHandler(TarscordContext context, TimeProvider timeProvider)
-        : IRequestHandler<Query, ListExpiredResponse>
+        : IRequestHandler<Query, ListResponse>
     {
-        public async Task<ListExpiredResponse> Handle(Query query, CancellationToken cancellationToken)
+        public async Task<ListResponse> Handle(Query query, CancellationToken cancellationToken)
         {
             var now = timeProvider.GetUtcNow().UtcDateTime;
 
@@ -24,7 +24,7 @@ internal static class ListExpired
                 .OrderBy(restriction => restriction.ExpiresAt)
                 .ToListAsync(cancellationToken);
 
-            return new ListExpiredResponse(expired.ConvertAll(RestrictionEnvelope.FromEntity));
+            return new ListResponse(expired.ConvertAll(RestrictionEnvelope.FromEntity));
         }
     }
 }
