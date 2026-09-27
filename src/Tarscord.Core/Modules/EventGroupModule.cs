@@ -25,7 +25,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     {
         var eventInfoList = await _mediator.Send(new List.Query(Context.User.Username));
 
-        await ReplyAsync(embed: eventInfoList.EventInfos[0].EventName.EmbedMessage()).ConfigureAwait(false);
+        await ReplyAsync(embed: eventInfoList.ToEmbeddedMessage());
     }
 
     /// <summary>

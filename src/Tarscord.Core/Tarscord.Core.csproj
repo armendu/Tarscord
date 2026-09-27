@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Tarscord.Core.Tests" />
+    <InternalsVisibleTo Include="Tarscord.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,26 +12,6 @@ internal record EventInfoEnvelope(
     DateTime? EventDate,
     string EventDescription) // TODO: Create an interface to implement for envelopes
 {
-    // public static Embed ToEmbeddedMessage(this EventInfoListEnvelope events)
-    // {
-    //     var eventsInformation = new StringBuilder();
-    //
-    //     foreach (var eventInfo in events.EventInfo)
-    //     {
-    //         eventsInformation
-    //             .Append(eventInfo.Id).Append(": '")
-    //             .Append(eventInfo.EventName)
-    //             .Append("' by user: ").Append(eventInfo.EventOrganizer).Append(".\n");
-    //     }
-    //
-    //     if (eventsInformation.Length == 0)
-    //     {
-    //         return "No events found".EmbedMessage();
-    //     }
-    //
-    //     return eventsInformation.ToString().EmbedMessage();
-    // }
-
     public static EventInfoEnvelope FromEntity(EventInfo eventInfo)
     {
         return new EventInfoEnvelope(

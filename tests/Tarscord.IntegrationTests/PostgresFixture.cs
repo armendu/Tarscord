@@ -90,6 +90,19 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
+    /// <summary>
+    /// Empties every table. Tests in this collection run one at a time, so calling it first gives a
+    /// handler test a table it can make assertions about.
+    /// </summary>
+    public async Task ResetAsync()
+    {
+        await using var context = CreateContext();
+
+        await context.Database.ExecuteSqlRawAsync(
+            "TRUNCATE public.event_attendees, public.event_infos, public.loans, public.users " +
+            "RESTART IDENTITY CASCADE");
+    }
+
     public TarscordContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TarscordContext>()
