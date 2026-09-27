@@ -15,6 +15,9 @@ public class LoanEnvelope
 
     public decimal AmountPaid { get; init; }
 
+    /// <summary>What is still owed.</summary>
+    public decimal Outstanding => Amount - AmountPaid;
+
     public static LoanEnvelope FromEntity(Loan loan)
     {
         return new LoanEnvelope

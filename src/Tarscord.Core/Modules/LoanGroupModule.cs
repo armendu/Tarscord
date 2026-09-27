@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using MediatR;
 using Tarscord.Core.Extensions;
@@ -22,41 +21,14 @@ public class LoanModule : ModuleBase
     /// Usage: loan list
     /// </summary>
     /// <returns>The list of loans.</returns>
-    [Command("list"), Summary("Shows the list of loans")]
+    [Command("list"), Summary("Shows your open loans")]
     [Alias("show")]
     public async Task ShowLoans()
     {
-        var loanList = await _mediator.Send(new List.Query(Context.User.Username));
+        var loanList = await _mediator.Send(
+            new List.Query(Context.User.Id, Context.User.Username));
 
-        if (!loanList.Loans.Any())
-        {
-            const string messageToReplyWith = "No active loans were found";
-            await ReplyAsync(embed: messageToReplyWith.EmbedMessage());
-        }
-
-        await ReplyAsync(embed: "Here are all the loans:\n".EmbedMessage(),
-            message: FormatEventInformation(loanList.Loans));
-    }
-
-    private static string FormatEventInformation(IReadOnlyList<LoanEnvelope> loans)
-    {
-        var messageToReply = new StringBuilder();
-
-        for (var i = 0; i < loans.Count; i++)
-        {
-            if (loans[i].Amount == loans[i].AmountPaid)
-            {
-                continue;
-            }
-            messageToReply.Append(i + 1).Append(". '")
-                .Append(loans[i].LoanedTo).Append("' owns '")
-                .Append(loans[i].LoanedFrom).Append("' ")
-                .Append(loans[i].Amount).Append('€')
-                .Append(" (from them paid: ").Append(loans[i].AmountPaid)
-                .Append(".\n");
-        }
-
-        return messageToReply.ToString();
+        await ReplyAsync(embed: loanList.ToEmbeddedMessage());
     }
 
     /// <summary>
