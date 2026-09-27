@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Tarscord.Core.Persistence;
 using Tarscord.DbMigrator;
 using Testcontainers.PostgreSql;
@@ -28,16 +29,63 @@ public sealed class PostgresFixture : IAsyncLifetime
             .Build();
     }
 
-    public string ConnectionString => _container.GetConnectionString();
+    public string ConnectionString
+    {
+        get
+        {
+            // Rancher Desktop publishes container ports on IPv4 only, and "localhost" resolves to
+            // ::1 first, so the address Testcontainers hands back is not always connectable.
+            var builder = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
+            {
+                Host = "127.0.0.1"
+            };
+
+            return builder.ConnectionString;
+        }
+    }
 
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
+        await WaitUntilConnectableAsync();
 
         var result = DatabaseMigrator.Upgrade(ConnectionString);
 
         if (!result.Successful)
             throw new InvalidOperationException("The database migrations failed.", result.Error);
+    }
+
+    /// <summary>
+    /// Waits until the database answers from the host, not just from inside the container.
+    /// </summary>
+    /// <remarks>
+    /// Testcontainers reports the container ready as soon as pg_isready succeeds inside it, but a
+    /// desktop Docker runtime forwards the published port through a VM and that forward can lag.
+    /// Connecting from here is the only check that matches what the tests then do.
+    /// </remarks>
+    private async Task WaitUntilConnectableAsync()
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(60);
+        Exception? lastFailure = null;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
+                return;
+            }
+            catch (NpgsqlException exception)
+            {
+                lastFailure = exception;
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"The test database at {_container.Hostname}:{_container.GetMappedPublicPort(5432)} never became reachable.",
+            lastFailure);
     }
 
     public async Task DisposeAsync() => await _container.DisposeAsync();

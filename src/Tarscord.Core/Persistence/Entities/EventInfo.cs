@@ -9,10 +9,10 @@ public class EventInfo : EntityBase
     public required string EventOrganizer { get; set; }
 
     /// <summary>
-    /// The Id of the organizer, can be converted to ulong
+    /// The organizer's Discord id.
     /// </summary>
     [Column("event_organizer_id")]
-    public required string EventOrganizerId { get; set; }
+    public ulong EventOrganizerId { get; set; }
 
     [Column("event_name")]
     public required string EventName { get; set; }

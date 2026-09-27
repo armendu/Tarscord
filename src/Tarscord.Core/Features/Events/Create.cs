@@ -55,7 +55,7 @@ internal static class Create
             var createdEvent = await _context.EventInfos.AddAsync(new EventInfo
             {
                 EventOrganizer = command.EventDescription,
-                EventOrganizerId = command.EventOrganizerId.ToString(),
+                EventOrganizerId = command.EventOrganizerId,
                 EventName = command.EventName,
                 EventDate = dateOfEvent.Value.ToUniversalTime(),
                 EventDescription = command.EventDescription,

@@ -5,9 +5,9 @@ using Tarscord.Core.Persistence.Entities;
 namespace Tarscord.Core.Features.Events;
 
 internal record EventInfoEnvelope(
-    ulong EventId,
+    int EventId,
     string EventOrganizer,
-    string EventOrganizerId,
+    ulong EventOrganizerId,
     string EventName,
     DateTime? EventDate,
     string EventDescription) // TODO: Create an interface to implement for envelopes

@@ -8,13 +8,13 @@ namespace Tarscord.Core.Features.Events;
 
 internal static class Details
 {
-    public record Query(ulong EventId) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>;
+    public record Query(int EventId) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>;
 
     public class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
-            RuleFor(x => x.EventId).NotNull().NotEmpty().GreaterThan((ulong)0);
+            RuleFor(x => x.EventId).GreaterThan(0);
         }
     }
 

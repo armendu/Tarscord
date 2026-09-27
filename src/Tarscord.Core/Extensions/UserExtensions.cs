@@ -9,7 +9,7 @@ public static class UserExtensions
     {
         return new User
         {
-            Id = user.Id,
+            DiscordId = user.Id,
             Username = user.Username,
         };
     }

@@ -34,7 +34,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("show"), Summary("Show information about an event")]
     [Alias("info", "get", "display", "details")]
     public async Task ShowEventInformation(
-        [Summary("The event Id")] ulong eventId)
+        [Summary("The event Id")] int eventId)
     {
         var response = await _mediator.Send(new Details.Query(eventId));
 
@@ -55,11 +55,9 @@ public class EventModule : ModuleBase<SocketCommandContext>
         string eventName,
         [Summary("The event date and time")] params string[] date)
     {
-        var user = Context.User.ToCommonUser();
-
         var eventInfo = new Create.Command(
-            user.Username,
-            user.Id,
+            Context.User.Username,
+            Context.User.Id,
             eventName,
             string.Join(" ", date),
             ""); // Event description for now should be empty or removed all together
@@ -96,7 +94,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     /// <returns>The confirmed attendees.</returns>
     [Command("confirm"), Summary("Confirm your attendance")]
     public async Task Confirm(
-        [Summary("The event name")] ulong eventId,
+        [Summary("The event name")] int eventId,
         [Summary("The (optional) user to confirm for")]
         params IUser[] users)
     {
@@ -145,7 +143,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("cancel"), Summary("Confirm your attendance")]
     [Alias("unattend")]
     public async Task CancelAttendance(
-        [Summary("The event name")] ulong eventId,
+        [Summary("The event name")] int eventId,
         [Summary("The (optional) user to confirm for")]
         params IUser[] users)
     {
@@ -179,7 +177,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     /// </summary>
     /// <returns>The number squared.</returns>
     [Command("confirmed"), Summary("Shows confirmed attendees.")]
-    public async Task ShowConfirmed([Summary("The Event Id")] ulong eventId)
+    public async Task ShowConfirmed([Summary("The Event Id")] int eventId)
     {
         await Task.CompletedTask;
         // var attendees = await _mediator.Send(new EventAttendanceDetails.Query()
