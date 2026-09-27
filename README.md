@@ -21,7 +21,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?event list` | Every event on record |
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
-| `?event remove <id>` (`delete`) | Cancel an event you organized |
+| `?event remove <name or id>` (`delete`) | Cancel an event you organized |
 | `?event confirm <id> [@users]` | Confirm attendance, yours or someone else's |
 | `?event cancel <id> [@users]` (`unattend`) | Withdraw attendance |
 | `?event confirmed <id>` | Who has confirmed for an event |

@@ -28,7 +28,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
 
         // Act
         var response = await NewHandler(context).Handle(
-            new Delete.Command(eventId, OrganizerId, Organizer), CancellationToken.None);
+            new Delete.Command(eventId.ToString(), OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
         response.IsT0.Should().BeTrue();
@@ -50,7 +50,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
 
         // Act
         var response = await NewHandler(context).Handle(
-            new Delete.Command(eventId, SomeoneElseId, "bob"), CancellationToken.None);
+            new Delete.Command(eventId.ToString(), SomeoneElseId, "bob"), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain(Organizer);
@@ -71,7 +71,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
 
         // Act
         var response = await NewHandler(context).Handle(
-            new Delete.Command(eventId, OrganizerId, Organizer), CancellationToken.None);
+            new Delete.Command(eventId.ToString(), OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("already cancelled");
@@ -86,10 +86,58 @@ public class EventsDeleteTests(PostgresFixture fixture)
 
         // Act
         var response = await NewHandler(context).Handle(
-            new Delete.Command(4242, OrganizerId, Organizer), CancellationToken.None);
+            new Delete.Command("4242", OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("no event with id 4242");
+        response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
+    }
+
+    [Fact]
+    public async Task Handle_ByName_DeactivatesTheEvent()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenAnEvent();
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewHandler(context).Handle(
+            new Delete.Command("Release party", OrganizerId, Organizer), CancellationToken.None);
+
+        // Assert
+        response.AsT0.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_ByNameWhenTwoEventsShareIt_AsksForTheIdInstead()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenAnEvent();
+        await GivenAnEvent();
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewHandler(context).Handle(
+            new Delete.Command("Release party", OrganizerId, Organizer), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("More than one event");
+    }
+
+    [Fact]
+    public async Task Handle_WithNothingToIdentifyTheEvent_ReturnsFailure()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewHandler(context).Handle(
+            new Delete.Command("  ", OrganizerId, Organizer), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("Name the event");
     }
 
     private async Task<int> GivenAnEvent(bool isActive = true)

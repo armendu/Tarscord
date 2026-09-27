@@ -78,14 +78,16 @@ public class EventModule : ModuleBase<SocketCommandContext>
     }
 
     /// <summary>
-    /// Usage: event remove {Event Id}
+    /// Usage: event remove {Event name or Id}
     /// </summary>
-    [Command("remove"), Summary("Cancel an event you organized")]
+    [Command("remove"), Summary("Cancel an event you organized, by name or id")]
     [Alias("delete")]
-    public async Task CancelEvent([Summary("The event Id")] int eventId)
+    public async Task CancelEvent(
+        [Summary("The event name, or the id from 'event list'")] [Remainder]
+        string eventNameOrId)
     {
         var response = await _mediator.Send(
-            new Delete.Command(eventId, Context.User.Id, Context.User.Username));
+            new Delete.Command(eventNameOrId, Context.User.Id, Context.User.Username));
 
         var embedMessage = response.ToEmbeddedMessage();
 

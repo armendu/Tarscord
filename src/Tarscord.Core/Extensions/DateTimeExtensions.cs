@@ -6,10 +6,10 @@ namespace Tarscord.Core.Extensions;
 public static class DateTimeExtensions
 {
     // Anchored, so "in 5 minutes tomorrow" is rejected rather than matching the first half.
-    private static readonly Regex s_relativeOffset =
+    private static readonly Regex s_relativeOffsetPattern =
         new(@"^in (\d{1,9}) (minute|hour|day|week|month|year)s?$");
 
-    private static readonly Regex s_nextWeekday =
+    private static readonly Regex s_nextWeekdayPattern =
         new(@"^next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$");
 
     /// <summary>Reads a date the way someone would type it, in UTC, or null if it isn't one.</summary>
@@ -34,13 +34,13 @@ public static class DateTimeExtensions
             return StartOfDay(localNow.AddDays(1));
         }
 
-        var relative = s_relativeOffset.Match(input);
+        var relative = s_relativeOffsetPattern.Match(input);
         if (relative.Success)
         {
             return FromRelativeOffset(localNow, relative);
         }
 
-        var weekday = s_nextWeekday.Match(input);
+        var weekday = s_nextWeekdayPattern.Match(input);
         if (weekday.Success)
         {
             return FromNextWeekday(localNow, weekday.Groups[1].Value);

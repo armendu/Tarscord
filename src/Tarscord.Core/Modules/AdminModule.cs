@@ -11,8 +11,6 @@ namespace Tarscord.Core.Modules;
 [Name("Admin commands")]
 public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
 {
-    private const string MentionSomeone = "Mention the user, like `?mute @name 10`.";
-
     /// <summary>
     /// Usage: mute {user} {minutes}?
     /// </summary>
@@ -61,7 +59,7 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
         // Guarding here is what lets Apply.Command keep a non-nullable IUser.
         if (user is null)
         {
-            await ReplyAsync(embed: MentionSomeone.EmbedMessage());
+            await ReplyAsync(embed: "Mention the user, like `?mute @name 10`.".EmbedMessage());
             return;
         }
 
@@ -79,7 +77,7 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
     {
         if (user is null)
         {
-            await ReplyAsync(embed: MentionSomeone.EmbedMessage());
+            await ReplyAsync(embed: "Mention the user, like `?mute @name 10`.".EmbedMessage());
             return;
         }
 

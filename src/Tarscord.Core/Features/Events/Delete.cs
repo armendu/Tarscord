@@ -10,14 +10,17 @@ namespace Tarscord.Core.Features.Events;
 
 internal static class Delete
 {
-    public record Command(int EventId, ulong RequestedById, string PerformedByUser)
+    /// <summary><paramref name="Event"/> is an id when it parses as one, otherwise a name.</summary>
+    public record Command(string Event, ulong RequestedById, string PerformedByUser)
         : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>, IPerformedByUser;
 
     public class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
-            RuleFor(command => command.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
+            RuleFor(command => command.Event)
+                .NotEmpty()
+                .WithMessage("Name the event, or give the id that 'event list' shows.");
         }
     }
 
@@ -43,13 +46,20 @@ internal static class Delete
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            var eventInfo = await context.EventInfos
-                .FirstOrDefaultAsync(candidate => candidate.Id == command.EventId, cancellationToken);
+            var matches = await FindAsync(command.Event, cancellationToken);
 
-            if (eventInfo is null)
+            if (matches.Count == 0)
             {
-                return new FailureResponse($"There is no event with id {command.EventId}");
+                return new FailureResponse($"There is no event called '{command.Event}'.");
             }
+
+            if (matches.Count > 1)
+            {
+                return new FailureResponse(
+                    $"More than one event is called '{command.Event}'. Use the id that 'event list' shows.");
+            }
+
+            var eventInfo = matches[0];
 
             if (eventInfo.EventOrganizerId != command.RequestedById)
             {
@@ -68,6 +78,22 @@ internal static class Delete
             await context.SaveChangesAsync(cancellationToken);
 
             return EventInfoEnvelope.FromEntity(eventInfo);
+        }
+
+        private async Task<List<Persistence.Entities.EventInfo>> FindAsync(
+            string idOrName,
+            CancellationToken cancellationToken)
+        {
+            if (int.TryParse(idOrName, out int eventId))
+            {
+                return await context.EventInfos
+                    .Where(candidate => candidate.Id == eventId)
+                    .ToListAsync(cancellationToken);
+            }
+
+            return await context.EventInfos
+                .Where(candidate => candidate.EventName == idOrName && candidate.IsActive)
+                .ToListAsync(cancellationToken);
         }
     }
 }
