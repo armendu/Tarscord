@@ -35,7 +35,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     public async Task ShowEventInformation(
         [Summary("The event Id")] int eventId)
     {
-        var response = await _mediator.Send(new Details.Query(eventId));
+        var response = await _mediator.Send(new Details.Query(eventId, Context.User.Username));
 
         var embeddedMessage = response.Match(
             eventInfoEnvelope => eventInfoEnvelope.ToEmbeddedMessage(),
