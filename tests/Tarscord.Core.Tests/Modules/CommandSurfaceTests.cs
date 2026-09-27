@@ -1,0 +1,104 @@
+using Discord.Commands;
+using FluentAssertions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Tarscord.Core;
+using Xunit;
+
+namespace Tarscord.Core.Tests.Modules;
+
+/// <summary>
+/// ?help is generated from these attributes, so a missing one is a command the bot offers and cannot
+/// describe.
+/// </summary>
+public class CommandSurfaceTests
+{
+    [Fact]
+    public async Task ModuleDiscovery_FindsTheWholeCommandSurface()
+    {
+        // Guards the two tests below: they would pass trivially on an empty set.
+
+        // Arrange
+        using var commands = await BuildCommandServiceAsync();
+
+        // Act
+        int commandCount = commands.Commands.Count();
+
+        // Assert
+        commandCount.Should().BeGreaterThan(15);
+    }
+
+    [Fact]
+    public async Task EveryCommand_HasASummary()
+    {
+        // Arrange
+        using var commands = await BuildCommandServiceAsync();
+
+        // Act
+        var withoutSummary = commands.Commands
+            .Where(command => string.IsNullOrWhiteSpace(command.Summary))
+            .Select(command => command.Aliases.First())
+            .ToList();
+
+        // Assert
+        withoutSummary.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task EveryModule_HasAName()
+    {
+        // EventModule had none, so ?help showed the raw type name as a heading.
+
+        // Arrange
+        using var commands = await BuildCommandServiceAsync();
+
+        // Act
+        var namedAfterTheirType = commands.Modules
+            .Where(module => module.Name.EndsWith("Module", StringComparison.Ordinal))
+            .Select(module => module.Name)
+            .ToList();
+
+        // Assert
+        namedAfterTheirType.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task EveryCommandParameter_HasASummary()
+    {
+        // Arrange
+        using var commands = await BuildCommandServiceAsync();
+
+        // Act
+        var withoutSummary = commands.Commands
+            .SelectMany(command => command.Parameters.Select(
+                parameter => new { Command = command.Aliases.First(), parameter.Name, parameter.Summary }))
+            .Where(parameter => string.IsNullOrWhiteSpace(parameter.Summary))
+            .Select(parameter => $"{parameter.Command}:{parameter.Name}")
+            .ToList();
+
+        // Assert
+        withoutSummary.Should().BeEmpty();
+    }
+
+    private static async Task<CommandService> BuildCommandServiceAsync()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["prefix"] = "?",
+                ["tarscord-context:connection-string"] =
+                    "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        Startup.ConfigureServices(services, configuration);
+
+        var provider = services.BuildServiceProvider();
+        var commands = provider.GetRequiredService<CommandService>();
+
+        await commands.AddModulesAsync(typeof(Startup).Assembly, provider);
+
+        return commands;
+    }
+}

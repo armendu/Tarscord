@@ -9,6 +9,7 @@ using Attendees = Tarscord.Core.Features.EventAttendees;
 
 namespace Tarscord.Core.Modules;
 
+[Name("Commands to organize events")]
 [Group("event")]
 public class EventModule : ModuleBase<SocketCommandContext>
 {

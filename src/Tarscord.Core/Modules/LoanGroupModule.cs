@@ -20,7 +20,6 @@ public class LoanModule : ModuleBase
     /// <summary>
     /// Usage: loan list
     /// </summary>
-    /// <returns>The list of loans.</returns>
     [Command("list"), Summary("Shows your open loans")]
     [Alias("show")]
     public async Task ShowLoans()
@@ -32,10 +31,9 @@ public class LoanModule : ModuleBase
     }
 
     /// <summary>
-    /// Usage: loan to {user} {amount}
+    /// Usage: loan to {user} {amount} {why}
     /// </summary>
-    /// <returns>The generated random number</returns>
-    [Command("to"), Summary("Loans a user some money")]
+    [Command("to"), Summary("Records that you lent someone money")]
     public async Task LoanToUser(
         [Summary("The user to loan money to")] string user,
         [Summary("The amount of the money being lent")]
@@ -70,9 +68,8 @@ public class LoanModule : ModuleBase
     }
 
     /// <summary>
-    /// Usage: loan payback {lower limit} {upper limit}
+    /// Usage: loan payback {user} {amount}
     /// </summary>
-    /// <returns>The generated random number</returns>
     [Command("payback"), Summary("Pays back money you owe someone")]
     [Alias("return", "removeloan", "deleteloan", "payloan")]
     public async Task PaybackToUser(

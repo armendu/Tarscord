@@ -1,13 +1,16 @@
 ﻿using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Tarscord.Core.Modules;
 
+[Name("Help")]
 public class HelpModule : ModuleBase<SocketCommandContext>
 {
+    private const string DefaultPrefix = "?";
+
+    private const string ModuleName = "Help";
+
     private readonly CommandService _service;
     private readonly IConfigurationRoot _config;
 
@@ -17,10 +20,10 @@ public class HelpModule : ModuleBase<SocketCommandContext>
         _config = config;
     }
 
-    [Command("help")]
+    [Command("help"), Summary("Lists every command you can use")]
     public async Task Help()
     {
-        var prefix = _config["prefix"]!;
+        string prefix = _config["prefix"] ?? DefaultPrefix;
         var builder = new EmbedBuilder
         {
             Color = Color.Blue,
@@ -29,8 +32,8 @@ public class HelpModule : ModuleBase<SocketCommandContext>
 
         foreach (var module in _service.Modules)
         {
-            // Exclude the Help module
-            if (module.Name == GetType().Name)
+            // This module lists the others; listing itself as well adds nothing.
+            if (module.Name == ModuleName)
             {
                 continue;
             }
@@ -57,8 +60,8 @@ public class HelpModule : ModuleBase<SocketCommandContext>
         await ReplyAsync(embed: builder.Build());
     }
 
-    [Command("help")]
-    public async Task HelpAsync(string command)
+    [Command("help"), Summary("Explains one command")]
+    public async Task HelpAsync([Summary("The command to explain")] string command)
     {
         var result = _service.Search(Context, command);
 
