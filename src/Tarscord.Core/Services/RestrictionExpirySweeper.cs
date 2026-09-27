@@ -10,13 +10,14 @@ namespace Tarscord.Core.Services;
 /// <remarks>This is what makes the [minutes] argument mean anything.</remarks>
 public sealed class RestrictionExpirySweeper(
     IServiceScopeFactory scopeFactory,
+    TimeProvider timeProvider,
     ILogger<RestrictionExpirySweeper> logger) : BackgroundService
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(PollInterval);
+        using var timer = new PeriodicTimer(PollInterval, timeProvider);
 
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
