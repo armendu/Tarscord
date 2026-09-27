@@ -13,7 +13,7 @@ public class TarscordContext(DbContextOptions<TarscordContext> options) : DbCont
 
     public DbSet<Reminder> Reminders { get; set; }
 
-    public DbSet<User> Users { get; set; }
+    public DbSet<Restriction> Restrictions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,16 +24,17 @@ public class TarscordContext(DbContextOptions<TarscordContext> options) : DbCont
         modelBuilder.Entity<EventAttendee>().Property(attendee => attendee.AttendeeId).HasConversion<long>();
         modelBuilder.Entity<Loan>().Property(loan => loan.LoanedFromId).HasConversion<long>();
         modelBuilder.Entity<Loan>().Property(loan => loan.LoanedToId).HasConversion<long>();
-        modelBuilder.Entity<User>().Property(user => user.DiscordId).HasConversion<long>();
         modelBuilder.Entity<Reminder>().Property(reminder => reminder.UserId).HasConversion<long>();
         modelBuilder.Entity<Reminder>().Property(reminder => reminder.ChannelId).HasConversion<long>();
+        modelBuilder.Entity<Restriction>().Property(restriction => restriction.UserId).HasConversion<long>();
+        modelBuilder.Entity<Restriction>().Property(restriction => restriction.ChannelId).HasConversion<long>();
+
+        // Stored as its name, so the column reads as 'mute' rather than as an integer whose meaning
+        // lives only in C#.
+        modelBuilder.Entity<Restriction>().Property(restriction => restriction.Kind).HasConversion<string>();
 
         modelBuilder.Entity<Loan>().Property(loan => loan.AmountLoaned).HasPrecision(18, 2);
         modelBuilder.Entity<Loan>().Property(loan => loan.AmountPayed).HasPrecision(18, 2);
-
-        modelBuilder.Entity<User>()
-            .HasIndex(user => user.DiscordId)
-            .IsUnique();
 
         modelBuilder.Entity<EventAttendee>()
             .HasIndex(attendee => new { attendee.EventInfoId, attendee.AttendeeId })

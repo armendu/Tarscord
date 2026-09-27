@@ -129,33 +129,67 @@ public class SchemaRoundTripTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Users_SaveAndReload_RoundTripsMuteState()
+    public async Task Restrictions_SaveAndReload_RoundTripsTheRestriction()
     {
         // Arrange
-        const ulong discordId = 444444444444444444;
-        var mutedUntil = new DateTime(2026, 5, 1, 18, 30, 0, DateTimeKind.Utc);
+        const ulong userId = 444444444444444444;
+        const ulong channelId = 555555555555555555;
+        var expiresAt = new DateTime(2026, 5, 1, 18, 30, 0, DateTimeKind.Utc);
 
         await using var context = fixture.CreateContext();
 
-        var user = new User
+        var restriction = new Restriction
         {
-            DiscordId = discordId,
+            UserId = userId,
             Username = "carol",
-            IsMuted = true,
-            MutedUntil = mutedUntil,
+            ChannelId = channelId,
+            Kind = RestrictionKind.DenyReacting,
+            ExpiresAt = expiresAt,
+            Lifted = false,
             Created = DateTime.UtcNow
         };
 
         // Act
-        context.Users.Add(user);
+        context.Restrictions.Add(restriction);
         await context.SaveChangesAsync();
 
         // Assert
         await using var verification = fixture.CreateContext();
-        var reloaded = await verification.Users.SingleAsync(x => x.DiscordId == discordId);
+        var reloaded = await verification.Restrictions.SingleAsync(x => x.Id == restriction.Id);
 
-        reloaded.Username.Should().Be("carol");
-        reloaded.IsMuted.Should().BeTrue();
-        reloaded.MutedUntil.Should().Be(mutedUntil);
+        reloaded.UserId.Should().Be(userId);
+        reloaded.ChannelId.Should().Be(channelId);
+        reloaded.Kind.Should().Be(RestrictionKind.DenyReacting);
+        reloaded.ExpiresAt.Should().Be(expiresAt);
+        reloaded.Lifted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Restrictions_StoredKind_IsReadableInTheDatabase()
+    {
+        // The column holds the name rather than an integer whose meaning lives only in C#.
+
+        // Arrange
+        await using var context = fixture.CreateContext();
+
+        context.Restrictions.Add(new Restriction
+        {
+            UserId = 666666666666666666,
+            Username = "dave",
+            ChannelId = 777777777777777777,
+            Kind = RestrictionKind.Mute,
+            Lifted = false,
+            Created = DateTime.UtcNow
+        });
+
+        await context.SaveChangesAsync();
+
+        // Act
+        var kinds = await context.Database
+            .SqlQuery<string>($"SELECT kind AS \"Value\" FROM public.restrictions WHERE user_id = 666666666666666666")
+            .ToListAsync();
+
+        // Assert
+        kinds.Should().ContainSingle().Which.Should().Be("Mute");
     }
 }

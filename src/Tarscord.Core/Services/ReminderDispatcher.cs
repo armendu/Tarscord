@@ -1,5 +1,4 @@
 using Discord;
-using Discord.WebSocket;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,7 +19,7 @@ namespace Tarscord.Core.Services;
 /// </remarks>
 public sealed class ReminderDispatcher(
     IServiceScopeFactory scopeFactory,
-    DiscordSocketClient discord,
+    IDiscordClient discord,
     TimeProvider timeProvider,
     ILogger<ReminderDispatcher> logger) : BackgroundService
 {

@@ -50,8 +50,8 @@ public class Startup
         // Start the startup service
         await provider.GetRequiredService<StartupService>().StartAsync();
 
-        var reminders = provider.GetRequiredService<ReminderDispatcher>();
-        await reminders.StartAsync(CancellationToken.None);
+        await provider.GetRequiredService<ReminderDispatcher>().StartAsync(CancellationToken.None);
+        await provider.GetRequiredService<RestrictionExpirySweeper>().StartAsync(CancellationToken.None);
 
         await Task.Delay(-1);
     }
@@ -72,10 +72,13 @@ public class Startup
                 // runs, so every exception a module throws was swallowed and the user saw silence.
                 DefaultRunMode = RunMode.Sync,
             }))
+            // Also as IDiscordClient, so handlers can depend on the interface and be tested.
+            .AddSingleton<IDiscordClient>(provider => provider.GetRequiredService<DiscordSocketClient>())
             .AddSingleton<CommandHandler>()
             .AddSingleton<StartupService>()
             .AddSingleton<LoggingService>()
             .AddSingleton<ReminderDispatcher>()
+            .AddSingleton<RestrictionExpirySweeper>()
             .AddLogging(builder => builder.AddSimpleConsole(options => options.TimestampFormat = "HH:mm:ss "))
             .AddSingleton(configuration)
             .AddDatabase(configuration)
@@ -90,6 +93,7 @@ public class Startup
             .AddScoped<IValidator<Features.Loans.Create.Command>, Features.Loans.Create.CommandValidator>()
             .AddScoped<IValidator<Features.Loans.Update.Command>, Features.Loans.Update.CommandValidator>()
             .AddScoped<IValidator<Features.Reminders.Create.Command>, Features.Reminders.Create.CommandValidator>()
+            .AddScoped<IValidator<Features.Restrictions.Apply.Command>, Features.Restrictions.Apply.CommandValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

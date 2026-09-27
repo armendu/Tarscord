@@ -43,9 +43,13 @@ Owner-only, and the bot needs Manage Roles in the channel to apply them:
 
 | Command | What it does |
 |---|---|
-| `?mute <@user> [minutes]` | Deny Send Messages in the channel |
+| `?mute <@user> [minutes]` | Deny Send Messages in this channel |
 | `?unmute <@user>` | Give it back |
-| `?denyreacting <@user> [minutes]` | Deny Add Reactions in the channel |
+| `?denyreacting <@user> [minutes]` | Deny Add Reactions in this channel |
+| `?allowreacting <@user>` (`allowreactions`) | Give that back |
+
+Leave `[minutes]` out and the restriction stays until you lift it; give a number and the bot lifts
+it for you when the time is up.
 
 ### Not working yet
 
@@ -53,9 +57,6 @@ These are registered, so `?help` will offer them, but they don't do what they cl
 [CLAUDE.md](CLAUDE.md) for the details:
 
 - `?sarcasm-level <n>` — accepts your number and discards it
-
-The `[minutes]` argument on `mute` and `denyreacting` is also accepted and ignored; the mute
-stays until you lift it by hand.
 
 ## Running it
 
