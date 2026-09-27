@@ -76,7 +76,13 @@ public class Startup
             .AddSingleton(configuration)
             .AddDatabase(configuration)
             .AddSingleton(TimeProvider.System)
+            // Validators are wired one by one and injected by the handler that uses them. There is
+            // no validation pipeline behavior, so a validator that is not listed here does nothing.
             .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
+            .AddScoped<IValidator<Features.Events.Delete.Command>, Features.Events.Delete.CommandValidator>()
+            .AddScoped<IValidator<Features.EventAttendees.Confirm.Command>, Features.EventAttendees.Confirm.CommandValidator>()
+            .AddScoped<IValidator<Features.EventAttendees.Cancel.Command>, Features.EventAttendees.Cancel.CommandValidator>()
+            .AddScoped<IValidator<Features.EventAttendees.List.Query>, Features.EventAttendees.List.QueryValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

@@ -3,6 +3,9 @@ using Discord.Commands;
 using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
+// Aliased because this module's own Confirm method and Events.List would otherwise collide with the
+// attendee slices of the same name.
+using Attendees = Tarscord.Core.Features.EventAttendees;
 
 namespace Tarscord.Core.Modules;
 
@@ -82,141 +85,82 @@ public class EventModule : ModuleBase<SocketCommandContext>
     }
 
     /// <summary>
-    /// Usage: event cancel {eventName}
+    /// Usage: event remove {Event Id}
     /// </summary>
-    [Command("remove"), Summary("Cancel an event")]
+    [Command("remove"), Summary("Cancel an event you organized")]
     [Alias("delete")]
-    public async Task CancelEvent([Summary("The event name")] string eventName)
+    public async Task CancelEvent([Summary("The event Id")] int eventId)
     {
-        await Task.CompletedTask;
-        // string messageToReplyWith = $"You have successfully canceled the event named '{eventName}'";
-        // EventInfo result = await _eventService.CancelEvent(Context.User.ToCommonUser(), eventName);
-        //
-        // if (result != null)
-        //     messageToReplyWith = $"The cancellation of the event named '{eventName}' failed.";
-        //
-        // await ReplyAsync(embed: messageToReplyWith.EmbedMessage());
+        var response = await _mediator.Send(
+            new Delete.Command(eventId, Context.User.Id, Context.User.Username));
+
+        var embedMessage = response.Match(
+            cancelled => $"Cancelled '{cancelled.EventName}'".EmbedMessage(),
+            failed => failed.ErrorMessage.EmbedMessage());
+
+        await ReplyAsync(embed: embedMessage);
     }
 
     /// <summary>
-    /// Usage: event confirm {Event Id} {User?}
+    /// Usage: event confirm {Event Id} {Users?}
     /// </summary>
-    /// <returns>The confirmed attendees.</returns>
-    [Command("confirm"), Summary("Confirm your attendance")]
+    [Command("confirm"), Summary("Confirm attendance, yours or someone else's")]
     public async Task Confirm(
-        [Summary("The event name")] int eventId,
-        [Summary("The (optional) user to confirm for")]
+        [Summary("The event Id")] int eventId,
+        [Summary("The (optional) users to confirm for")]
         params IUser[] users)
     {
-        await Task.CompletedTask;
-        // if (users.Length == 0)
-        //     users = new[] { Context.User };
-        //
-        // var eventAttendees = await _mediator.Send(new Update.Command()
-        // {
-        //     EventAttendees = new Update.EventAttendees()
-        //     {
-        //         Confirmation = true,
-        //         Attendees = users.Select(u => new Update.Attendee
-        //         {
-        //             AttendeeId = u.Id,
-        //             Confirmed = true,
-        //             AttendeeName = u.Username,
-        //             EventInfoId = eventId.ToString()
-        //         }).ToList(),
-        //         EventId = eventId
-        //     }
-        // });
-        //
-        // var confirmAttendanceAsList = eventAttendees.EventAttendee.ToList();
-        // if (confirmAttendanceAsList.Any())
-        // {
-        //     StringBuilder stringBuilder = new StringBuilder();
-        //
-        //     for (int i = 1; i <= confirmAttendanceAsList.Count; i++)
-        //     {
-        //         stringBuilder.Append($"{i}. {confirmAttendanceAsList[i - 1]}\n");
-        //     }
-        //
-        //     await ReplyAsync(
-        //         embed: "Thank you for confirming your attendance, these users confirmed their attendance:"
-        //             .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
-        // }
-        // else
-        //     await ReplyAsync(embed: "Attendance confirmation failed".EmbedMessage()).ConfigureAwait(false);
+        var attendees = (users.Length == 0 ? [Context.User] : users)
+            .Select(user => new Attendees.Confirm.Attendee(user.Id, user.Username))
+            .ToList();
+
+        var response = await _mediator.Send(
+            new Attendees.Confirm.Command(eventId, attendees, Context.User.Username));
+
+        var embedMessage = response.Match(
+            confirmed => confirmed.ToEmbeddedMessage(),
+            failed => failed.ErrorMessage.EmbedMessage());
+
+        await ReplyAsync(embed: embedMessage);
     }
 
     /// <summary>
-    /// Usage: event confirm {eventName} {user?} 
+    /// Usage: event cancel {Event Id} {Users?}
     /// </summary>
-    /// <returns>The number squared.</returns>
-    [Command("cancel"), Summary("Confirm your attendance")]
+    [Command("cancel"), Summary("Withdraw attendance, yours or someone else's")]
     [Alias("unattend")]
     public async Task CancelAttendance(
-        [Summary("The event name")] int eventId,
-        [Summary("The (optional) user to confirm for")]
+        [Summary("The event Id")] int eventId,
+        [Summary("The (optional) users to withdraw for")]
         params IUser[] users)
     {
-        await Task.CompletedTask;
-        // users ??= new[] {Context.User};
-        //
-        // var eventAttendees = await _mediator.Send(new Update.Command()
-        // {
-        //     EventAttendance = new Update.EventAttendance()
-        //     {
-        //         Confirmation = true,
-        //         AttendeeIds = users.Select(u => u.Id).ToList(),
-        //         AttendeeNames = users.Select(u => u.Username).ToList(),
-        //         EventId = eventId
-        //     }
-        // });
-        //
-        // var attendeesAsList = eventAttendees.EventAttendee?.ToList();
-        // if (attendeesAsList?.Any() ?? false)
-        // {
-        //     await ReplyAsync(
-        //         embed: $"You successfully canceled your attendance for the event with Id '{eventId}'"
-        //             .EmbedMessage()).ConfigureAwait(false);
-        // }
-        // else
-        //     await ReplyAsync(embed: "Attendance cancellation failed".EmbedMessage()).ConfigureAwait(false);
+        var attendeeIds = (users.Length == 0 ? [Context.User] : users)
+            .Select(user => user.Id)
+            .ToList();
+
+        var response = await _mediator.Send(
+            new Attendees.Cancel.Command(eventId, attendeeIds, Context.User.Username));
+
+        var embedMessage = response.Match(
+            remaining => remaining.ToEmbeddedMessage(),
+            failed => failed.ErrorMessage.EmbedMessage());
+
+        await ReplyAsync(embed: embedMessage);
     }
 
     /// <summary>
     /// Usage: event confirmed {Event Id}
     /// </summary>
-    /// <returns>The number squared.</returns>
-    [Command("confirmed"), Summary("Shows confirmed attendees.")]
-    public async Task ShowConfirmed([Summary("The Event Id")] int eventId)
+    [Command("confirmed"), Summary("Shows who has confirmed for an event")]
+    public async Task ShowConfirmed([Summary("The event Id")] int eventId)
     {
-        await Task.CompletedTask;
-        // var attendees = await _mediator.Send(new EventAttendanceDetails.Query()
-        // {
-        //     EventId = eventId
-        // });
-        //
-        // var attendeesAsList = attendees.EventAttendee?.ToList();
-        // if (attendeesAsList == null)
-        // {
-        //     await ReplyAsync(embed: $"The event named '{eventId}' does not exist".EmbedMessage())
-        //         .ConfigureAwait(false);
-        //     return;
-        // }
-        //
-        // if (!attendeesAsList.Any())
-        // {
-        //     await ReplyAsync(embed: "There are no confirmed attendees".EmbedMessage()).ConfigureAwait(false);
-        //     return;
-        // }
-        //
-        // var stringBuilder = new StringBuilder();
-        // for (int i = 1; i <= attendeesAsList.Count; i++)
-        // {
-        //     stringBuilder.Append($"{i}. {attendeesAsList[i - 1]}\n");
-        // }
-        //
-        // await ReplyAsync(
-        //     embed: "Users who have confirmed their attendance are:"
-        //         .EmbedMessage(stringBuilder.ToString())).ConfigureAwait(false);
+        var response = await _mediator.Send(
+            new Attendees.List.Query(eventId, Context.User.Username));
+
+        var embedMessage = response.Match(
+            attendees => attendees.ToEmbeddedMessage(),
+            failed => failed.ErrorMessage.EmbedMessage());
+
+        await ReplyAsync(embed: embedMessage);
     }
 }

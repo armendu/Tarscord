@@ -20,6 +20,10 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?event list` | Every event on record |
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
+| `?event remove <id>` (`delete`) | Cancel an event you organized |
+| `?event confirm <id> [@users]` | Confirm attendance, yours or someone else's |
+| `?event cancel <id> [@users]` (`unattend`) | Withdraw attendance |
+| `?event confirmed <id>` | Who has confirmed for an event |
 | `?loan list` (`show`) | Loans you're on either side of |
 | `?loan to <@user> <amount> <why>` | Record that you lent someone money |
 
@@ -48,7 +52,6 @@ These are registered, so `?help` will offer them, but they don't do what they cl
 
 - `?remindme <minutes> <message>` — throws before it reaches the reminder
 - `?loan payback <@user> <amount>` (`return`, `payloan`, …) — throws on the database query
-- `?event remove | confirm | cancel | confirmed` — the bodies are commented out
 - `?sarcasm-level <n>` — accepts your number and discards it
 
 The `[minutes]` argument on `mute` and `denyreacting` is also accepted and ignored; the mute

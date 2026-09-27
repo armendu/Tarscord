@@ -70,6 +70,46 @@ public class StartupTests
         act.Should().Throw<InvalidOperationException>();
     }
 
+    [Theory]
+    [MemberData(nameof(RequestHandlers))]
+    public void ConfigureServices_ForAMediatRHandler_ResolvesItWithAllItsDependencies(Type handlerService)
+    {
+        // Handlers are resolved on demand when a command runs, so a dependency nobody registered —
+        // a validator, most easily — is a runtime failure on one command and nowhere else.
+
+        // Arrange
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        // Act
+        object? handler = scope.ServiceProvider.GetService(handlerService);
+
+        // Assert
+        handler.Should().NotBeNull();
+    }
+
+    public static TheoryData<Type> RequestHandlers()
+    {
+        Type[] handlerInterfaces = [typeof(IRequestHandler<,>), typeof(IRequestHandler<>)];
+
+        var services = typeof(Startup).Assembly.GetTypes()
+            .Where(type => type is { IsAbstract: false, IsInterface: false })
+            .SelectMany(type => type.GetInterfaces())
+            .Where(contract => contract.IsGenericType
+                               && handlerInterfaces.Contains(contract.GetGenericTypeDefinition()))
+            // TimerService takes an ITimer that nothing registers. The reminder rework deletes it,
+            // and this exclusion goes with it.
+            .Where(contract => !contract.ToString().Contains("Features.Reminders"))
+            .Distinct();
+
+        var data = new TheoryData<Type>();
+
+        foreach (var service in services)
+            data.Add(service);
+
+        return data;
+    }
+
     private static ServiceProvider BuildProvider()
     {
         var configuration = new ConfigurationBuilder()
