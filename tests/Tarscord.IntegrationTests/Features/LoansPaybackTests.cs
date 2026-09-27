@@ -10,11 +10,7 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests.Features;
 
-/// <summary>
-/// The payback rule is the clearest piece of logic in this repo that should have had a test and did
-/// not. Every case here runs against PostgreSQL, because the original defect was a query EF Core
-/// could not translate rather than arithmetic.
-/// </summary>
+/// <summary>Against PostgreSQL, because the defect was untranslatable LINQ, not arithmetic.</summary>
 [Collection(PostgresCollection.Name)]
 public class LoansPaybackTests(PostgresFixture fixture)
 {
@@ -26,8 +22,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForAnOpenLoan_RecordsThePayment()
     {
-        // This is the regression test for the untranslatable LastOrDefaultAsync: the command threw
-        // InvalidOperationException before it reached the database, so it never worked at all.
+        // The regression test: LastOrDefaultAsync threw before reaching the database.
 
         // Arrange
         await fixture.ResetAsync();
@@ -163,8 +158,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [InlineData(-5)]
     public async Task Handle_WithAnAmountThatIsNotPositive_ReturnsFailure(decimal amount)
     {
-        // Update.CommandValidator compiled and was never registered, so a zero or negative payment
-        // reached the handler and mutated the balance.
+        // The validator was never registered, so a zero or negative payment mutated the balance.
 
         // Arrange
         await fixture.ResetAsync();

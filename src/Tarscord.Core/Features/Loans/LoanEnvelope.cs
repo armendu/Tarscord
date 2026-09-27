@@ -39,9 +39,7 @@ public class LoanEnvelope
 
     public string Money(decimal amount) => $"{amount:0.00}{CurrencySymbol}";
 
-    /// <summary>
-    /// One line describing the loan, shared by the list and the single-loan replies.
-    /// </summary>
+    /// <summary>One line, shared by the list and the single-loan replies.</summary>
     public string ToSummary()
     {
         var summary = new StringBuilder();

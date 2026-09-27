@@ -1,10 +1,9 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
-// Aliased because this module's own Confirm method and Events.List would otherwise collide with the
-// attendee slices of the same name.
+// Aliased: this module's Confirm method and Events.List collide with the attendee slices.
 using Attendees = Tarscord.Core.Features.EventAttendees;
 
 namespace Tarscord.Core.Modules;
@@ -57,8 +56,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
         [Summary("The name, when it is, and an optional description, separated by commas")] [Remainder]
         string arguments)
     {
-        // Commas, not spaces: both the name and the date are usually several words ("Release party",
-        // "in 3 days"), which no positional split can separate reliably.
+        // Commas, not spaces: the name and the date are both usually several words.
         var parts = arguments.Split(',', StringSplitOptions.TrimEntries);
 
         if (parts.Length < 2)

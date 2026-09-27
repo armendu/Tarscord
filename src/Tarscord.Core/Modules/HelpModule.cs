@@ -1,14 +1,13 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
+using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Modules;
 
-[Name("Help")]
+[Name(ModuleName)]
 public class HelpModule : ModuleBase<SocketCommandContext>
 {
-    private const string DefaultPrefix = "?";
-
     private const string ModuleName = "Help";
 
     private readonly CommandService _service;
@@ -23,7 +22,7 @@ public class HelpModule : ModuleBase<SocketCommandContext>
     [Command("help"), Summary("Lists every command you can use")]
     public async Task Help()
     {
-        string prefix = _config["prefix"] ?? DefaultPrefix;
+        string prefix = _config.CommandPrefix();
         var builder = new EmbedBuilder
         {
             Color = Color.Blue,

@@ -1,4 +1,4 @@
-﻿namespace Tarscord.Core;
+namespace Tarscord.Core;
 
 internal static class Program
 {

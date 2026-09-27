@@ -57,8 +57,7 @@ internal static class Apply
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            // Permission overwrites only exist on guild channels; this used to return an empty string,
-            // which the module then turned into an embed with no title that Discord rejects.
+            // Overwrites only exist on guild channels; this used to return "" and build an empty embed.
             if (command.ContextChannel is not IGuildChannel channel)
                 return new FailureResponse("That only works in a server channel.");
 
@@ -75,8 +74,7 @@ internal static class Apply
                                  && !candidate.Lifted,
                     cancellationToken);
 
-            // Re-applying extends the existing restriction rather than inserting a second row, which
-            // the partial unique index would reject anyway.
+            // Re-applying extends the existing row; the partial unique index forbids a second.
             if (inForce is null)
             {
                 inForce = new Restriction

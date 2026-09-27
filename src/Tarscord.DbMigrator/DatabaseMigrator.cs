@@ -3,10 +3,7 @@ using DbUp.Engine;
 
 namespace Tarscord.DbMigrator;
 
-/// <summary>
-/// Applies the embedded SQL migrations. Separate from <c>Program</c> so integration tests can run
-/// the same migrations against a throwaway database instead of reimplementing the schema.
-/// </summary>
+/// <summary>Applies the embedded SQL migrations, so tests can run the same scripts.</summary>
 public static class DatabaseMigrator
 {
     public static DatabaseUpgradeResult Upgrade(string connectionString)

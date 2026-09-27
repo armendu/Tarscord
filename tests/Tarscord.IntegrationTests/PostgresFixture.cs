@@ -7,13 +7,8 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests;
 
-/// <summary>
-/// A throwaway PostgreSQL instance with the real DbUp migrations applied.
-/// </summary>
-/// <remarks>
-/// Running the shipped migrations rather than EF's EnsureCreated is the entire point: it is what
-/// catches disagreements between the hand-written SQL and the C# model.
-/// </remarks>
+/// <summary>A throwaway PostgreSQL with the real DbUp migrations applied.</summary>
+/// <remarks>The shipped scripts, not EnsureCreated: that is what catches model drift.</remarks>
 public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container;
@@ -33,8 +28,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     {
         get
         {
-            // Rancher Desktop publishes container ports on IPv4 only, and "localhost" resolves to
-            // ::1 first, so the address Testcontainers hands back is not always connectable.
+            // Rancher publishes on IPv4 only, and "localhost" resolves to ::1 first.
             var builder = new NpgsqlConnectionStringBuilder(_container.GetConnectionString())
             {
                 Host = "127.0.0.1"
@@ -55,14 +49,8 @@ public sealed class PostgresFixture : IAsyncLifetime
             throw new InvalidOperationException("The database migrations failed.", result.Error);
     }
 
-    /// <summary>
-    /// Waits until the database answers from the host, not just from inside the container.
-    /// </summary>
-    /// <remarks>
-    /// Testcontainers reports the container ready as soon as pg_isready succeeds inside it, but a
-    /// desktop Docker runtime forwards the published port through a VM and that forward can lag.
-    /// Connecting from here is the only check that matches what the tests then do.
-    /// </remarks>
+    /// <summary>Waits until the database answers from the host, not just inside the container.</summary>
+    /// <remarks>A desktop runtime forwards the port through a VM, and that forward lags.</remarks>
     private async Task WaitUntilConnectableAsync()
     {
         var deadline = DateTime.UtcNow.AddSeconds(60);
@@ -90,10 +78,7 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
-    /// <summary>
-    /// Empties every table. Tests in this collection run one at a time, so calling it first gives a
-    /// handler test a table it can make assertions about.
-    /// </summary>
+    /// <summary>Empties every table; the collection runs one test at a time.</summary>
     public async Task ResetAsync()
     {
         await using var context = CreateContext();

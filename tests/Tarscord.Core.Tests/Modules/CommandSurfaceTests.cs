@@ -7,10 +7,7 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Modules;
 
-/// <summary>
-/// ?help is generated from these attributes, so a missing one is a command the bot offers and cannot
-/// describe.
-/// </summary>
+/// <summary>?help is built from these attributes, so a missing one is an undescribable command.</summary>
 public class CommandSurfaceTests
 {
     [Fact]

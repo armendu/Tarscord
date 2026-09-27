@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using FluentValidation;
@@ -18,9 +18,7 @@ public class Startup
 
     public Startup()
     {
-        // config.example.yml supplies the defaults for every key and is always present, so a clone
-        // with no config.yml of its own still starts and fails with a readable message about the
-        // token rather than a FileNotFoundException before logging exists.
+        // The example file is the defaults layer, so a clone without config.yml still starts.
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddYamlFile("Resources/config.example.yml", optional: false, reloadOnChange: true)
@@ -37,8 +35,7 @@ public class Startup
         var services = new ServiceCollection();
         ConfigureServices(services, Configuration);
 
-        // ValidateScopes turns "scoped service resolved from the root provider" into a startup
-        // failure instead of a shared-DbContext bug that only shows under concurrent commands.
+        // Makes a scoped service resolved from the root a startup failure, not a concurrency bug.
         var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateScopes = true,
@@ -58,14 +55,8 @@ public class Startup
         await Task.Delay(-1);
     }
 
-    /// <summary>
-    /// The local model, behind Microsoft.Extensions.AI's abstraction.
-    /// </summary>
-    /// <remarks>
-    /// Handlers depend on IChatClient and never on Ollama, which is what makes them testable and what
-    /// lets the model behind this be swapped without touching a feature file. Nothing connects here:
-    /// if Ollama is not running, the first request fails and the handler falls back to a fixed line.
-    /// </remarks>
+    /// <summary>The local model, behind Microsoft.Extensions.AI's abstraction.</summary>
+    /// <remarks>Nothing connects here; a handler falls back if the model is down.</remarks>
     private static IChatClient CreateChatClient(IConfiguration configuration)
     {
         string url = configuration["ollama:url"] ?? "http://localhost:11434";
@@ -86,8 +77,7 @@ public class Startup
             .AddSingleton(new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Verbose,
-                // Sync, not Async: with Async, ExecuteAsync returns success before the command body
-                // runs, so every exception a module throws was swallowed and the user saw silence.
+                // Sync: with Async, ExecuteAsync returns success before the body runs.
                 DefaultRunMode = RunMode.Sync,
             }))
             // Also as IDiscordClient, so handlers can depend on the interface and be tested.
@@ -103,8 +93,7 @@ public class Startup
             .AddSingleton(configuration)
             .AddDatabase(configuration)
             .AddSingleton(TimeProvider.System)
-            // Validators are wired one by one and injected by the handler that uses them. There is
-            // no validation pipeline behavior, so a validator that is not listed here does nothing.
+            // No validation pipeline: a validator missing from this list does nothing.
             .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
             .AddScoped<IValidator<Features.Events.Delete.Command>, Features.Events.Delete.CommandValidator>()
             .AddScoped<IValidator<Features.EventAttendees.Confirm.Command>, Features.EventAttendees.Confirm.CommandValidator>()

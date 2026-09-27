@@ -1,4 +1,4 @@
-﻿# Copy this file to config.yml in the same directory and fill in your own values.
+# Copy this file to config.yml in the same directory and fill in your own values.
 # config.yml is gitignored; never commit a real token.
 
 # Prefix that starts a command, e.g. "?help".

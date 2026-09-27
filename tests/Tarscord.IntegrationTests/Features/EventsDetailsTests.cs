@@ -52,8 +52,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
     [InlineData(-1)]
     public async Task Handle_ForAnIdThatCannotExist_SaysTheIdIsWrongRatherThanTheEventIsMissing(int eventId)
     {
-        // Both branches returned the same FailureResponse, so a malformed id was indistinguishable
-        // from a missing event.
+        // Both branches returned the same FailureResponse.
 
         // Arrange
         await fixture.ResetAsync();

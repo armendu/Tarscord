@@ -73,8 +73,7 @@ internal static class Confirm
             {
                 var row = existing.Find(candidate => candidate.AttendeeId == attendee.AttendeeId);
 
-                // Confirming twice is an update, not a second row: a unique index on
-                // (event_info_id, attendee_id) would otherwise reject it.
+                // An update, not a second row: (event_info_id, attendee_id) is unique.
                 if (row is null)
                 {
                     context.EventAttendees.Add(new EventAttendee

@@ -6,14 +6,8 @@ using Tarscord.Core.Features.Restrictions;
 
 namespace Tarscord.Core.Services;
 
-/// <summary>
-/// Gives back permissions whose restriction has run out.
-/// </summary>
-/// <remarks>
-/// The [minutes] argument on ?mute and ?denyreacting was parsed and then ignored — the handler carried
-/// a TODO saying so — which meant every mute was permanent no matter what was typed. This is what
-/// makes the argument mean something.
-/// </remarks>
+/// <summary>Gives back permissions whose restriction has run out.</summary>
+/// <remarks>This is what makes the [minutes] argument mean anything.</remarks>
 public sealed class RestrictionExpirySweeper(
     IServiceScopeFactory scopeFactory,
     ILogger<RestrictionExpirySweeper> logger) : BackgroundService
@@ -53,8 +47,7 @@ public sealed class RestrictionExpirySweeper(
         }
         catch (Exception exception)
         {
-            // A background loop that lets an exception escape stops running, and every future mute
-            // silently becomes permanent again. Log it and wait for the next tick.
+            // If this loop dies, every future mute silently becomes permanent again.
             logger.LogError(exception, "Lifting expired restrictions failed");
         }
     }

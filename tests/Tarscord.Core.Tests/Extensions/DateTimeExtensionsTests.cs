@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Extensions;
 
-/// <summary>
-/// The parser reads whatever someone types after <c>?event create</c>, so what it rejects matters as
-/// much as what it accepts.
-/// </summary>
+/// <summary>What the parser rejects matters as much as what it accepts.</summary>
 public class DateTimeExtensionsTests
 {
     // A Friday, so "next friday" has to roll forward a whole week rather than return today.
@@ -83,8 +80,7 @@ public class DateTimeExtensionsTests
     [InlineData("in -3 days")]
     public void FromTextToDate_WithTextItCannotRead_ReturnsNull(string input)
     {
-        // The unanchored patterns used to match the middle of a sentence, and a number too large for
-        // int.Parse or AddYears escaped as an unhandled exception out of the handler.
+        // Unanchored patterns matched mid-sentence, and a large number threw out of the handler.
 
         // Arrange
         var timeProvider = new FakeTimeProvider(Now);

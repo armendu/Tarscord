@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests;
 
-/// <summary>
-/// Confirms the DbUp migrations apply to an empty database and that the context can talk to what
-/// they produced.
-/// </summary>
+/// <summary>The DbUp migrations apply to an empty database and the context can read the result.</summary>
 [Collection(PostgresCollection.Name)]
 public class MigrationsTests(PostgresFixture fixture)
 {

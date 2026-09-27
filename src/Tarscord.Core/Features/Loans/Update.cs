@@ -13,14 +13,8 @@ namespace Tarscord.Core.Features.Loans;
 
 internal static class Update
 {
-    /// <summary>
-    /// A payment from the person who borrowed to the person who lent.
-    /// </summary>
-    /// <remarks>
-    /// The fields used to be called LoanedFrom and LoanedTo, which were the reverse of the entity's
-    /// meaning: the handler compared LoanedFromId to request.LoanedTo. Payer and lender say which is
-    /// which.
-    /// </remarks>
+    /// <summary>A payment from the borrower to the lender.</summary>
+    /// <remarks>Named payer and lender because LoanedFrom/LoanedTo held the reverse.</remarks>
     public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUser
     {
         public decimal Amount { get; set; }
@@ -69,8 +63,7 @@ internal static class Update
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            // The most recent loan still owed. This was LastOrDefaultAsync on an unordered query,
-            // which EF Core cannot translate, so every payback threw before reaching the database.
+            // The most recent loan still owed. LastOrDefaultAsync here was untranslatable.
             var loan = await context.Loans
                 .Where(candidate => candidate.LoanedFromId == request.LenderId
                                     && candidate.LoanedToId == request.PayerId

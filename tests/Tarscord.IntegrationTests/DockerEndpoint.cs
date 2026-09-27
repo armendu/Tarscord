@@ -1,13 +1,7 @@
 namespace Tarscord.IntegrationTests;
 
-/// <summary>
-/// Points Testcontainers at whichever Docker socket this machine actually has.
-/// </summary>
-/// <remarks>
-/// Testcontainers reads DOCKER_HOST before ~/.testcontainers.properties, and a developer machine
-/// running Rancher Desktop or Colima has no /var/run/docker.sock at all. Probing here keeps the
-/// socket path out of the repo and out of the developer's global configuration.
-/// </remarks>
+/// <summary>Points Testcontainers at whichever Docker socket this machine has.</summary>
+/// <remarks>Rancher Desktop and Colima have no /var/run/docker.sock; DOCKER_HOST wins.</remarks>
 internal static class DockerEndpoint
 {
     private const string DockerHostVariable = "DOCKER_HOST";

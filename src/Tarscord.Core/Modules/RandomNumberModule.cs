@@ -15,9 +15,7 @@ public class RandomNumberModule : ModuleBase<SocketCommandContext>
         [Summary("The lower limit")] int min,
         [Summary("The upper limit")] int max)
     {
-        // Random.Shared.Next throws when min is above max. That was caught as Exception and rethrown
-        // as a new one, which discarded the original and told nobody: RunMode.Async reported the
-        // command as successful and the user saw silence.
+        // Next throws when min is above max; that was caught and rethrown, telling nobody.
         if (min > max)
         {
             await ReplyAsync(embed: "The lower limit has to come first. Try: random 1 100".EmbedMessage());

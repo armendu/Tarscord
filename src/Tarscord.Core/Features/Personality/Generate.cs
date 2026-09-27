@@ -6,13 +6,8 @@ using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Features.Personality;
 
-/// <summary>
-/// Asks the local model for something to say.
-/// </summary>
-/// <remarks>
-/// There is no FailureResponse arm: a reply the user can read is always produced, because a model
-/// that is not running is not the user's problem. The caller supplies the line to fall back to.
-/// </remarks>
+/// <summary>Asks the local model for something to say.</summary>
+/// <remarks>No FailureResponse arm: the caller's fallback is used when the model is down.</remarks>
 internal static class Generate
 {
     public record Command(string Prompt, string Fallback, string PerformedByUser)
@@ -23,8 +18,7 @@ internal static class Generate
         IChatClient chatClient,
         BotPersonality personality) : IRequestHandler<Command, GeneratedMessageEnvelope>
     {
-        // Ollama on a laptop is not fast, but a Discord reply that takes longer than this reads as
-        // broken, and the canned line is better than nothing.
+        // Past this a Discord reply reads as broken, and the canned line is better.
         private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(20);
 
         public async Task<GeneratedMessageEnvelope> Handle(
@@ -65,8 +59,7 @@ internal static class Generate
                                                  or IOException
                                                  or InvalidOperationException)
             {
-                // Ollama not running is the normal case on a fresh machine, so this is a warning and a
-                // canned line rather than a failure the user has to read about.
+                // Ollama being down is normal, so warn and fall back rather than fail.
                 logger.LogWarning(exception, "Asking the model failed; using a canned reply instead");
             }
 

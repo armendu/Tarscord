@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 
 namespace Tarscord.Core.Extensions;
 

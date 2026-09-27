@@ -5,15 +5,9 @@ namespace Tarscord.Core.Extensions;
 
 public static partial class DateTimeExtensions
 {
-    /// <summary>
-    /// Reads a date the way someone would type it into a chat window.
-    /// </summary>
+    /// <summary>Reads a date the way someone would type it into a chat window.</summary>
     /// <returns>The instant in UTC, or <c>null</c> when the text isn't a date this understands.</returns>
-    /// <remarks>
-    /// Takes a <see cref="TimeProvider"/> rather than reading the ambient clock so that "tomorrow"
-    /// is testable. Day names resolve against the provider's local time zone, because that is the
-    /// zone the person typing is thinking in, and the result is converted to UTC for storage.
-    /// </remarks>
+    /// <remarks>Day names resolve in the provider's local zone; the result is UTC.</remarks>
     public static DateTime? FromTextToDate(this string input, TimeProvider timeProvider)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -42,8 +36,7 @@ public static partial class DateTimeExtensions
 
     private static DateTime? FromRelativeOffset(DateTimeOffset localNow, Match match)
     {
-        // A number the user typed can be arbitrarily large, and both the parse and the arithmetic
-        // used to escape as an unhandled exception out of the MediatR handler.
+        // A number the user typed can be arbitrarily large; both the parse and the arithmetic threw.
         if (!int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture,
                 out int amount))
         {

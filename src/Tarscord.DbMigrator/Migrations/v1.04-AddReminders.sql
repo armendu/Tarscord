@@ -1,5 +1,4 @@
--- Reminders were held in a static SortedList inside a singleton service, so they were lost on every
--- restart and two reminders due in the same tick collided on the key.
+-- Held in a static SortedList before this: lost on restart, and two in one tick collided.
 CREATE TABLE IF NOT EXISTS public.reminders
 (
     id         SERIAL PRIMARY KEY,

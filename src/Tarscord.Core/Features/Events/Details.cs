@@ -38,8 +38,7 @@ internal static class Details
 
             var validation = await validator.ValidateAsync(query, cancellationToken);
 
-            // An unusable id and a missing event used to return the same message, so 'event show 0'
-            // reported that the event did not exist.
+            // An unusable id used to report the same thing as a missing event.
             if (!validation.IsValid)
             {
                 return new FailureResponse(

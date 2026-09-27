@@ -19,8 +19,7 @@ internal static class Complete
             if (reminder is null)
                 return false;
 
-            // Marked one at a time, after delivery, so a reminder that failed to send is retried on
-            // the next tick instead of being silently dropped.
+            // One at a time, after delivery, so a failed send is retried next tick.
             reminder.Sent = true;
             reminder.Updated = timeProvider.GetUtcNow().UtcDateTime;
 

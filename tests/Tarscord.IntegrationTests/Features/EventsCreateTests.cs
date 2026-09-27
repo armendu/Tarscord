@@ -18,8 +18,7 @@ public class EventsCreateTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_WithAValidDate_StoresTheOrganizerRatherThanTheDescription()
     {
-        // The handler used to assign EventOrganizer = command.EventDescription, so every event ever
-        // created lost the organizer's name.
+        // The handler assigned EventOrganizer = EventDescription, losing the organizer.
 
         // Arrange
         await fixture.ResetAsync();

@@ -26,8 +26,7 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_WithSeveralEvents_ListsEveryOne()
     {
-        // The module used to show only the first event's name, so it was wrong even when it did not
-        // throw.
+        // The module showed only the first event's name, so it was wrong even when it worked.
 
         // Arrange
         var response = new List.ListResponse(

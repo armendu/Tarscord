@@ -238,6 +238,10 @@ unless `OnModelCreating` converts it to `long` — every Discord id needs that c
 run in `schemaversions`, so changing an applied script does nothing on any database that already has
 it. Add a new numbered file. `v1.03` had to be corrected by `v1.05` for exactly this reason.
 
+**Source is UTF-8 without a BOM, declared in `.editorconfig`.** The tree used to be mixed — 16 files
+with a BOM, the rest without — and an editor reading a non-BOM file that contains `€` or `ë` guesses
+wrong and reports it as loaded in the wrong encoding. Don't reintroduce a BOM.
+
 **`config.yml` is optional; `config.example.yml` is not.** The example file is the defaults layer and
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
 the example with a placeholder or nothing will read it. Both are copied to the output directory.
@@ -307,9 +311,10 @@ that's what `OneOf<TEnvelope, FailureResponse>` is for here. Never throw bare
 **Analyzers** — [Code analysis in .NET](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview).
 `EnableNETAnalyzers` is on by default for .NET 5+, so `CAxxxx` rules already run, and CI builds
 with `-warnaserror`, so any of them failing fails the build. `IDExxxx` code-style rules still do
-**not** run on a command-line build unless `EnforceCodeStyleInBuild` is set, and there is no
-`.editorconfig`, so the naming and layout rules above remain conventions rather than machine-checked.
-Adding one is the right way to change that and was deliberately left out of scope.
+**not** run on a command-line build unless `EnforceCodeStyleInBuild` is set, which is not set, so the
+naming and layout rules above remain conventions rather than machine-checked. `.editorconfig` exists
+but only declares encoding and whitespace; adding severities to it is the next step and was left out
+of scope.
 
 ## Testing
 

@@ -55,8 +55,7 @@ internal static class Delete
             if (!eventInfo.IsActive)
                 return new FailureResponse($"'{eventInfo.EventName}' was already cancelled.");
 
-            // Deactivated rather than deleted: the attendance rows are a record of who said yes, and
-            // 'event show' on an old id should still answer.
+            // Deactivated, not deleted: the attendance rows are a record of who said yes.
             eventInfo.IsActive = false;
             eventInfo.Updated = timeProvider.GetUtcNow().UtcDateTime;
 

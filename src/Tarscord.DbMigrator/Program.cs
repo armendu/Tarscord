@@ -1,4 +1,4 @@
-﻿using Tarscord.DbMigrator;
+using Tarscord.DbMigrator;
 
 return RunDbMigration(args);
 

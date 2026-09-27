@@ -11,8 +11,7 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_WithNoLoans_SaysSoOnlyOnce()
     {
-        // The module replied "No active loans were found" and then fell through with no return, so it
-        // sent a second, empty "Here are all the loans" message straight after.
+        // The module replied, then fell through with no return and sent a second, empty message.
 
         // Arrange
         var response = new List.ListResponse([]);

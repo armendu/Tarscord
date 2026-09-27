@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -32,8 +32,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="NetEscapades.Configuration.Yaml" Version="3.1.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <!-- Pinned: OllamaSharp 5.4.x ships a source generator built against a newer Roslyn than the
-         10.0.201 SDK's compiler, which warns CS9057 in every project that sees it. -->
+    <!-- Pinned: 5.4.x ships a generator built against a newer Roslyn and warns CS9057. -->
     <PackageReference Include="OllamaSharp" Version="5.3.1" />
     <PackageReference Include="OneOf" Version="3.0.271" />
     <PackageReference Include="Roslynator.Analyzers" Version="5.0.0">
@@ -43,9 +42,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <!-- config.example.yml is the always-present defaults layer, config.yml the gitignored
-         override; Startup reads them in that order, so a fresh clone starts and fails with a
-         readable "enter your token" message instead of a FileNotFoundException. -->
+    <!-- config.example.yml is the defaults layer; config.yml is the gitignored override. -->
     <None Update="Resources\config.example.yml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

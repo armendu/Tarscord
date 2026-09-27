@@ -1,11 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Tarscord.Core.Persistence.Entities;
 
 public abstract class EntityBase
 {
-    // The surrogate key, matching the SERIAL columns. A Discord snowflake is not this: it is ulong,
-    // does not fit here, and belongs in a column of its own.
+    // The surrogate key, matching SERIAL. A Discord snowflake belongs in its own column.
     [Column("id")]
     public int Id { get; set; }
 

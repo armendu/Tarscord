@@ -58,9 +58,7 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
 
     private async Task ApplyAsync(IUser? user, RestrictionKind kind, int minutes)
     {
-        // Guarding here is what lets Apply.Command take a non-nullable IUser. The parameter was
-        // declared nullable and passed straight through, which the compiler warned about three times
-        // and which dereferenced null inside GetPermissionOverwrite on a bare ?mute.
+        // Guarding here is what lets Apply.Command keep a non-nullable IUser.
         if (user is null)
         {
             await ReplyAsync(embed: MentionSomeone.EmbedMessage());

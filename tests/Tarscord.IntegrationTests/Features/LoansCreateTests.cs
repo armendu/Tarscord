@@ -41,8 +41,7 @@ public class LoansCreateTests(PostgresFixture fixture)
     [InlineData(-50)]
     public async Task Handle_WithAnAmountThatIsNotPositive_ReturnsFailureAndStoresNothing(decimal amount)
     {
-        // The validator existed, compiled, was never registered and enforced nothing, so
-        // "loan to @bob -50" was accepted.
+        // The validator compiled, was never registered, and enforced nothing.
 
         // Arrange
         await fixture.ResetAsync();

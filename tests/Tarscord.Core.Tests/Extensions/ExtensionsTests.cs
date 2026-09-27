@@ -4,9 +4,7 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Extensions;
 
-/// <summary>
-/// Every module replies through <see cref="Core.Extensions.Extensions.EmbedMessage"/>.
-/// </summary>
+/// <summary>Every module replies through <see cref="Core.Extensions.Extensions.EmbedMessage"/>.</summary>
 public class ExtensionsTests
 {
     [Fact]

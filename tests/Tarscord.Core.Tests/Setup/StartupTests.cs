@@ -11,10 +11,7 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Setup;
 
-/// <summary>
-/// Guards the composition root. Every command in the bot is resolved through this container, so a
-/// missing registration shows up here rather than as a silent failure on one command.
-/// </summary>
+/// <summary>Guards the composition root: a missing registration fails here, not on one command.</summary>
 public class StartupTests
 {
     private const string ConnectionString =
@@ -57,8 +54,7 @@ public class StartupTests
     [Fact]
     public void ConfigureServices_ForTheDbContext_RefusesToResolveFromTheRoot()
     {
-        // A scoped DbContext resolved from the root provider is shared by the whole process, which is
-        // what made concurrent commands collide on one change tracker.
+        // A scoped DbContext from the root is shared process-wide; concurrent commands collided.
 
         // Arrange
         using var provider = BuildProvider();
@@ -74,8 +70,7 @@ public class StartupTests
     [MemberData(nameof(RequestHandlers))]
     public void ConfigureServices_ForAMediatRHandler_ResolvesItWithAllItsDependencies(Type handlerService)
     {
-        // Handlers are resolved on demand when a command runs, so a dependency nobody registered —
-        // a validator, most easily — is a runtime failure on one command and nowhere else.
+        // Handlers resolve on demand, so an unregistered validator fails on one command only.
 
         // Arrange
         using var provider = BuildProvider();

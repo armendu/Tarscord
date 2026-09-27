@@ -1,9 +1,7 @@
--- The C# model and these tables disagreed on the type of almost every column. Nothing failed
--- loudly, so the damage showed up as wrong answers: money lost its cents, event organizers could
--- not be written at all, and event_attendees was unusable.
+-- The model and these tables disagreed on almost every column type. Nothing failed loudly: money
+-- lost its cents, organizers could not be written, and event_attendees was unusable.
 
--- Money was BIGINT behind a decimal property, so 12.50 was rounded to 13 on the way in and a
--- partial-payment balance could never settle.
+-- BIGINT behind a decimal, so 12.50 became 13 and no balance could settle.
 ALTER TABLE public.loans
     ALTER COLUMN amount_loaned TYPE NUMERIC(18, 2),
     ALTER COLUMN amount_payed TYPE NUMERIC(18, 2);
@@ -30,8 +28,7 @@ ALTER TABLE public.loans
 CREATE INDEX IF NOT EXISTS ix_loans_loaned_from_id ON public.loans (loaned_from_id);
 CREATE INDEX IF NOT EXISTS ix_loans_loaned_to_id ON public.loans (loaned_to_id);
 
--- event_organizer_id held a BIGINT behind a string property, so EF sent a text parameter to a
--- bigint column and PostgreSQL refused the cast: creating an event could not succeed.
+-- A BIGINT behind a string: EF sent text to a bigint column and PostgreSQL refused the cast.
 UPDATE public.event_infos SET event_organizer_id = 0 WHERE event_organizer_id IS NULL;
 UPDATE public.event_infos SET event_organizer = '' WHERE event_organizer IS NULL;
 UPDATE public.event_infos SET event_description = '' WHERE event_description IS NULL;
@@ -73,8 +70,7 @@ WHERE a.id > (SELECT MIN(b.id)
 CREATE UNIQUE INDEX IF NOT EXISTS ux_event_attendees_event_attendee
     ON public.event_attendees (event_info_id, attendee_id);
 
--- Entities/User.cs has existed with mute fields since the mute command was written and never had a
--- table behind it, so a mute was applied to Discord and forgotten immediately.
+-- Entities/User.cs has had mute fields with no table behind them since the command was written.
 CREATE TABLE IF NOT EXISTS public.users
 (
     id                  SERIAL PRIMARY KEY,

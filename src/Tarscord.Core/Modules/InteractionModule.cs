@@ -16,8 +16,7 @@ public class InteractionModule(IMediator mediator) : ModuleBase<SocketCommandCon
     public async Task SendSarcasticMessageAsync(
         [Summary("The user to dare")] IUser? user = null)
     {
-        // Threw a bare Exception here, which RunMode.Async then swallowed, so a bare ?dare did
-        // nothing at all.
+        // A bare Exception here used to be swallowed, so a bare ?dare did nothing.
         if (user is null)
         {
             await ReplyAsync(embed: "Mention who you're daring, like `?dare @name`.".EmbedMessage());

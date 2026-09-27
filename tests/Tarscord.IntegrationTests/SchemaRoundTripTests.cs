@@ -5,10 +5,7 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests;
 
-/// <summary>
-/// Proves the C# model and the migrated schema agree. Every command depends on this, so these run
-/// before any feature test is trustworthy.
-/// </summary>
+/// <summary>Proves the C# model and the migrated schema agree.</summary>
 [Collection(PostgresCollection.Name)]
 public class SchemaRoundTripTests(PostgresFixture fixture)
 {

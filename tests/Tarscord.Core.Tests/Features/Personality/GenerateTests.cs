@@ -10,10 +10,7 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Features.Personality;
 
-/// <summary>
-/// The model is behind <see cref="IChatClient"/>, so every branch here is testable without Ollama
-/// running — which matters most for the branch that runs when it isn't.
-/// </summary>
+/// <summary>Every branch is testable without Ollama, which is the point.</summary>
 public class GenerateTests
 {
     private const string Fallback = "I dare you to write that message, bob.";

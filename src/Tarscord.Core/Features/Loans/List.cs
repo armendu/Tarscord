@@ -43,8 +43,7 @@ internal static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), request.PerformedByUser);
 
-            // By id, not by username: a Discord display name can change, and matching on it orphaned
-            // every loan the moment someone renamed themselves.
+            // By id, not username: a rename used to orphan the whole history.
             var loans = await context.Loans
                 .Where(loan => (loan.LoanedFromId == request.PerformedByUserId
                                 || loan.LoanedToId == request.PerformedByUserId)

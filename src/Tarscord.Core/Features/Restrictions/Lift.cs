@@ -10,13 +10,8 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-/// <summary>
-/// Gives a permission back, either because someone asked or because the restriction expired.
-/// </summary>
-/// <remarks>
-/// Takes ids rather than Discord objects so that the expiry sweeper, which only has a stored row, can
-/// use the same path as the ?unmute command.
-/// </remarks>
+/// <summary>Gives a permission back, on request or on expiry.</summary>
+/// <remarks>Takes ids so the sweeper and ?unmute share one path.</remarks>
 internal static class Lift
 {
     public record Command(
@@ -59,8 +54,7 @@ internal static class Lift
 
             if (inForce is null)
             {
-                // The permission is back either way, but there is nothing stored to lift, so say so
-                // rather than claiming to have undone something.
+                // The permission is back either way, but there was nothing stored to lift.
                 return new FailureResponse($"{user.Username} was not restricted here.");
             }
 
@@ -79,8 +73,7 @@ internal static class Lift
             if (current is not OverwritePermissions permissions)
                 return;
 
-            // Inherit, not Allow: the point is to stop overriding the channel's own permissions, not to
-            // grant something the user might not otherwise have.
+            // Inherit, not Allow: stop overriding the channel rather than grant something new.
             var restored = kind switch
             {
                 RestrictionKind.Mute => permissions.Modify(sendMessages: PermValue.Inherit),

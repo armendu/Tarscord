@@ -100,8 +100,7 @@ public class RestrictionsTests(PostgresFixture fixture)
     [Fact]
     public async Task Apply_OutsideAGuildChannel_ReturnsFailure()
     {
-        // The handler used to return an empty string here, which became an embed with no title that
-        // Discord rejects outright.
+        // The handler returned "", which became an embed Discord rejects.
 
         // Arrange
         await fixture.ResetAsync();

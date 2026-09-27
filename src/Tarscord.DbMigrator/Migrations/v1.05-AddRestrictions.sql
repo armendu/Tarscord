@@ -1,7 +1,5 @@
--- A mute is scoped to a channel, so per-user columns cannot express it: muting someone in two
--- channels needs two expiries, and users.is_muted could only ever remember one of them. v1.03 added
--- that table on the strength of Entities/User.cs, which no code ever read or wrote. This replaces it
--- with a row per restriction.
+-- A mute is scoped to a channel, so the per-user columns v1.03 added cannot express it: someone
+-- muted in two channels needs two expiries. Replaced by a row per restriction.
 DROP TABLE IF EXISTS public.users;
 
 CREATE TABLE IF NOT EXISTS public.restrictions

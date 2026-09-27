@@ -24,22 +24,19 @@ public static class ProcessMessage
         ILogger<Handler> logger)
         : IRequestHandler<Command, bool>
     {
-        private const string DefaultPrefix = "?";
-
         public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
         {
             if (request.Message is not SocketUserMessage message)
                 return false;
 
-            // Ignore every bot rather than only ourselves: two bots that each answer the other's
-            // messages keep going forever.
+            // Every bot, not just ourselves: two of these would answer each other forever.
             if (message.Author.IsBot || message.Author.IsWebhook)
                 return false;
 
             var context = new SocketCommandContext(discord, message);
 
             int argPos = 0;
-            string prefix = config["prefix"] ?? DefaultPrefix;
+            string prefix = config.CommandPrefix();
 
             bool hasCommandPrefix = message.HasStringPrefix(prefix, ref argPos);
             bool wasMentioned = !hasCommandPrefix
@@ -48,8 +45,7 @@ public static class ProcessMessage
             if (!hasCommandPrefix && !wasMentioned)
                 return false;
 
-            // One scope per command. TarscordContext is scoped, and without this every handler in
-            // the process shared a single instance and its change tracker.
+            // One scope per command; TarscordContext is scoped and was shared process-wide.
             using var scope = provider.CreateScope();
             var result = await commands.ExecuteAsync(context, argPos, scope.ServiceProvider);
 
@@ -66,8 +62,7 @@ public static class ProcessMessage
             bool wasMentioned,
             int argPos)
         {
-            // RunMode.Sync is what makes this reachable: an exception thrown inside a module used to
-            // be reported as success and disappear.
+            // Reachable only because of RunMode.Sync; this used to be reported as success.
             if (result is ExecuteResult { Exception: not null } executeResult)
             {
                 logger.LogError(executeResult.Exception, "Command '{CommandText}' threw",
@@ -81,9 +76,7 @@ public static class ProcessMessage
 
             if (result.Error == CommandError.UnknownCommand)
             {
-                // Someone talking to the bot rather than issuing a command gets an answer. A typo
-                // after the command prefix stays silent, because that is what it used to do and
-                // answering every "?foo" with improvised text would be worse.
+                // Only a mention gets an answer; a typo after the prefix stays silent.
                 if (wasMentioned)
                     await AnswerMentionAsync(scope, context, argPos);
 

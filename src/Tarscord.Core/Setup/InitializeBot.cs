@@ -36,9 +36,7 @@ public static class InitializeBot
         {
             string? discordToken = _config["tokens:discord"];
 
-            // A missing token is a configuration failure, not something a user can act on in chat, so
-            // this one throws rather than becoming a FailureResponse. It names a specific type: a bare
-            // Exception tells a reader nothing about what went wrong.
+            // A configuration failure, not something a user can act on, so it throws.
             if (string.IsNullOrWhiteSpace(discordToken) || discordToken == PlaceholderToken)
             {
                 throw new InvalidOperationException(
