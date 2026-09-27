@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using MediatR;
-using System.ComponentModel.DataAnnotations;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 
@@ -46,21 +45,32 @@ public class EventModule : ModuleBase<SocketCommandContext>
     }
 
     /// <summary>
-    /// Usage: event create {Event Name}, {DateTime of Event}, {Description}
+    /// Usage: event create {Event Name}, {When}, {Description?}
     /// </summary>
-    [Command("create"), Summary("Create an event")]
+    [Command("create"), Summary("Create an event, as: name, when, description")]
     [Alias("add", "make", "generate")]
     public async Task CreateEvent(
-        [Summary("The event name"), Required(ErrorMessage = "Please provide a name for your event")]
-        string eventName,
-        [Summary("The event date and time")] params string[] date)
+        [Summary("The name, when it is, and an optional description, separated by commas")] [Remainder]
+        string arguments)
     {
+        // Commas, not spaces: both the name and the date are usually several words ("Release party",
+        // "in 3 days"), which no positional split can separate reliably.
+        var parts = arguments.Split(',', StringSplitOptions.TrimEntries);
+
+        if (parts.Length < 2)
+        {
+            await ReplyAsync(embed: "Usage: event create <name>, <when>, <description>".EmbedMessage(
+                "For example: event create Release party, next friday, in the usual place"));
+
+            return;
+        }
+
         var eventInfo = new Create.Command(
             Context.User.Username,
             Context.User.Id,
-            eventName,
-            string.Join(" ", date),
-            ""); // Event description for now should be empty or removed all together
+            parts[0],
+            parts[1],
+            string.Join(", ", parts.Skip(2)));
 
         var response = await _mediator.Send(eventInfo);
 

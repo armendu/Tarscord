@@ -19,12 +19,19 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?dare <@user>` | Dares someone to say it out loud |
 | `?event list` | Every event on record |
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
-| `?event create <name> <when>` (`add`, `make`, `generate`) | Add an event |
+| `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
 | `?loan list` (`show`) | Loans you're on either side of |
 | `?loan to <@user> <amount> <why>` | Record that you lent someone money |
 
-Event dates are written the way you'd say them: `today`, `tomorrow`, `in 3 days`,
-`in 2 weeks`, `next friday`.
+The three parts of `?event create` are separated by commas, because a name and a date are both
+usually several words:
+
+```
+?event create Release party, next friday, in the usual place
+```
+
+The description is optional. Dates can be written the way you'd say them — `today`, `tomorrow`,
+`in 3 days`, `in 2 weeks`, `next friday` — or given outright as `2026-05-01 18:30`.
 
 Owner-only, and the bot needs Manage Roles in the channel to apply them:
 

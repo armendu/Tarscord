@@ -1,4 +1,5 @@
 using Discord;
+using System.Text;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Persistence.Entities;
 
@@ -25,9 +26,17 @@ internal record EventInfoEnvelope(
 
     public Embed ToEmbeddedMessage()
     {
-        return
-            ($"'Event Name: {EventName}', " +
-             $"created by user '{EventOrganizer}', " +
-             $"with description '{EventDescription}'").EmbedMessage();
+        var details = new StringBuilder();
+
+        details.Append("Id: ").Append(EventId).Append('\n');
+        details.Append("Organized by: ").Append(EventOrganizer).Append('\n');
+
+        if (EventDate.HasValue)
+            details.Append("When: ").Append(EventDate.Value.ToString("f")).Append('\n');
+
+        if (!string.IsNullOrWhiteSpace(EventDescription))
+            details.Append(EventDescription);
+
+        return EventName.EmbedMessage(details.ToString());
     }
 }

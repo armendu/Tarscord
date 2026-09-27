@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
 
@@ -15,55 +16,49 @@ internal static class Create
         string EventName,
         string EventDate,
         string EventDescription
-    ) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>;
-
-// public class CreateEventCommandValidator : AbstractValidator<CreateEventCommand>
-// {
-//     public CreateEventCommandValidator()
-//     {
-//         // RuleFor(x => x.Event).NotNull();
-//     }
-// }
-
-    internal sealed class CommandHandler : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
+    ) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>, IPerformedByUser
     {
-        private readonly ILogger<CommandHandler> _logger;
-        private readonly TarscordContext _context;
-        private readonly TimeProvider _timeProvider;
+        public string PerformedByUser => EventOrganizer;
+    }
 
-        public CommandHandler(
-            ILogger<CommandHandler> logger,
-            TarscordContext context,
-            TimeProvider timeProvider)
-        {
-            _logger = logger;
-            _context = context;
-            _timeProvider = timeProvider;
-        }
-
+    internal sealed class CommandHandler(
+        ILogger<CommandHandler> logger,
+        TarscordContext context,
+        TimeProvider timeProvider)
+        : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
+    {
         public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
             Command command,
             CancellationToken cancellationToken)
         {
-            var dateOfEvent = command.EventDate.FromTextToDate();
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Create), command.PerformedByUser);
+
+            if (string.IsNullOrWhiteSpace(command.EventName))
+                return new FailureResponse("An event needs a name");
+
+            var dateOfEvent = command.EventDate.FromTextToDate(timeProvider);
 
             if (!dateOfEvent.HasValue)
             {
-                return new FailureResponse("Invalid event date provided");
+                return new FailureResponse(
+                    $"'{command.EventDate}' is not a date I understand. Try 'today', 'tomorrow', " +
+                    "'in 3 days', 'next friday' or '2026-05-01 18:30'.");
             }
 
-            var createdEvent = await _context.EventInfos.AddAsync(new EventInfo
+            var createdEvent = await context.EventInfos.AddAsync(new EventInfo
             {
-                EventOrganizer = command.EventDescription,
+                EventOrganizer = command.EventOrganizer,
                 EventOrganizerId = command.EventOrganizerId,
                 EventName = command.EventName,
-                EventDate = dateOfEvent.Value.ToUniversalTime(),
+                EventDate = dateOfEvent.Value,
                 EventDescription = command.EventDescription,
                 IsActive = true,
-                Created = _timeProvider.GetUtcNow().UtcDateTime
+                Created = timeProvider.GetUtcNow().UtcDateTime
             }, cancellationToken);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+
             return EventInfoEnvelope.FromEntity(createdEvent.Entity);
         }
     }
