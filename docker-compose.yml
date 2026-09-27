@@ -1,0 +1,24 @@
+# Postgres for local development. Host port is 5433, not 5432, because 5432 is
+# commonly already taken on a developer machine; the app and the migrator both
+# default to 5433 to match.
+services:
+  postgres:
+    image: postgres:17
+    container_name: tarscord-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tarscord_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - tarscord-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d tarscord_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tarscord-postgres-data:

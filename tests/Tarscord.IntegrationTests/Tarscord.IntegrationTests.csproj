@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,19 +11,21 @@
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.11.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.14.1">
+    <PackageReference Include="Roslynator.Analyzers" Version="5.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Tarscord.Core\Tarscord.Core.csproj" />
+    <ProjectReference Include="..\..\src\Tarscord.Core\Tarscord.Core.csproj" />
+    <ProjectReference Include="..\..\src\Tarscord.DbMigrator\Tarscord.DbMigrator.csproj" />
   </ItemGroup>
 
 </Project>

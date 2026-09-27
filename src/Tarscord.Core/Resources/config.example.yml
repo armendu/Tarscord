@@ -1,4 +1,4 @@
-# Copy this file to config.yml in the same directory and fill in your own values.
+﻿# Copy this file to config.yml in the same directory and fill in your own values.
 # config.yml is gitignored; never commit a real token.
 
 # Prefix that starts a command, e.g. "?help".
@@ -12,7 +12,7 @@ sarcasm-level: 0
 humor-level: 0
 
 tarscord-context:
-    connection-string: "Host=localhost;Username=root;Password=password;Database=tarscord_db"
+    connection-string: "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"
 
 messages:
     euro_sign: "€"

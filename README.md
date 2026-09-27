@@ -52,7 +52,7 @@ stays until you lift it by hand.
 ### You'll need
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- PostgreSQL, reachable and with an empty database ready
+- Docker or Rancher Desktop, for the bundled PostgreSQL — or your own Postgres if you'd rather
 - A Discord application — [Developer Portal](https://discord.com/developers/applications) →
   **New Application** → **Bot** → **Reset Token**, and keep the token
 
@@ -67,8 +67,9 @@ cp src/Tarscord.Core/Resources/config.example.yml src/Tarscord.Core/Resources/co
 Open `src/Tarscord.Core/Resources/config.yml` and put your token in `tokens.discord`. That file
 is gitignored, so your token stays on your machine.
 
-**Don't skip this step.** The bot loads `config.yml` as a required file and throws on startup if
-it isn't there.
+`config.example.yml` is read first and supplies the default for every key, so `config.yml` only
+needs the values you want to override. Without a token the bot starts and then stops with
+`Please enter your bot's token into the config.yml file.`
 
 ### 2. Turn on the Message Content intent
 
@@ -80,18 +81,28 @@ work without reading what people type. Leave it off and the bot logs in, reports
 and then ignores every single command with no error anywhere. It is the usual reason a first run
 looks dead.
 
-### 3. Create the schema
+### 3. Start PostgreSQL
+
+```sh
+docker compose up -d
+```
+
+That brings up `tarscord-postgres` with the `tarscord_db` database, published on **port 5433**.
+5433 rather than the usual 5432 because a developer machine often already has something on 5432;
+the app's default connection string and the migrator's both point at 5433 to match.
+
+### 4. Create the schema
 
 The migrator applies the SQL in `src/Tarscord.DbMigrator/Migrations/` with
 [DbUp](https://dbup.readthedocs.io). It takes the connection string as its first argument:
 
 ```sh
-dotnet run --project src/Tarscord.DbMigrator -- "Host=localhost;Username=root;Password=password;Database=tarscord_db"
+dotnet run --project src/Tarscord.DbMigrator -- "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"
 ```
 
 Run with no argument and it falls back to exactly that localhost string.
 
-### 4. Start the bot
+### 5. Start the bot
 
 ```sh
 dotnet run --project src/Tarscord.Core
@@ -100,7 +111,7 @@ dotnet run --project src/Tarscord.Core
 `dotnet build` from the repository root works too — the solution is a `Tarscord.slnx`, which
 every project in the repo belongs to.
 
-### 5. Invite it
+### 6. Invite it
 
 In the Developer Portal under **OAuth2 → URL Generator**, tick `bot`, pick the permissions you
 want it to have (Manage Roles and Manage Messages for the moderation commands), then open the
@@ -124,8 +135,19 @@ any code. Loan output hard-codes its `€`. Changing those values does nothing t
 ```
 src/Tarscord.Core/        the bot: Discord modules, features, EF Core persistence
 src/Tarscord.DbMigrator/  DbUp console app, applies Migrations/*.sql
-tests/                    xUnit
+tests/Tarscord.Core.Tests/        unit tests, no infrastructure
+tests/Tarscord.IntegrationTests/  runs the real migrations against a throwaway Postgres
 ```
+
+## Tests
+
+```sh
+dotnet test tests/Tarscord.Core.Tests          # unit, fast, no Docker needed
+dotnet test tests/Tarscord.IntegrationTests    # starts its own Postgres via Testcontainers
+```
+
+The integration suite needs a Docker socket. It finds one automatically for Docker Desktop,
+Rancher Desktop and Colima; set `DOCKER_HOST` if yours lives somewhere else.
 
 ## Contributing
 

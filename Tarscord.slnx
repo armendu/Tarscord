@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="src/Tarscord.Core/Tarscord.Core.csproj" />
   <Project Path="src/Tarscord.DbMigrator/Tarscord.DbMigrator.csproj" />
-  <Project Path="tests/Tarscord.Core.Tests.csproj" />
+  <Project Path="tests/Tarscord.Core.Tests/Tarscord.Core.Tests.csproj" />
+  <Project Path="tests/Tarscord.IntegrationTests/Tarscord.IntegrationTests.csproj" />
 </Solution>

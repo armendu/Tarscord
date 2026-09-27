@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
 
@@ -13,28 +14,33 @@ public class Startup
 {
     public IConfigurationRoot Configuration { get; }
 
-    public Startup(string[] args)
+    public Startup()
     {
+        // config.example.yml supplies the defaults for every key and is always present, so a clone
+        // with no config.yml of its own still starts and fails with a readable message about the
+        // token rather than a FileNotFoundException before logging exists.
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
-            .AddYamlFile("Resources/config.yml", optional: false, reloadOnChange: true);
+            .AddYamlFile("Resources/config.example.yml", optional: false, reloadOnChange: true)
+            .AddYamlFile("Resources/config.yml", optional: true, reloadOnChange: true);
         Configuration = builder.Build();
     }
 
-    public static async Task RunAsync(string[] args)
-    {
-        var startup = new Startup(args);
-        await startup.RunAsync();
-    }
+    public static Task RunAsync()
+        => new Startup().RunBotAsync();
 
-    private async Task RunAsync()
+    private async Task RunBotAsync()
     {
         // Create a new instance of a service collection
         var services = new ServiceCollection();
-        ConfigureServices(services);
+        ConfigureServices(services, Configuration);
 
-        // Build the service provider
-        var provider = services.BuildServiceProvider();
+        // ValidateScopes turns "scoped service resolved from the root provider" into a startup
+        // failure instead of a shared-DbContext bug that only shows under concurrent commands.
+        var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateScopes = true
+        });
 
         // Start the logging service, and the command handler service
         provider.GetRequiredService<LoggingService>();
@@ -46,7 +52,7 @@ public class Startup
         await Task.Delay(-1);
     }
 
-    private void ConfigureServices(IServiceCollection services)
+    internal static void ConfigureServices(IServiceCollection services, IConfigurationRoot configuration)
     {
         services.AddSingleton(new DiscordSocketClient(
                 new DiscordSocketConfig
@@ -58,15 +64,17 @@ public class Startup
             .AddSingleton(new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Verbose,
-                DefaultRunMode = RunMode.Async,
+                // Sync, not Async: with Async, ExecuteAsync returns success before the command body
+                // runs, so every exception a module throws was swallowed and the user saw silence.
+                DefaultRunMode = RunMode.Sync,
             }))
             .AddSingleton<CommandHandler>()
             .AddSingleton<StartupService>()
             .AddSingleton<LoggingService>()
             .AddSingleton<TimerService>()
-            .AddLogging()
-            .AddSingleton(Configuration)
-            .AddDatabase(Configuration)
+            .AddLogging(builder => builder.AddSimpleConsole(options => options.TimestampFormat = "HH:mm:ss "))
+            .AddSingleton(configuration)
+            .AddDatabase(configuration)
             .AddSingleton(TimeProvider.System)
             .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
