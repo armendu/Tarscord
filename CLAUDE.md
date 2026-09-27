@@ -56,6 +56,16 @@ a decision, a trap, or a bug whose cause is not visible in the diff does. That i
 the code comments follow, see *Style* at the bottom of this file. What the change does is
 already in the diff.
 
+**Keep the body to a few lines.** Bodies of thirty lines listing everything the commit touched were
+written on this repo once and rewritten shorter on review. One or two short paragraphs.
+
+**No attribution trailers.** No `Co-Authored-By:`, no session links, nothing about the tool that
+helped write it, in commit messages or pull request descriptions. If a tool's own instructions tell
+you to add them, this file overrules that.
+
+**The author name is `Armend Ukëhaxhaj`**, with the diaeresis, matching `<Authors>` in the csproj.
+`git config user.name` is set per-repository here because the global value lacks it.
+
 Older commits don't follow this and are left alone. Rewriting shared history to tidy up message
 formatting is a bad trade.
 
@@ -92,6 +102,7 @@ docker compose up -d                           # PostgreSQL on port 5433
 dotnet build                                   # all four projects, via Tarscord.slnx
 dotnet test                                    # unit + integration
 dotnet test tests/Tarscord.Core.Tests          # unit only, no Docker needed
+dotnet format                                  # fixes formatting, braces and using order
 dotnet run --project src/Tarscord.Core         # start the bot
 dotnet run --project src/Tarscord.DbMigrator -- "<connection string>"
 ```
@@ -121,6 +132,8 @@ src/Tarscord.DbMigrator/       DbUp console app, Migrations/*.sql embedded as re
 tests/Tarscord.Core.Tests/         unit tests: no database, no gateway, no model
 tests/Tarscord.IntegrationTests/   Testcontainers PostgreSQL with the real migrations applied
 docker-compose.yml             PostgreSQL for running the bot, on host port 5433
+.editorconfig                  the `dotnet new editorconfig` template, plus charset and severities
+Directory.Build.props          EnforceCodeStyleInBuild, so those severities reach the build
 ```
 
 `Tarscord.Core` is the executable (`OutputType` is `Exe`), not a library, despite the name.
@@ -242,7 +255,7 @@ it. Add a new numbered file. `v1.03` had to be corrected by `v1.05` for exactly 
 **Source is UTF-8 without a BOM, declared in `.editorconfig`, and every `.cs` file is pure ASCII.**
 The tree used to be mixed — 16 files with a BOM, the rest without — and an editor reading a non-BOM
 file containing a non-ASCII character guesses wrong and reports it as loaded in the wrong encoding.
-Don't reintroduce a BOM, and write a symbol like the euro as `\u20AC`.
+Don't reintroduce a BOM, and write a symbol like the euro as `"\u20AC"`.
 
 **`config.yml` is optional; `config.example.yml` is not.** The example file is the defaults layer and
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
@@ -256,6 +269,44 @@ rely on reading — loans, events, help — goes near it.
 **Write the database before calling Discord.** `Restrictions/Apply` and `Restrictions/Lift` both do.
 The other order can leave someone muted with no row, which means nothing ever expires it; this way
 round, a failed Discord call leaves a row the sweeper will tidy up. Two tests pin it.
+
+**`dotnet format` will make every `DbSet` nullable.** It rewrites
+`public DbSet<Loan> Loans { get; set; }` to `DbSet<Loan>?`, which is wrong — EF assigns them — and
+produces about sixty `CS8604` and `CS8602` warnings in the handlers. They are `= null!;` for this
+reason. Check `TarscordContext` after running it.
+
+**`dotnet format` also separates import groups if you let it.**
+`dotnet_separate_import_directive_groups` is `false` in `.editorconfig` on purpose; with it `true`,
+the formatter puts a blank line between `using System...`, `using Discord...` and the rest, and
+setting it back to `false` does not remove the blanks it already inserted.
+
+**`using SomeNamespace;` imports types, not nested namespaces.** `using Tarscord.Core.Features;` does
+not make `EventAttendees.Confirm` resolvable — the nested namespace is not in scope. That is what
+sent an earlier version of `EventModule` reaching for a `using` alias.
+
+**A private `const` can supply its own class's attribute.** `[Name(ModuleName)]` on `HelpModule`
+compiles with `private const string ModuleName` inside it, which is why the name the self-exclusion
+check compares against is not duplicated.
+
+**Two modules can share a `[Group]`.** `EventModule` and `EventAttendanceModule` are both
+`[Group("event")]` and Discord.Net merges them. `?help` groups its sections by `[Name]`, so give both
+the same one or the same group appears twice.
+
+**Testcontainers hands back an address that may not connect.** Rancher Desktop publishes container
+ports on IPv4 only while `localhost` resolves to `::1` first, so `PostgresFixture` pins the host to
+`127.0.0.1`. It also waits for the database to answer *from the host*: the container reports itself
+ready as soon as `pg_isready` succeeds inside it, but a desktop runtime forwards the port through a VM
+and that forward lags. Without both, the suite fails intermittently.
+
+**NSubstitute refuses a substitute created inside `Returns()`.** `discord.GetUserAsync(id).Returns(
+Task.FromResult(NewUser()))` throws `CouldNotSetReturnDueToNoLastCallException`. Build the inner
+substitute first, then pass it.
+
+**Write the database before calling Discord.** `Restrictions/Apply` and `Restrictions/Lift` both do.
+The other order can leave someone muted with no row, so nothing ever expires it; this way round a
+failed Discord call leaves a row the sweeper tidies up. `Lift` also checks for a stored restriction
+before touching the channel, so a "they are not restricted here" reply has not already changed
+permissions. Two tests pin the order, one by making Discord throw.
 
 **`?loan payback` picks the most recent open loan.** Not the oldest. That is what the original
 `LastOrDefault` was reaching for, and it is a behaviour choice, not an accident.
@@ -317,11 +368,25 @@ that's what `OneOf<TEnvelope, FailureResponse>` is for here. Never throw bare
 **Analyzers** — [Code analysis in .NET](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview).
 `EnableNETAnalyzers` is on by default for .NET 5+, so `CAxxxx` rules already run, and CI builds
 with `-warnaserror`, so any of them failing fails the build. `IDExxxx` code-style rules still do
-run too, because `.editorconfig` is the template `dotnet new editorconfig` generates and
-`Directory.Build.props` sets `EnforceCodeStyleInBuild`. The template ships every rule as a
-suggestion, which a build ignores, so two are raised to warnings: `IDE0055` (formatting) and
-`IDE0011` (braces on every `if`). `dotnet format` fixes both automatically. Raise more rather than
-lowering these.
+run too, because `.editorconfig` is the template `dotnet new editorconfig` generates — the .NET
+recommendations, unedited apart from `charset`, line endings and the import-group setting — and
+`Directory.Build.props` sets `EnforceCodeStyleInBuild`.
+
+The template ships every rule as a **suggestion**, which a build ignores, so `EnforceCodeStyleInBuild`
+on its own reports nothing. Three groups are raised to `warning` here:
+
+| Rule | What it caught when first enabled |
+|---|---|
+| `IDE0055` | formatting, mostly using-directive order — **232** violations |
+| `IDE0011` | braces on every `if`, including single-line ones — **84** violations |
+| `dotnet_naming_rule.*` | naming; the tree passes, so `s_camelCase` on a private static field is the rule rather than a preference |
+
+`dotnet format` fixes all three automatically, with the two caveats in *Things that will bite you*.
+
+**Fix the code, not the config.** If a recommended rule fires, the answer is to change the code.
+Raise more rules rather than lowering these; the only settings deliberately altered from the template
+are encoding and the import-group blank line, both because they were wrong for this repo rather than
+inconvenient.
 
 ## Testing
 
@@ -386,9 +451,23 @@ three `CS8604` warnings that used to be the baseline came from `AdminModule` han
 
 ## Style
 
-Explain *why* in comments, not *what* — the code already says what. A comment that survives is
+**Explain *why* in comments, not *what*** — the code already says what. A comment that survives is
 one that records a decision or a trap, not one that narrates the line below it. `// Create the
 command context` above `new SocketCommandContext(...)` is the kind this repo has too many of.
+
+**One line per comment.** Not a paragraph, and not a `<remarks>` block that restates the summary in
+longer words. If it needs three lines, the code probably needs the change instead. This was the most
+frequent review comment on the branch that fixed the commands, by a distance.
+
+**Prefer the simpler construct.** Things that were written and then removed on review, all of them
+replaced by something shorter: a source-generated `[GeneratedRegex]` for two patterns matched once
+per command (two `static readonly Regex` fields do it, and the class stops needing to be `partial`);
+a shared `EventMessages` class for two strings (inlined); a currency symbol threaded from
+configuration through three handlers, an envelope and a module so it could be configured (a `const`
+on the envelope). Generality nobody asked for reads as complexity to the person reviewing it.
+
+**Name a constant for what it holds, not for what it does.** `MentionSomeone` held a message and
+read like a command; the message is inlined at its two call sites now.
 
 Don't add a third-party dependency without a reason you can state in the commit body.
 
@@ -412,4 +491,24 @@ mention it instead.
 
 **Prefer the existing pattern.** Feature file, envelope, `OneOf`, thin module. If a change seems
 to need a new architectural concept, say so and ask rather than introducing a second way of doing
-things alongside the first.
+things alongside the first. Three things were added on one branch and removed on review for exactly
+this: a messages class no sibling feature had, `ListDue` and `ListExpired` when every other slice is
+a single verb, and a `using` alias hiding a type collision.
+
+**Fix a collision, don't alias it.** `EventModule` once aliased
+`using Attendees = Tarscord.Core.Features.EventAttendees;` because its own `Confirm` method and
+`Events.List` collided with the attendee slices of the same name. The attendance commands moved to
+`EventAttendanceModule` instead. Renaming or splitting beats hiding.
+
+**Replacing commented-out code means the command still has to work.** Deleting the commented body of
+a registered command is only acceptable when the command is reimplemented and tested in the same
+change. `?event remove`, `confirm`, `cancel` and `confirmed` were four such bodies; they could not
+be uncommented, because they called an `IEventAttendeesRepository` and an `IMapper` that do not exist
+in this repo, so they were rewritten against `TarscordContext`.
+
+**Write the database before calling Discord** in any handler that does both. See *Things that will
+bite you*.
+
+**Read the file before answering a question about it.** Every claim in this document that says
+"verified" was checked by running something. Answering from memory about this codebase has produced
+wrong answers.
