@@ -16,7 +16,8 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 |---|---|
 | `?help` / `?help <command>` | List commands, or explain one |
 | `?random <min> <max>` (`?r`) | A random number between two bounds |
-| `?dare <@user>` | Dares someone to say it out loud |
+| `?dare <@user>` | Dares someone, in the bot's current voice |
+| `@Tarscord <anything>` | Mention it with no command and it answers |
 | `?event list` | Every event on record |
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
@@ -39,6 +40,13 @@ usually several words:
 The description is optional. Dates can be written the way you'd say them — `today`, `tomorrow`,
 `in 3 days`, `in 2 weeks`, `next friday` — or given outright as `2026-05-01 18:30`.
 
+Owner-only:
+
+| Command | What it does |
+|---|---|
+| `?sarcasm-level <0-10>` | How sarcastic it is |
+| `?humor-level <0-10>` (`humour-level`) | How funny it tries to be |
+
 Owner-only, and the bot needs Manage Roles in the channel to apply them:
 
 | Command | What it does |
@@ -51,12 +59,8 @@ Owner-only, and the bot needs Manage Roles in the channel to apply them:
 Leave `[minutes]` out and the restriction stays until you lift it; give a number and the bot lifts
 it for you when the time is up.
 
-### Not working yet
-
-These are registered, so `?help` will offer them, but they don't do what they claim. See
-[CLAUDE.md](CLAUDE.md) for the details:
-
-- `?sarcasm-level <n>` — accepts your number and discards it
+Every command `?help` offers does what it says. If one misbehaves, that's a bug — the
+[CLAUDE.md](CLAUDE.md) list of known-broken commands is history now.
 
 ## Running it
 
@@ -137,9 +141,26 @@ Three keys in `src/Tarscord.Core/Resources/config.yml` actually do something:
 | `tokens.discord` | Your bot token. Required |
 | `tarscord-context.connection-string` | PostgreSQL connection string. Required |
 | `prefix` | The character that starts a command. Default `?` |
+| `sarcasm-level`, `humor-level` | 0–10, the starting values for the bot's voice |
+| `ollama.url`, `ollama.model` | Where the local model lives, and which one |
+| `messages.euro_sign` | The symbol loan amounts are printed with |
 
-The rest of the file — `sarcasm-level`, `humor-level`, `messages.euro_sign` — is never read by
-any code. Loan output hard-codes its `€`. Changing those values does nothing today.
+### The local model
+
+`?dare` and replies to a mention are written by a local LLM through
+[Ollama](https://ollama.com), shaped by `sarcasm-level` and `humor-level`:
+
+```sh
+ollama pull llama3.1
+ollama serve
+```
+
+It is optional. If nothing answers on `ollama.url`, the bot logs a warning and replies with a fixed
+line instead, so no command breaks because the model is down. Every other reply — loans, events,
+help — is deterministic and never goes near the model.
+
+`?sarcasm-level 8` and `?humor-level 3` change the voice while the bot is running. They are held in
+memory, so a restart goes back to the values in `config.yml`.
 
 ## Layout
 

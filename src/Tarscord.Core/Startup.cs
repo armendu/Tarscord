@@ -3,8 +3,10 @@ using Discord.Commands;
 using Discord.WebSocket;
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OllamaSharp;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
 
@@ -56,6 +58,22 @@ public class Startup
         await Task.Delay(-1);
     }
 
+    /// <summary>
+    /// The local model, behind Microsoft.Extensions.AI's abstraction.
+    /// </summary>
+    /// <remarks>
+    /// Handlers depend on IChatClient and never on Ollama, which is what makes them testable and what
+    /// lets the model behind this be swapped without touching a feature file. Nothing connects here:
+    /// if Ollama is not running, the first request fails and the handler falls back to a fixed line.
+    /// </remarks>
+    private static IChatClient CreateChatClient(IConfiguration configuration)
+    {
+        string url = configuration["ollama:url"] ?? "http://localhost:11434";
+        string model = configuration["ollama:model"] ?? "llama3.1";
+
+        return new OllamaApiClient(new Uri(url), model);
+    }
+
     internal static void ConfigureServices(IServiceCollection services, IConfigurationRoot configuration)
     {
         services.AddSingleton(new DiscordSocketClient(
@@ -79,6 +97,8 @@ public class Startup
             .AddSingleton<LoggingService>()
             .AddSingleton<ReminderDispatcher>()
             .AddSingleton<RestrictionExpirySweeper>()
+            .AddSingleton<BotPersonality>()
+            .AddSingleton(CreateChatClient(configuration))
             .AddLogging(builder => builder.AddSimpleConsole(options => options.TimestampFormat = "HH:mm:ss "))
             .AddSingleton(configuration)
             .AddDatabase(configuration)
@@ -94,6 +114,7 @@ public class Startup
             .AddScoped<IValidator<Features.Loans.Update.Command>, Features.Loans.Update.CommandValidator>()
             .AddScoped<IValidator<Features.Reminders.Create.Command>, Features.Reminders.Create.CommandValidator>()
             .AddScoped<IValidator<Features.Restrictions.Apply.Command>, Features.Restrictions.Apply.CommandValidator>()
+            .AddScoped<IValidator<Features.Personality.SetLevels.Command>, Features.Personality.SetLevels.CommandValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

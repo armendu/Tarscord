@@ -27,10 +27,14 @@
     <PackageReference Include="Discord.Net" Version="3.20.1" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.10.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="NetEscapades.Configuration.Yaml" Version="3.1.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- Pinned: OllamaSharp 5.4.x ships a source generator built against a newer Roslyn than the
+         10.0.201 SDK's compiler, which warns CS9057 in every project that sees it. -->
+    <PackageReference Include="OllamaSharp" Version="5.3.1" />
     <PackageReference Include="OneOf" Version="3.0.271" />
     <PackageReference Include="Roslynator.Analyzers" Version="5.0.0">
       <PrivateAssets>all</PrivateAssets>

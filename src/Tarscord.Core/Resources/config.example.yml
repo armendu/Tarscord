@@ -8,8 +8,15 @@ tokens:
     # Discord Developer Portal -> your application -> Bot -> Reset Token.
     discord: "YOUR_DISCORD_BOT_TOKEN"
 
+# Both 0-10, and both settable at runtime with ?sarcasm-level and ?humor-level.
 sarcasm-level: 0
 humor-level: 0
+
+# The local model the bot talks through. Tarscord works without it: if nothing answers at this
+# address, ?dare and replies to a mention fall back to fixed lines.
+ollama:
+    url: "http://localhost:11434"
+    model: "llama3.1"
 
 tarscord-context:
     connection-string: "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"

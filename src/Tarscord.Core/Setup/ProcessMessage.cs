@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Setup;
 
@@ -40,11 +41,12 @@ public static class ProcessMessage
             int argPos = 0;
             string prefix = config["prefix"] ?? DefaultPrefix;
 
-            if (!message.HasStringPrefix(prefix, ref argPos) &&
-                !message.HasMentionPrefix(discord.CurrentUser, ref argPos))
-            {
+            bool hasCommandPrefix = message.HasStringPrefix(prefix, ref argPos);
+            bool wasMentioned = !hasCommandPrefix
+                                && message.HasMentionPrefix(discord.CurrentUser, ref argPos);
+
+            if (!hasCommandPrefix && !wasMentioned)
                 return false;
-            }
 
             // One scope per command. TarscordContext is scoped, and without this every handler in
             // the process shared a single instance and its change tracker.
@@ -52,12 +54,17 @@ public static class ProcessMessage
             var result = await commands.ExecuteAsync(context, argPos, scope.ServiceProvider);
 
             if (!result.IsSuccess)
-                await ReportFailureAsync(context, result);
+                await ReportFailureAsync(scope, context, result, wasMentioned, argPos);
 
             return true;
         }
 
-        private async Task ReportFailureAsync(SocketCommandContext context, IResult result)
+        private async Task ReportFailureAsync(
+            IServiceScope scope,
+            SocketCommandContext context,
+            IResult result,
+            bool wasMentioned,
+            int argPos)
         {
             // RunMode.Sync is what makes this reachable: an exception thrown inside a module used to
             // be reported as success and disappear.
@@ -72,14 +79,43 @@ public static class ProcessMessage
                 return;
             }
 
-            // Any mention of the bot reaches this method, so an unknown command is not worth a reply.
             if (result.Error == CommandError.UnknownCommand)
+            {
+                // Someone talking to the bot rather than issuing a command gets an answer. A typo
+                // after the command prefix stays silent, because that is what it used to do and
+                // answering every "?foo" with improvised text would be worse.
+                if (wasMentioned)
+                    await AnswerMentionAsync(scope, context, argPos);
+
                 return;
+            }
 
             logger.LogWarning("Command '{CommandText}' failed with {Error}: {Reason}",
                 context.Message.Content, result.Error, result.ErrorReason);
 
             await context.Channel.SendMessageAsync(embed: result.ErrorReason.EmbedMessage());
+        }
+
+        private static async Task AnswerMentionAsync(
+            IServiceScope scope,
+            SocketCommandContext context,
+            int argPos)
+        {
+            string said = context.Message.Content[argPos..].Trim();
+
+            if (said.Length == 0)
+                return;
+
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+            using var typingState = context.Channel.EnterTypingState();
+
+            var response = await mediator.Send(new Generate.Command(
+                Prompt: $"{context.User.Username} said to you: {said}",
+                Fallback: "I have nothing useful to add.",
+                PerformedByUser: context.User.Username));
+
+            await context.Channel.SendMessageAsync(response.ToReplyText());
         }
     }
 }
