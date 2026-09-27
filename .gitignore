@@ -334,3 +334,6 @@ ASALocalRun/
 
 # macOS files
 .DS_Store
+# Local bot configuration — holds the Discord token and the database password.
+# Copy Resources/config.example.yml to Resources/config.yml and fill it in.
+src/Tarscord.Core/Resources/config.yml
