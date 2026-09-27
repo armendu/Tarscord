@@ -84,6 +84,7 @@ public class Startup
             .AddScoped<IValidator<Features.EventAttendees.Cancel.Command>, Features.EventAttendees.Cancel.CommandValidator>()
             .AddScoped<IValidator<Features.EventAttendees.List.Query>, Features.EventAttendees.List.QueryValidator>()
             .AddScoped<IValidator<Features.Loans.Create.Command>, Features.Loans.Create.CommandValidator>()
+            .AddScoped<IValidator<Features.Loans.Update.Command>, Features.Loans.Update.CommandValidator>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
     }
 }

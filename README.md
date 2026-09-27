@@ -26,6 +26,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?event confirmed <id>` | Who has confirmed for an event |
 | `?loan list` (`show`) | Loans you're on either side of |
 | `?loan to <@user> <amount> <why>` | Record that you lent someone money |
+| `?loan payback <@user> <amount>` (`return`, `payloan`, …) | Pay back money you owe |
 
 The three parts of `?event create` are separated by commas, because a name and a date are both
 usually several words:
@@ -51,7 +52,6 @@ These are registered, so `?help` will offer them, but they don't do what they cl
 [CLAUDE.md](CLAUDE.md) for the details:
 
 - `?remindme <minutes> <message>` — throws before it reaches the reminder
-- `?loan payback <@user> <amount>` (`return`, `payloan`, …) — throws on the database query
 - `?sarcasm-level <n>` — accepts your number and discards it
 
 The `[minutes]` argument on `mute` and `denyreacting` is also accepted and ignored; the mute

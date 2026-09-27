@@ -73,11 +73,11 @@ public class LoanModule : ModuleBase
     /// Usage: loan payback {lower limit} {upper limit}
     /// </summary>
     /// <returns>The generated random number</returns>
-    [Command("payback"), Summary("Pays back the amount to the loaner")]
+    [Command("payback"), Summary("Pays back money you owe someone")]
     [Alias("return", "removeloan", "deleteloan", "payloan")]
     public async Task PaybackToUser(
-        [Summary("The user to loan money to")] string user,
-        [Summary("The value of the money being lent")]
+        [Summary("The user you are paying back")] string user,
+        [Summary("The amount you are paying back")]
         decimal amountBeingPayedBack)
     {
         var guildUser = await GetMentionedUser(user);
@@ -91,10 +91,10 @@ public class LoanModule : ModuleBase
         var response = await _mediator.Send(new Update.Command
         {
             Amount = amountBeingPayedBack,
-            LoanedTo = guildUser.Id,
-            LoanedToUsername = guildUser.Username,
-            LoanedFrom = Context.User.Id,
-            LoanedFromUsername = Context.User.Username,
+            LenderId = guildUser.Id,
+            LenderUsername = guildUser.Username,
+            PayerId = Context.User.Id,
+            PayerUsername = Context.User.Username,
             PerformedByUser = Context.User.Username
         });
 
