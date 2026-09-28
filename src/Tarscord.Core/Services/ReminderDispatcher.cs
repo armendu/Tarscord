@@ -59,14 +59,7 @@ public sealed class ReminderDispatcher(
         }
     }
 
-    /// <summary>
-    /// Delivers one reminder, and treats a failure as that reminder's problem alone.
-    /// </summary>
-    /// <remarks>
-    /// Due reminders come back oldest first, so one the bot can no longer post (403 in a channel it
-    /// lost access to) used to abort the whole tick and be first again on the next one, holding up
-    /// every reminder behind it forever.
-    /// </remarks>
+    /// <summary>One failure is that reminder's problem, not the whole queue's.</summary>
     private async Task TryDeliverAsync(
         IMediator mediator,
         ReminderEnvelope reminder,
@@ -85,8 +78,7 @@ public sealed class ReminderDispatcher(
             logger.LogError(exception, "Reminder {ReminderId} could not be delivered; giving up on it",
                 reminder.ReminderId);
 
-            // Marked done so it stops blocking the queue. A reminder nobody can be told about is
-            // worse kept than dropped.
+            // Marked done, or it is first in the queue again on every tick.
             await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
         }
     }
@@ -107,8 +99,7 @@ public sealed class ReminderDispatcher(
             return;
         }
 
-        // This one does need to ping, but only the person who set the reminder. The message text is
-        // theirs and goes in the embed, where it cannot mention anyone.
+        // Pings only the person being reminded; their text is in the embed, which cannot mention.
         await channel.SendMessageAsync(
             text: MentionUtils.MentionUser(reminder.UserId),
             embed: "Reminder".EmbedMessage(reminder.Message),

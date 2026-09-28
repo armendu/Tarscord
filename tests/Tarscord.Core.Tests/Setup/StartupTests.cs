@@ -18,6 +18,33 @@ public class StartupTests
         "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db";
 
     [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ConfigureServices_WithNoConnectionString_RefusesToStart(string? configured)
+    {
+        // The one key with no default, so forgetting it cannot silently reach a dev database.
+
+        // Arrange
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["prefix"] = "?",
+                ["tarscord-context:connection-string"] = configured
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+
+        // Act
+        Action act = () => Startup.ConfigureServices(services, configuration);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*connection string*");
+    }
+
+    [Theory]
     [InlineData(typeof(DiscordSocketClient))]
     [InlineData(typeof(CommandService))]
     [InlineData(typeof(CommandHandler))]

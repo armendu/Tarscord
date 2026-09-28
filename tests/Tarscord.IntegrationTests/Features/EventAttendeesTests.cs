@@ -87,8 +87,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
     [Fact]
     public async Task Confirm_ForTheSamePersonNamedTwice_AddsThemOnce()
     {
-        // params IUser[] lets someone be mentioned twice. The loop only looked at rows loaded up
-        // front, so it queued two inserts and the unique index rejected the save.
+        // Mentioned twice, the loop queued two inserts and the unique index rejected the save.
 
         // Arrange
         await fixture.ResetAsync();
@@ -185,8 +184,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
     [Fact]
     public async Task Cancel_ForSomeoneElseByAnyoneButTheOrganizer_IsRefused()
     {
-        // Withdrawing deletes the row that records who said yes, and any member could do it for
-        // anyone: ?event cancel 7 @alice @bob wiped their RSVPs with no check at all.
+        // Any member could delete anyone's RSVP: ?event cancel 7 @alice had no check at all.
 
         // Arrange
         await fixture.ResetAsync();

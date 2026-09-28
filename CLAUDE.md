@@ -257,6 +257,11 @@ The tree used to be mixed — 16 files with a BOM, the rest without — and an e
 file containing a non-ASCII character guesses wrong and reports it as loaded in the wrong encoding.
 Don't reintroduce a BOM, and write a symbol like the euro as `"\u20AC"`.
 
+**The connection string is the one key with no default.** Every other key falls back to
+`config.example.yml`, so forgetting one is silent; `tarscord-context:connection-string` is empty
+there and `AddDatabase` throws, because the alternative is a deployment quietly running against
+`localhost:5433` with the development password. A test pins it.
+
 **`config.yml` is optional; `config.example.yml` is not.** The example file is the defaults layer and
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
 the example with a placeholder or nothing will read it. Both are copied to the output directory.

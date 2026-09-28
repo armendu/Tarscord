@@ -79,12 +79,13 @@ cd Tarscord
 cp src/Tarscord.Core/Resources/config.example.yml src/Tarscord.Core/Resources/config.yml
 ```
 
-Open `src/Tarscord.Core/Resources/config.yml` and put your token in `tokens.discord`. That file
-is gitignored, so your token stays on your machine.
+Open `src/Tarscord.Core/Resources/config.yml` and set `tokens.discord` and
+`tarscord-context.connection-string`. That file is gitignored, so your token stays on your machine.
 
-`config.example.yml` is read first and supplies the default for every key, so `config.yml` only
-needs the values you want to override. Without a token the bot starts and then stops with
-`Please enter your bot's token into the config.yml file.`
+`config.example.yml` is read first and supplies a default for every key except the connection
+string, which has none on purpose — the bot refuses to start rather than pointing itself at a
+database you did not choose. For the bundled compose stack use
+`Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db`.
 
 ### 2. Turn on the Message Content intent
 

@@ -59,8 +59,7 @@ internal static class Cancel
 
             var attendeeIds = command.AttendeeIds.Distinct().ToList();
 
-            // Withdrawing is a delete, and the rows are the record of who said yes, so only the
-            // person themselves or the organizer may do it. Checked on the id, never the display name.
+            // A delete, so it is yours or the organizer's to do. On the id, not the display name.
             bool forSomeoneElse = attendeeIds.Any(attendeeId => attendeeId != command.RequestedById);
 
             if (forSomeoneElse && eventInfo.EventOrganizerId != command.RequestedById)
