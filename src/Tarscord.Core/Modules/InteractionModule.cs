@@ -33,6 +33,6 @@ public class InteractionModule(IMediator mediator, IConfigurationRoot config) : 
             Fallback: $"I dare you to write that message, {user.Username}.",
             PerformedByUser: Context.User.Username));
 
-        await ReplyAsync(response.ToReplyText());
+        await ReplyAsync(response.ToReplyText(), allowedMentions: AllowedMentions.None);
     }
 }

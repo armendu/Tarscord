@@ -107,9 +107,12 @@ public sealed class ReminderDispatcher(
             return;
         }
 
+        // This one does need to ping, but only the person who set the reminder. The message text is
+        // theirs and goes in the embed, where it cannot mention anyone.
         await channel.SendMessageAsync(
             text: MentionUtils.MentionUser(reminder.UserId),
-            embed: "Reminder".EmbedMessage(reminder.Message));
+            embed: "Reminder".EmbedMessage(reminder.Message),
+            allowedMentions: new AllowedMentions { UserIds = [reminder.UserId] });
 
         await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
     }

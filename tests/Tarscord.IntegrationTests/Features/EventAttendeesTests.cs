@@ -13,6 +13,7 @@ namespace Tarscord.IntegrationTests.Features;
 public class EventAttendeesTests(PostgresFixture fixture)
 {
     private const string PerformedByUser = "alice";
+    private const ulong OrganizerId = 111111111111111111;
     private const ulong BobId = 222222222222222222;
     private const ulong CarolId = 333333333333333333;
 
@@ -174,11 +175,61 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewCancelHandler(context).Handle(
-            new Cancel.Command(eventId, [BobId], PerformedByUser), CancellationToken.None);
+            new Cancel.Command(eventId, [BobId], OrganizerId, PerformedByUser), CancellationToken.None);
 
         // Assert
         response.AsT0.Attendees.Select(attendee => attendee.AttendeeName)
             .Should().ContainSingle().Which.Should().Be("carol");
+    }
+
+    [Fact]
+    public async Task Cancel_ForSomeoneElseByAnyoneButTheOrganizer_IsRefused()
+    {
+        // Withdrawing deletes the row that records who said yes, and any member could do it for
+        // anyone: ?event cancel 7 @alice @bob wiped their RSVPs with no check at all.
+
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent();
+
+        await using var firstContext = fixture.CreateContext();
+        await NewConfirmHandler(firstContext).Handle(
+            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            CancellationToken.None);
+
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewCancelHandler(context).Handle(
+            new Cancel.Command(eventId, [BobId], CarolId, "carol"), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("Only alice can withdraw");
+
+        await using var verification = fixture.CreateContext();
+        (await verification.EventAttendees.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Cancel_ForYourself_IsAllowed()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent();
+
+        await using var firstContext = fixture.CreateContext();
+        await NewConfirmHandler(firstContext).Handle(
+            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            CancellationToken.None);
+
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewCancelHandler(context).Handle(
+            new Cancel.Command(eventId, [BobId], BobId, "bob"), CancellationToken.None);
+
+        // Assert
+        response.AsT0.Attendees.Should().BeEmpty();
     }
 
     [Fact]
@@ -191,7 +242,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewCancelHandler(context).Handle(
-            new Cancel.Command(eventId, [BobId], PerformedByUser), CancellationToken.None);
+            new Cancel.Command(eventId, [BobId], OrganizerId, PerformedByUser), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("No attendance to cancel");

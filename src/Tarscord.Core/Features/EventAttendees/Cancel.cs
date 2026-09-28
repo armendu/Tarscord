@@ -10,8 +10,11 @@ namespace Tarscord.Core.Features.EventAttendees;
 
 internal static class Cancel
 {
-    public record Command(int EventId, IReadOnlyList<ulong> AttendeeIds, string PerformedByUser)
-        : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
+    public record Command(
+        int EventId,
+        IReadOnlyList<ulong> AttendeeIds,
+        ulong RequestedById,
+        string PerformedByUser) : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
 
     public class CommandValidator : AbstractValidator<Command>
     {
@@ -55,6 +58,16 @@ internal static class Cancel
             }
 
             var attendeeIds = command.AttendeeIds.Distinct().ToList();
+
+            // Withdrawing is a delete, and the rows are the record of who said yes, so only the
+            // person themselves or the organizer may do it. Checked on the id, never the display name.
+            bool forSomeoneElse = attendeeIds.Any(attendeeId => attendeeId != command.RequestedById);
+
+            if (forSomeoneElse && eventInfo.EventOrganizerId != command.RequestedById)
+            {
+                return new FailureResponse(
+                    $"Only {eventInfo.EventOrganizer} can withdraw someone else's attendance.");
+            }
 
             var toRemove = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == command.EventId

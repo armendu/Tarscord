@@ -134,7 +134,12 @@ public static class ProcessMessage
                 Fallback: "I have nothing useful to add.",
                 PerformedByUser: context.User.Username));
 
-            await context.Channel.SendMessageAsync(response.ToReplyText());
+            // The model was handed the user's text, so whatever comes back must not be able to ping.
+            // Left unset, Discord.Net omits allowed_mentions and Discord expands every mention in
+            // the content, which would let a member borrow the bot to notify a role or @everyone.
+            await context.Channel.SendMessageAsync(
+                response.ToReplyText(),
+                allowedMentions: AllowedMentions.None);
         }
     }
 }

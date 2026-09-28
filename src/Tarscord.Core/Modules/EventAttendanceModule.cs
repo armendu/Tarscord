@@ -53,7 +53,7 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             .ToList();
 
         var response = await _mediator.Send(
-            new Cancel.Command(eventId, attendeeIds, Context.User.Username));
+            new Cancel.Command(eventId, attendeeIds, Context.User.Id, Context.User.Username));
 
         var embedMessage = response.ToEmbeddedMessage();
 

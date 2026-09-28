@@ -76,7 +76,11 @@ public class HelpModule : ModuleBase<SocketCommandContext>
 
         if (!result.IsSuccess)
         {
-            await ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
+            // The user's text is echoed verbatim, so their mentions must not become the bot's pings.
+            await ReplyAsync(
+                $"Sorry, I couldn't find a command like **{command}**.",
+                allowedMentions: AllowedMentions.None);
+
             return;
         }
 
