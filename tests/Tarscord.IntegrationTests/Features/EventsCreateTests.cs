@@ -94,5 +94,6 @@ public class EventsCreateTests(PostgresFixture fixture)
     }
 
     private static Create.CommandHandler NewHandler(Tarscord.Core.Persistence.TarscordContext context) =>
-        new(NullLogger<Create.CommandHandler>.Instance, context, new FakeTimeProvider(Now));
+        new(NullLogger<Create.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
+            new Create.CommandValidator());
 }

@@ -64,7 +64,11 @@ internal static class Confirm
                 return new FailureResponse($"'{eventInfo.EventName}' has been cancelled.");
             }
 
-            var attendeeIds = command.Attendees.Select(attendee => attendee.AttendeeId).ToList();
+            // Mentioning the same person twice is one confirmation, not two rows the unique index
+            // would reject.
+            var attendees = command.Attendees.DistinctBy(attendee => attendee.AttendeeId).ToList();
+
+            var attendeeIds = attendees.Select(attendee => attendee.AttendeeId).ToList();
 
             var existing = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == command.EventId
@@ -73,7 +77,7 @@ internal static class Confirm
 
             var now = timeProvider.GetUtcNow().UtcDateTime;
 
-            foreach (var attendee in command.Attendees)
+            foreach (var attendee in attendees)
             {
                 var row = existing.Find(candidate => candidate.AttendeeId == attendee.AttendeeId);
 

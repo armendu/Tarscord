@@ -13,6 +13,10 @@ public static class DateTimeExtensions
         new(@"^next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$");
 
     /// <summary>Reads a date the way someone would type it, in UTC, or null if it isn't one.</summary>
+    /// <remarks>
+    /// Everything the bot stores and prints is UTC. A day the user names is that day in UTC, not their
+    /// local midnight converted, or "next friday" would land on a Thursday everywhere east of London.
+    /// </remarks>
     public static DateTime? FromTextToDate(this string input, TimeProvider timeProvider)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -26,18 +30,18 @@ public static class DateTimeExtensions
 
         if (input is "today")
         {
-            return StartOfDay(localNow);
+            return UtcStartOfDay(localNow);
         }
 
         if (input is "tomorrow")
         {
-            return StartOfDay(localNow.AddDays(1));
+            return UtcStartOfDay(localNow.AddDays(1));
         }
 
         var relative = s_relativeOffsetPattern.Match(input);
         if (relative.Success)
         {
-            return FromRelativeOffset(localNow, relative);
+            return FromRelativeOffset(timeProvider.GetUtcNow(), relative);
         }
 
         var weekday = s_nextWeekdayPattern.Match(input);
@@ -46,10 +50,10 @@ public static class DateTimeExtensions
             return FromNextWeekday(localNow, weekday.Groups[1].Value);
         }
 
-        return FromAbsoluteDate(input, timeProvider);
+        return FromAbsoluteDate(input);
     }
 
-    private static DateTime? FromRelativeOffset(DateTimeOffset localNow, Match match)
+    private static DateTime? FromRelativeOffset(DateTimeOffset utcNow, Match match)
     {
         if (!int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture,
                 out int amount))
@@ -61,12 +65,12 @@ public static class DateTimeExtensions
         {
             return match.Groups[2].Value switch
             {
-                "minute" => localNow.AddMinutes(amount).UtcDateTime,
-                "hour" => localNow.AddHours(amount).UtcDateTime,
-                "day" => localNow.AddDays(amount).UtcDateTime,
-                "week" => localNow.AddDays(amount * 7.0).UtcDateTime,
-                "month" => localNow.AddMonths(amount).UtcDateTime,
-                "year" => localNow.AddYears(amount).UtcDateTime,
+                "minute" => utcNow.AddMinutes(amount).UtcDateTime,
+                "hour" => utcNow.AddHours(amount).UtcDateTime,
+                "day" => utcNow.AddDays(amount).UtcDateTime,
+                "week" => utcNow.AddDays(amount * 7.0).UtcDateTime,
+                "month" => utcNow.AddMonths(amount).UtcDateTime,
+                "year" => utcNow.AddYears(amount).UtcDateTime,
                 _ => null
             };
         }
@@ -83,10 +87,10 @@ public static class DateTimeExtensions
 
         int daysUntilNext = ((int)targetDay - (int)localNow.DayOfWeek + 7) % 7;
 
-        return StartOfDay(localNow.AddDays(daysUntilNext == 0 ? 7 : daysUntilNext));
+        return UtcStartOfDay(localNow.AddDays(daysUntilNext == 0 ? 7 : daysUntilNext));
     }
 
-    private static DateTime? FromAbsoluteDate(string input, TimeProvider timeProvider)
+    private static DateTime? FromAbsoluteDate(string input)
     {
         // Invariant culture, so the same text means the same date wherever the bot runs.
         if (!DateTime.TryParse(input, CultureInfo.InvariantCulture,
@@ -95,17 +99,10 @@ public static class DateTimeExtensions
             return null;
         }
 
-        if (parsed.Kind == DateTimeKind.Utc)
-        {
-            return parsed;
-        }
-
-        var unspecified = DateTime.SpecifyKind(parsed, DateTimeKind.Unspecified);
-
-        return new DateTimeOffset(unspecified, timeProvider.LocalTimeZone.GetUtcOffset(unspecified))
-            .UtcDateTime;
+        // The clock the user typed is the clock that gets stored and printed back.
+        return DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
     }
 
-    private static DateTime StartOfDay(DateTimeOffset localMoment) =>
-        new DateTimeOffset(localMoment.Date, localMoment.Offset).UtcDateTime;
+    private static DateTime UtcStartOfDay(DateTimeOffset localMoment) =>
+        DateTime.SpecifyKind(localMoment.Date, DateTimeKind.Utc);
 }

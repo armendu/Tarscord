@@ -84,6 +84,29 @@ public class EventAttendeesTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Confirm_ForTheSamePersonNamedTwice_AddsThemOnce()
+    {
+        // params IUser[] lets someone be mentioned twice. The loop only looked at rows loaded up
+        // front, so it queued two inserts and the unique index rejected the save.
+
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent();
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewConfirmHandler(context).Handle(
+            new Confirm.Command(
+                eventId,
+                [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(BobId, "bob")],
+                PerformedByUser),
+            CancellationToken.None);
+
+        // Assert
+        response.AsT0.Attendees.Should().ContainSingle();
+    }
+
+    [Fact]
     public async Task Confirm_ForACancelledEvent_ReturnsFailure()
     {
         // Arrange

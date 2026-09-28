@@ -14,7 +14,7 @@ public class ListTests
         // The module used to index EventInfos[0] with no emptiness check.
 
         // Arrange
-        var response = new List.ListResponse([]);
+        var response = new List.ListResponse([], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -34,7 +34,7 @@ public class ListTests
             Envelope(1, "Release party"),
             Envelope(2, "Standup"),
             Envelope(3, "Retro")
-        ]);
+        ], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -51,7 +51,7 @@ public class ListTests
         // The id is what ?event show takes, so a list without it is unusable.
 
         // Arrange
-        var response = new List.ListResponse([Envelope(7, "Release party")]);
+        var response = new List.ListResponse([Envelope(7, "Release party")], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -67,7 +67,7 @@ public class ListTests
         var response = new List.ListResponse(
         [
             new EventInfoEnvelope(1, Organizer, 123, "Release party", null, "somewhere", true)
-        ]);
+        ], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();

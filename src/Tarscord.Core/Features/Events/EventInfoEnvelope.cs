@@ -36,7 +36,7 @@ internal record EventInfoEnvelope(
 
         if (EventDate.HasValue)
         {
-            summary.Append(" on ").Append(EventDate.Value.ToString("f"));
+            summary.Append(" on ").Append(EventDate.Value.ToString("f")).Append(" UTC");
         }
 
         return summary.ToString();
@@ -51,7 +51,7 @@ internal record EventInfoEnvelope(
 
         if (EventDate.HasValue)
         {
-            details.Append("When: ").Append(EventDate.Value.ToString("f")).Append('\n');
+            details.Append("When: ").Append(EventDate.Value.ToString("f")).Append(" UTC").Append('\n');
         }
 
         if (!string.IsNullOrWhiteSpace(EventDescription))

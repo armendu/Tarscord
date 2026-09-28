@@ -8,7 +8,7 @@ namespace Tarscord.Core.Modules;
 
 [Name("Commands to handle money loaning")]
 [Group("loan")]
-public class LoanModule : ModuleBase
+public class LoanModule : ModuleBase<SocketCommandContext>
 {
     private readonly IMediator _mediator;
 
@@ -98,17 +98,22 @@ public class LoanModule : ModuleBase
         await ReplyAsync(embed: embeddedMessage);
     }
 
+    /// <summary>The mentioned guild member, or null when there isn't one to find.</summary>
+    /// <remarks>Context.Guild is null in a direct message, which used to be an unhandled NRE.</remarks>
     private async Task<IGuildUser?> GetMentionedUser(string userMention)
     {
-        // Parse the user mention to get the user ID
-        if (!MentionUtils.TryParseUser(userMention, out var userId))
+        // Through IGuild, so a member missing from the cache is fetched over REST; the
+        // GuildMembers intent is not requested.
+        if (Context.Guild is not IGuild guild)
         {
             return null;
         }
 
-        // Get the user from the guild
-        var guildUser = await Context.Guild.GetUserAsync(userId);
+        if (!MentionUtils.TryParseUser(userMention, out ulong userId))
+        {
+            return null;
+        }
 
-        return guildUser ?? null;
+        return await guild.GetUserAsync(userId);
     }
 }

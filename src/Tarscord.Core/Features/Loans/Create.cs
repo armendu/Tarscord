@@ -25,6 +25,9 @@ internal static class Create
 
     public class CommandValidator : AbstractValidator<Command>
     {
+        // loans.description is VARCHAR(1000); past that Postgres rejects the insert.
+        private const int DescriptionLength = 1000;
+
         public CommandValidator()
         {
             RuleFor(command => command.Amount)
@@ -34,6 +37,10 @@ internal static class Create
             RuleFor(command => command.LoanedToId)
                 .NotEqual(command => command.LoanedFromId)
                 .WithMessage("You cannot loan money to yourself.");
+
+            RuleFor(command => command.Description)
+                .MaximumLength(DescriptionLength)
+                .WithMessage($"Keep the reason under {DescriptionLength} characters.");
         }
     }
 

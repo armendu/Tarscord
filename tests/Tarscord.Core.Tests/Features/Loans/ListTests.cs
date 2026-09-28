@@ -12,7 +12,7 @@ public class ListTests
         // The module replied, then fell through with no return and sent a second, empty message.
 
         // Arrange
-        var response = new List.ListResponse([]);
+        var response = new List.ListResponse([], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -28,7 +28,7 @@ public class ListTests
         // The old wording was "'bob' owns 'alice'", which reads as the opposite of the truth.
 
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)]);
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -41,7 +41,7 @@ public class ListTests
     public void ToEmbeddedMessage_ForAPartlyPaidLoan_ShowsWhatIsLeftAndWhatIsPaid()
     {
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 7.50m)]);
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 7.50m)], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -54,7 +54,7 @@ public class ListTests
     public void ToEmbeddedMessage_ForAnUnpaidLoan_LeavesOutThePaidPart()
     {
         // Arrange
-        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)]);
+        var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();
@@ -68,7 +68,7 @@ public class ListTests
     {
         // Arrange
         var response = new List.ListResponse(
-            [Loan(amount: 20m, paid: 0m), Loan(amount: 30m, paid: 0m)]);
+            [Loan(amount: 20m, paid: 0m), Loan(amount: 30m, paid: 0m)], false);
 
         // Act
         var embed = response.ToEmbeddedMessage();

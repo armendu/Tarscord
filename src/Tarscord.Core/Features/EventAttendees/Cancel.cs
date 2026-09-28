@@ -55,7 +55,7 @@ internal static class Cancel
                 return new FailureResponse($"There is no event with id {command.EventId}");
             }
 
-            var attendeeIds = command.AttendeeIds.ToList();
+            var attendeeIds = command.AttendeeIds.Distinct().ToList();
 
             var toRemove = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == command.EventId

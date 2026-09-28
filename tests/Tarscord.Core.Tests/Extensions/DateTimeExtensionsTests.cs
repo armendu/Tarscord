@@ -92,6 +92,44 @@ public class DateTimeExtensionsTests
         result.Should().BeNull();
     }
 
+    [Theory]
+    [InlineData("today", "2026-05-01T00:00:00")]
+    [InlineData("tomorrow", "2026-05-02T00:00:00")]
+    [InlineData("next friday", "2026-05-08T00:00:00")]
+    [InlineData("2026-05-08 18:30", "2026-05-08T18:30:00")]
+    public void FromTextToDate_OnAHostThatIsNotInUtc_StillMeansTheDayTheUserNamed(
+        string input, string expected)
+    {
+        // Resolving a named day to local midnight and storing that as UTC moved it to the previous
+        // day, so "next friday" came back as a Thursday everywhere east of London.
+
+        // Arrange
+        var timeProvider = new FakeTimeProvider(Now);
+        timeProvider.SetLocalTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin"));
+
+        // Act
+        var result = input.FromTextToDate(timeProvider);
+
+        // Assert
+        result.Should().Be(Utc(expected));
+    }
+
+    [Fact]
+    public void FromTextToDate_ForAnOffsetOnAHostThatIsNotInUtc_IsTheSameInstant()
+    {
+        // An offset names an instant, so the zone must not move it.
+
+        // Arrange
+        var timeProvider = new FakeTimeProvider(Now);
+        timeProvider.SetLocalTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin"));
+
+        // Act
+        var result = "in 2 hours".FromTextToDate(timeProvider);
+
+        // Assert
+        result.Should().Be(Utc("2026-05-01T14:00:00"));
+    }
+
     private static DateTime Utc(string value) =>
         DateTime.Parse(value, CultureInfo.InvariantCulture,
             DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);

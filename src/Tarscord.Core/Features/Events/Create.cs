@@ -1,3 +1,4 @@
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using OneOf;
@@ -21,10 +22,33 @@ internal static class Create
         public string PerformedByUser => EventOrganizer;
     }
 
+    public class CommandValidator : AbstractValidator<Command>
+    {
+        // event_infos holds these as VARCHAR(200); without the rules Postgres rejects the insert and
+        // the user gets "Something went wrong" instead of being told the name is too long.
+        private const int ColumnLength = 200;
+
+        public CommandValidator()
+        {
+            RuleFor(command => command.EventName)
+                .NotEmpty()
+                .WithMessage("An event needs a name.")
+                .MaximumLength(ColumnLength)
+                .WithMessage($"Keep the name under {ColumnLength} characters.");
+
+            RuleFor(command => command.EventOrganizer).MaximumLength(ColumnLength);
+
+            RuleFor(command => command.EventDescription)
+                .MaximumLength(ColumnLength)
+                .WithMessage($"Keep the description under {ColumnLength} characters.");
+        }
+    }
+
     internal sealed class CommandHandler(
         ILogger<CommandHandler> logger,
         TarscordContext context,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
     {
         public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
@@ -34,9 +58,12 @@ internal static class Create
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
                 nameof(Create), command.PerformedByUser);
 
-            if (string.IsNullOrWhiteSpace(command.EventName))
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
             {
-                return new FailureResponse("An event needs a name");
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
             var dateOfEvent = command.EventDate.FromTextToDate(timeProvider);

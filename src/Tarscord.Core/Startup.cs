@@ -95,6 +95,7 @@ public class Startup
             .AddDatabase(configuration)
             .AddSingleton(TimeProvider.System)
             // No validation pipeline: a validator missing from this list does nothing.
+            .AddScoped<IValidator<Features.Events.Create.Command>, Features.Events.Create.CommandValidator>()
             .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
             .AddScoped<IValidator<Features.Events.Delete.Command>, Features.Events.Delete.CommandValidator>()
             .AddScoped<IValidator<Features.EventAttendees.Confirm.Command>, Features.EventAttendees.Confirm.CommandValidator>()

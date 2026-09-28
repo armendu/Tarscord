@@ -11,9 +11,11 @@ namespace Tarscord.Core.Features.Events;
 
 internal static class List
 {
+    private const int MaxListed = 25;
+
     public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
 
-    public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos) : IEmbeddedMessage
+    public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos, bool More) : IEmbeddedMessage
     {
         public Embed ToEmbeddedMessage()
         {
@@ -29,6 +31,11 @@ internal static class List
                 events.Append(eventInfo.ToSummary()).Append('\n');
             }
 
+            if (More)
+            {
+                events.Append("...and more.");
+            }
+
             return "Here are all the events:".EmbedMessage(events.ToString());
         }
     }
@@ -41,12 +48,21 @@ internal static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), request.PerformedByUser);
 
+            // One row past the limit, so the reply can say there are more without a second query.
             var eventInfos = await context.EventInfos
                 .Where(eventInfo => eventInfo.IsActive)
                 .OrderBy(eventInfo => eventInfo.EventDate)
+                .Take(MaxListed + 1)
                 .ToListAsync(cancellationToken);
 
-            return new ListResponse(eventInfos.ConvertAll(EventInfoEnvelope.FromEntity));
+            bool more = eventInfos.Count > MaxListed;
+
+            if (more)
+            {
+                eventInfos.RemoveAt(MaxListed);
+            }
+
+            return new ListResponse(eventInfos.ConvertAll(EventInfoEnvelope.FromEntity), more);
         }
     }
 }

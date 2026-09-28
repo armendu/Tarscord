@@ -11,10 +11,12 @@ namespace Tarscord.Core.Features.Loans;
 
 internal static class List
 {
+    private const int MaxListed = 25;
+
     public record Query(ulong PerformedByUserId, string PerformedByUser)
         : IRequest<ListResponse>, IPerformedByUser;
 
-    public record ListResponse(IReadOnlyList<LoanEnvelope> Loans) : IEmbeddedMessage
+    public record ListResponse(IReadOnlyList<LoanEnvelope> Loans, bool More) : IEmbeddedMessage
     {
         public Embed ToEmbeddedMessage()
         {
@@ -29,6 +31,11 @@ internal static class List
             {
                 lines.Append(position).Append(". ")
                     .Append(Loans[position - 1].ToSummary()).Append('\n');
+            }
+
+            if (More)
+            {
+                lines.Append("...and more.");
             }
 
             return "Here are the open loans:".EmbedMessage(lines.ToString());
@@ -49,9 +56,17 @@ internal static class List
                                 || loan.LoanedToId == request.PerformedByUserId)
                                && loan.AmountPayed < loan.AmountLoaned)
                 .OrderBy(loan => loan.Created)
+                .Take(MaxListed + 1)
                 .ToListAsync(cancellationToken);
 
-            return new ListResponse(loans.ConvertAll(LoanEnvelope.FromEntity));
+            bool more = loans.Count > MaxListed;
+
+            if (more)
+            {
+                loans.RemoveAt(MaxListed);
+            }
+
+            return new ListResponse(loans.ConvertAll(LoanEnvelope.FromEntity), more);
         }
     }
 }
