@@ -257,6 +257,16 @@ The tree used to be mixed — 16 files with a BOM, the rest without — and an e
 file containing a non-ASCII character guesses wrong and reports it as loaded in the wrong encoding.
 Don't reintroduce a BOM, and write a symbol like the euro as `"\u20AC"`.
 
+**Text limits come from Discord, not from taste.** `Persistence/TextLengths.cs` holds the two that
+matter - `Name` is 256 because that is all an embed title shows, `FreeText` is 2000 because that is
+all Discord lets someone type - and the validators and the `VARCHAR` widths both follow them. A
+validator that disagrees with its column turns a readable reply into an unhandled Postgres error, so
+change the migration and the constant together.
+
+**An event can be named instead of numbered.** `EventInfos.MatchAsync` takes the text as an id when
+it parses as one, otherwise as a name, and by name it takes the latest **active** event. So by id you
+can still reach a cancelled event and be told it is cancelled; by name you cannot see it at all.
+
 **The connection string is the one key with no default.** Every other key falls back to
 `config.example.yml`, so forgetting one is silent; `tarscord-context:connection-string` is empty
 there and `AddDatabase` throws, because the alternative is a deployment quietly running against

@@ -34,7 +34,8 @@ internal static class Create
             RuleFor(command => command.Message)
                 .NotEmpty()
                 .WithMessage("A reminder needs something to say.")
-                .MaximumLength(1000);
+                .MaximumLength(TextLengths.FreeText)
+                .WithMessage($"Keep it under {TextLengths.FreeText} characters.");
         }
     }
 

@@ -109,12 +109,12 @@ public class EventsDeleteTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Handle_ByNameWhenTwoEventsShareIt_AsksForTheIdInstead()
+    public async Task Handle_ByNameWhenTwoEventsShareIt_TakesTheLatestActiveOne()
     {
         // Arrange
         await fixture.ResetAsync();
-        await GivenAnEvent();
-        await GivenAnEvent();
+        await GivenAnEvent(createdDaysAgo: 10);
+        int latest = await GivenAnEvent(createdDaysAgo: 1);
         await using var context = fixture.CreateContext();
 
         // Act
@@ -122,7 +122,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
             new Delete.Command("Release party", OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("More than one event");
+        response.AsT0.EventId.Should().Be(latest);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         response.AsT1.ErrorMessage.Should().Contain("Name the event");
     }
 
-    private async Task<int> GivenAnEvent(bool isActive = true)
+    private async Task<int> GivenAnEvent(bool isActive = true, int createdDaysAgo = 1)
     {
         await using var context = fixture.CreateContext();
 
@@ -152,7 +152,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
             EventDate = DateTime.UtcNow.AddDays(1),
             EventDescription = "upstairs",
             IsActive = isActive,
-            Created = DateTime.UtcNow
+            Created = Now.UtcDateTime.AddDays(-createdDaysAgo)
         };
 
         context.EventInfos.Add(eventInfo);

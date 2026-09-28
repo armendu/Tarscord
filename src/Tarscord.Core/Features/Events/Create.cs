@@ -24,23 +24,19 @@ internal static class Create
 
     public class CommandValidator : AbstractValidator<Command>
     {
-        // event_infos holds these as VARCHAR(200); without the rules Postgres rejects the insert and
-        // the user gets "Something went wrong" instead of being told the name is too long.
-        private const int ColumnLength = 200;
-
         public CommandValidator()
         {
             RuleFor(command => command.EventName)
                 .NotEmpty()
                 .WithMessage("An event needs a name.")
-                .MaximumLength(ColumnLength)
-                .WithMessage($"Keep the name under {ColumnLength} characters.");
+                .MaximumLength(TextLengths.Name)
+                .WithMessage($"Keep the name under {TextLengths.Name} characters.");
 
-            RuleFor(command => command.EventOrganizer).MaximumLength(ColumnLength);
+            RuleFor(command => command.EventOrganizer).MaximumLength(TextLengths.Name);
 
             RuleFor(command => command.EventDescription)
-                .MaximumLength(ColumnLength)
-                .WithMessage($"Keep the description under {ColumnLength} characters.");
+                .MaximumLength(TextLengths.FreeText)
+                .WithMessage($"Keep the description under {TextLengths.FreeText} characters.");
         }
     }
 

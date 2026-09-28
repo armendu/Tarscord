@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
+using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.EventAttendees;
@@ -11,7 +12,7 @@ namespace Tarscord.Core.Features.EventAttendees;
 internal static class Cancel
 {
     public record Command(
-        int EventId,
+        string Event,
         IReadOnlyList<ulong> AttendeeIds,
         ulong RequestedById,
         string PerformedByUser) : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
@@ -20,7 +21,9 @@ internal static class Cancel
     {
         public CommandValidator()
         {
-            RuleFor(command => command.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
+            RuleFor(command => command.Event)
+                .NotEmpty()
+                .WithMessage("Name the event, or give the id that 'event list' shows.");
 
             RuleFor(command => command.AttendeeIds)
                 .NotEmpty()
@@ -49,12 +52,11 @@ internal static class Cancel
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            var eventInfo = await context.EventInfos
-                .FirstOrDefaultAsync(candidate => candidate.Id == command.EventId, cancellationToken);
+            var eventInfo = await context.EventInfos.MatchAsync(command.Event, cancellationToken);
 
             if (eventInfo is null)
             {
-                return new FailureResponse($"There is no event with id {command.EventId}");
+                return new FailureResponse($"There is no event called '{command.Event}'.");
             }
 
             var attendeeIds = command.AttendeeIds.Distinct().ToList();
@@ -69,7 +71,7 @@ internal static class Cancel
             }
 
             var toRemove = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == command.EventId
+                .Where(attendee => attendee.EventInfoId == eventInfo.Id
                                    && attendeeIds.Contains(attendee.AttendeeId))
                 .ToListAsync(cancellationToken);
 
@@ -82,7 +84,7 @@ internal static class Cancel
             await context.SaveChangesAsync(cancellationToken);
 
             var remaining = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == command.EventId)
+                .Where(attendee => attendee.EventInfoId == eventInfo.Id)
                 .OrderBy(attendee => attendee.AttendeeName)
                 .ToListAsync(cancellationToken);
 

@@ -4,21 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
+using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.EventAttendees;
 
 internal static class List
 {
-    /// <summary>Who has confirmed for one event.</summary>
-    public record Query(int EventId, string PerformedByUser)
+    public record Query(string Event, string PerformedByUser)
         : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
 
     public class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
-            RuleFor(query => query.EventId).GreaterThan(0).WithMessage("An event id is a positive number. 'event list' shows them.");
+            RuleFor(query => query.Event)
+                .NotEmpty()
+                .WithMessage("Name the event, or give the id that 'event list' shows.");
         }
     }
 
@@ -43,16 +45,15 @@ internal static class List
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            var eventInfo = await context.EventInfos
-                .FirstOrDefaultAsync(candidate => candidate.Id == query.EventId, cancellationToken);
+            var eventInfo = await context.EventInfos.MatchAsync(query.Event, cancellationToken);
 
             if (eventInfo is null)
             {
-                return new FailureResponse($"There is no event with id {query.EventId}");
+                return new FailureResponse($"There is no event called '{query.Event}'.");
             }
 
             var attendees = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == query.EventId)
+                .Where(attendee => attendee.EventInfoId == eventInfo.Id)
                 .OrderBy(attendee => attendee.AttendeeName)
                 .ToListAsync(cancellationToken);
 

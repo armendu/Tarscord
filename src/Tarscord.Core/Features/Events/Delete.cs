@@ -46,20 +46,12 @@ internal static class Delete
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            var matches = await FindAsync(command.Event, cancellationToken);
+            var eventInfo = await context.EventInfos.MatchAsync(command.Event, cancellationToken);
 
-            if (matches.Count == 0)
+            if (eventInfo is null)
             {
                 return new FailureResponse($"There is no event called '{command.Event}'.");
             }
-
-            if (matches.Count > 1)
-            {
-                return new FailureResponse(
-                    $"More than one event is called '{command.Event}'. Use the id that 'event list' shows.");
-            }
-
-            var eventInfo = matches[0];
 
             if (eventInfo.EventOrganizerId != command.RequestedById)
             {
@@ -78,25 +70,6 @@ internal static class Delete
             await context.SaveChangesAsync(cancellationToken);
 
             return EventInfoEnvelope.FromEntity(eventInfo);
-        }
-
-        private async Task<List<Persistence.Entities.EventInfo>> FindAsync(
-            string idOrName,
-            CancellationToken cancellationToken)
-        {
-            if (int.TryParse(idOrName, out int eventId))
-            {
-                return await context.EventInfos
-                    .Where(candidate => candidate.Id == eventId)
-                    .ToListAsync(cancellationToken);
-            }
-
-            // ILike, because == is case-sensitive in Postgres and nobody retypes their own
-            // capitalisation. Cancelled events are included so that both paths give the same answer:
-            // by id they reported "already cancelled", by name "there is no event called".
-            return await context.EventInfos
-                .Where(candidate => EF.Functions.ILike(candidate.EventName, idOrName))
-                .ToListAsync(cancellationToken);
         }
     }
 }

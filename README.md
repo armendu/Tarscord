@@ -22,9 +22,9 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
 | `?event remove <name or id>` (`delete`) | Cancel an event you organized |
-| `?event confirm <id> [@users]` | Confirm attendance, yours or someone else's |
-| `?event cancel <id> [@users]` (`unattend`) | Withdraw attendance |
-| `?event confirmed <id>` | Who has confirmed for an event |
+| `?event confirm <name or id> [@users]` | Confirm attendance, yours or someone else's |
+| `?event cancel <name or id> [@users]` (`unattend`) | Withdraw attendance; someone else's is the organizer's to do |
+| `?event confirmed <name or id>` | Who has confirmed for an event |
 | `?loan list` (`show`) | Loans you're on either side of |
 | `?loan to <@user> <amount> <why>` | Record that you lent someone money |
 | `?loan payback <@user> <amount>` (`return`, `payloan`, …) | Pay back money you owe |
@@ -36,6 +36,10 @@ usually several words:
 ```
 ?event create Release party, next friday, in the usual place
 ```
+
+Anywhere an event is named you can give its name instead of its id, and the latest active event with
+that name is used. `confirm` and `cancel` take mentions after it, so a multi-word name needs quotes
+there: `?event confirm "Release party" @bob`.
 
 The description is optional. Dates can be written the way you'd say them — `today`, `tomorrow`,
 `in 3 days`, `in 2 weeks`, `next friday` — or given outright as `2026-05-01 18:30`.

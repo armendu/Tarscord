@@ -29,7 +29,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).Handle(
-            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
             CancellationToken.None);
 
         // Assert
@@ -48,14 +48,14 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).Handle(
-            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
             CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
         var response = await NewConfirmHandler(context).Handle(
-            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob_renamed")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob_renamed")], PerformedByUser),
             CancellationToken.None);
 
         // Assert
@@ -74,7 +74,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
         // Act
         var response = await NewConfirmHandler(context).Handle(
             new Confirm.Command(
-                eventId,
+                eventId.ToString(),
                 [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(CarolId, "carol")],
                 PerformedByUser),
             CancellationToken.None);
@@ -97,7 +97,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
         // Act
         var response = await NewConfirmHandler(context).Handle(
             new Confirm.Command(
-                eventId,
+                eventId.ToString(),
                 [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(BobId, "bob")],
                 PerformedByUser),
             CancellationToken.None);
@@ -116,7 +116,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).Handle(
-            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
             CancellationToken.None);
 
         // Assert
@@ -132,11 +132,11 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).Handle(
-            new Confirm.Command(4242, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command("4242", [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
             CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("no event with id 4242");
+        response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).Handle(
-            new Confirm.Command(eventId, [], PerformedByUser), CancellationToken.None);
+            new Confirm.Command(eventId.ToString(), [], PerformedByUser), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("nobody to confirm");
@@ -165,7 +165,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).Handle(
             new Confirm.Command(
-                eventId,
+                eventId.ToString(),
                 [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(CarolId, "carol")],
                 PerformedByUser),
             CancellationToken.None);
@@ -174,7 +174,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewCancelHandler(context).Handle(
-            new Cancel.Command(eventId, [BobId], OrganizerId, PerformedByUser), CancellationToken.None);
+            new Cancel.Command(eventId.ToString(), [BobId], OrganizerId, PerformedByUser), CancellationToken.None);
 
         // Assert
         response.AsT0.Attendees.Select(attendee => attendee.AttendeeName)
@@ -192,14 +192,14 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).Handle(
-            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
             CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
         var response = await NewCancelHandler(context).Handle(
-            new Cancel.Command(eventId, [BobId], CarolId, "carol"), CancellationToken.None);
+            new Cancel.Command(eventId.ToString(), [BobId], CarolId, "carol"), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("Only alice can withdraw");
@@ -217,14 +217,14 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).Handle(
-            new Confirm.Command(eventId, [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
             CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
         var response = await NewCancelHandler(context).Handle(
-            new Cancel.Command(eventId, [BobId], BobId, "bob"), CancellationToken.None);
+            new Cancel.Command(eventId.ToString(), [BobId], BobId, "bob"), CancellationToken.None);
 
         // Assert
         response.AsT0.Attendees.Should().BeEmpty();
@@ -240,7 +240,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewCancelHandler(context).Handle(
-            new Cancel.Command(eventId, [BobId], OrganizerId, PerformedByUser), CancellationToken.None);
+            new Cancel.Command(eventId.ToString(), [BobId], OrganizerId, PerformedByUser), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("No attendance to cancel");
@@ -256,7 +256,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewListHandler(context).Handle(
-            new List.Query(eventId, PerformedByUser), CancellationToken.None);
+            new List.Query(eventId.ToString(), PerformedByUser), CancellationToken.None);
 
         // Assert
         response.AsT0.Attendees.Should().BeEmpty();
@@ -271,16 +271,14 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewListHandler(context).Handle(
-            new List.Query(4242, PerformedByUser), CancellationToken.None);
+            new List.Query("4242", PerformedByUser), CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("no event with id 4242");
+        response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public async Task List_ForAnIdThatCannotExist_SaysTheIdIsWrong(int eventId)
+    [Fact]
+    public async Task List_WithNothingToIdentifyTheEvent_ReturnsFailure()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -288,10 +286,10 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewListHandler(context).Handle(
-            new List.Query(eventId, PerformedByUser), CancellationToken.None);
+            new List.Query("  ", PerformedByUser), CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("positive number");
+        response.AsT1.ErrorMessage.Should().Contain("Name the event");
     }
 
     private async Task<int> GivenAnEvent(bool isActive = true)
