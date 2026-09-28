@@ -7,14 +7,7 @@ public static class Extensions
     private const int TitleLimit = 256;
     private const int DescriptionLimit = 4096;
 
-    /// <summary>
-    /// The one place every reply is built, so it is the one place the limits have to hold.
-    /// </summary>
-    /// <remarks>
-    /// EmbedBuilder throws when a title passes 256 characters or a description passes 4096, and the
-    /// reply is built after the command has already changed something — a long loan reason used to
-    /// save the loan and then answer "Something went wrong running that command."
-    /// </remarks>
+    /// <summary>Clamps here, because a reply that throws has already changed something.</summary>
     public static Embed EmbedMessage(this string title, string? message = null)
     {
         return new EmbedBuilder
@@ -26,5 +19,5 @@ public static class Extensions
     }
 
     private static string Clamp(string text, int limit) =>
-        text.Length <= limit ? text : string.Concat(text.AsSpan(0, limit - 1), "…");
+        text.Length <= limit ? text : string.Concat(text.AsSpan(0, limit - 1), "\u2026");
 }

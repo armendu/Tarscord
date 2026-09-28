@@ -192,9 +192,9 @@ members are not virtual, so a handler that takes it cannot be tested at all. Bot
 
 ## The build
 
-All four projects target `net10.0`. `global.json` pins the SDK to `8.0.0` with
-`"rollForward": "latestMajor"`, which is why a machine with 10.0.201 installed builds fine — the
-pin is a floor, not a ceiling.
+All four projects target `net10.0`, and `global.json` asks for `10.0.100` with
+`"rollForward": "latestFeature"` — so any 10.0.x SDK works (10.0.201 resolves here) but an SDK from a
+future major does not, which makes a bump deliberate rather than silent.
 
 | Package | Version | What it's for |
 |---|---|---|
@@ -444,7 +444,9 @@ unit test nor deterministic.
 
 `.github/workflows/dotnet.yml` runs `dotnet restore`, `dotnet build -warnaserror` and
 `dotnet test` in Release on every push and pull request targeting `master`, on `ubuntu-latest` with
-the 10.0.x SDK.
+the SDK from `global-json-file: global.json`. It used to name `10.0.x` explicitly because
+`global.json` pinned `8.0.0` and a runner holding only that could not build `net10.0`; the pin says
+10 now, so the workflow and the repo agree from one place.
 
 There is no service container for PostgreSQL: the integration suite starts its own through
 Testcontainers, using the Docker daemon the runner already provides. There is no Ollama on the

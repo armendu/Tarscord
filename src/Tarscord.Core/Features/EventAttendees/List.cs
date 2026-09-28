@@ -10,6 +10,7 @@ namespace Tarscord.Core.Features.EventAttendees;
 
 internal static class List
 {
+    /// <summary>Who has confirmed for one event.</summary>
     public record Query(int EventId, string PerformedByUser)
         : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
 

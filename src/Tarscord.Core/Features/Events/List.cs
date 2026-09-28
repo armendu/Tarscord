@@ -13,6 +13,7 @@ internal static class List
 {
     private const int MaxListed = 25;
 
+    /// <summary>Every active event.</summary>
     public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
 
     public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos, bool More) : IEmbeddedMessage

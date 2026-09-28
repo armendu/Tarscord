@@ -13,6 +13,7 @@ internal static class List
 {
     private const int MaxListed = 25;
 
+    /// <summary>The caller's loans that are not yet settled, either side.</summary>
     public record Query(ulong PerformedByUserId, string PerformedByUser)
         : IRequest<ListResponse>, IPerformedByUser;
 
