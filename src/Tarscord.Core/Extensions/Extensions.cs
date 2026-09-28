@@ -7,7 +7,6 @@ public static class Extensions
     private const int TitleLimit = 256;
     private const int DescriptionLimit = 4096;
 
-    /// <summary>Clamps here, because a reply that throws has already changed something.</summary>
     public static Embed EmbedMessage(this string title, string? message = null)
     {
         return new EmbedBuilder
