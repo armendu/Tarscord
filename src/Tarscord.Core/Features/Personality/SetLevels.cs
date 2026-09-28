@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
-using Tarscord.Core.Features.Events;
 using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Features.Personality;

@@ -25,15 +25,4 @@ public class EventInfo : EntityBase
 
     [Column("is_active")]
     public bool IsActive { get; set; }
-
-    public override string ToString()
-    {
-        return $"Organizer:\t {EventOrganizer}\n" +
-               $"Name:\t {EventName}\n" +
-               $"Date and time:\t {EventDate:F}\n" +
-               $"Description:\t {EventDescription}\n" +
-               $"Is active:\t {IsActive}\n" +
-               $"Date created:\t {Created:s}\n" +
-               $"Date updated:\t {Updated:s}\n";
-    }
 }

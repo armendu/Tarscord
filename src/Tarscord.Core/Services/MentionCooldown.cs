@@ -5,7 +5,7 @@ namespace Tarscord.Core.Services;
 /// <summary>Stops one person keeping the model busy by mentioning the bot over and over.</summary>
 public sealed class MentionCooldown(TimeProvider timeProvider)
 {
-    private static readonly TimeSpan s_perUser = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan PerUser = TimeSpan.FromSeconds(20);
 
     private readonly ConcurrentDictionary<ulong, DateTimeOffset> _lastReply = new();
 
@@ -14,7 +14,7 @@ public sealed class MentionCooldown(TimeProvider timeProvider)
     {
         var now = timeProvider.GetUtcNow();
 
-        if (_lastReply.TryGetValue(userId, out var last) && now - last < s_perUser)
+        if (_lastReply.TryGetValue(userId, out var last) && now - last < PerUser)
         {
             return false;
         }

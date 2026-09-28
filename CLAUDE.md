@@ -266,9 +266,12 @@ the example with a placeholder or nothing will read it. Both are copied to the o
 line. If you add something that talks to the model, it degrades the same way. Nothing that people
 rely on reading — loans, events, help — goes near it.
 
-**Write the database before calling Discord.** `Restrictions/Apply` and `Restrictions/Lift` both do.
-The other order can leave someone muted with no row, which means nothing ever expires it; this way
-round, a failed Discord call leaves a row the sweeper will tidy up. Two tests pin it.
+**`Apply` saves before calling Discord; `Lift` calls Discord before saving.** Opposite orders, for
+the same reason — leave the row as the thing that still needs doing. If `Apply` denied in Discord
+first and then failed to save, someone would be muted with no row, so nothing would ever expire it.
+If `Lift` marked the row lifted first and then failed in Discord, the person would stay denied with
+nothing left to find them, because the sweeper only looks at rows where `Lifted` is false. This was
+the wrong way round for `Lift` until a review caught it.
 
 **`dotnet format` will make every `DbSet` nullable.** It rewrites
 `public DbSet<Loan> Loans { get; set; }` to `DbSet<Loan>?`, which is wrong — EF assigns them — and
@@ -328,7 +331,9 @@ capitalised (`IOStream`), longer ones don't (`HtmlTag`). Names never differ by c
 
 **Layout and fields** — [dotnet/runtime C# Coding Style](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md),
 which is what this codebase's existing `_mediator`-style fields already follow. Private and
-internal fields are `_camelCase`, statics are `s_`. Allman braces, four spaces, no tabs.
+internal instance fields are `_camelCase`. Note that `s_` for statics, which that guide asks for, is
+**not** used here: `.editorconfig` enforces PascalCase for a `private static readonly` field and the
+build checks it, so the enforced rule wins. Allman braces, four spaces, no tabs.
 `using` directives outside the namespace, sorted, `System.*` first. Always state visibility, and
 put it first among the modifiers. Prefer `nameof(...)` to a string literal. Make internal and
 private types `static` or `sealed` unless something derives from them. Use `var` only when the
@@ -379,7 +384,7 @@ on its own reports nothing. Three groups are raised to `warning` here:
 |---|---|
 | `IDE0055` | formatting, mostly using-directive order — **232** violations |
 | `IDE0011` | braces on every `if`, including single-line ones — **84** violations |
-| `dotnet_naming_rule.*` | naming; the tree passes, so `s_camelCase` on a private static field is the rule rather than a preference |
+| `IDE1006` | naming; the template wants PascalCase for a `private static readonly` field, **not** an `s_` prefix, which is the opposite of what the dotnet/runtime style above says — the template wins here because it is what the build checks |
 
 `dotnet format` fixes all three automatically, with the two caveats in *Things that will bite you*.
 

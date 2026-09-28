@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
-using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
 
@@ -59,12 +58,15 @@ internal static class Lift
                 return new FailureResponse("I cannot find that user any more.");
             }
 
+            // Discord first, which is the opposite of Apply. Marking the row lifted before the
+            // permission is actually back would leave the person denied with nothing left to find
+            // them: the sweeper only looks at rows where Lifted is false.
+            await AllowInDiscordAsync(channel, user, command.Kind);
+
             inForce.Lifted = true;
             inForce.Updated = timeProvider.GetUtcNow().UtcDateTime;
 
             await context.SaveChangesAsync(cancellationToken);
-
-            await AllowInDiscordAsync(channel, user, command.Kind);
 
             return RestrictionEnvelope.FromEntity(inForce);
         }

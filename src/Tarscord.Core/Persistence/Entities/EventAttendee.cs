@@ -13,7 +13,4 @@ public class EventAttendee : EntityBase
 
     [Column("attendee_name")]
     public required string AttendeeName { get; set; }
-
-    [Column("confirmed")]
-    public bool Confirmed { get; set; }
 }

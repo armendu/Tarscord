@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Tarscord.DbMigrator;
 using Xunit;
 
 namespace Tarscord.IntegrationTests;
@@ -30,7 +31,7 @@ public class MigrationsTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Upgrade_AgainstEmptyDatabase_LeavesNoPendingScripts()
+    public async Task Upgrade_AgainstEmptyDatabase_AppliedEveryScript()
     {
         // Arrange
         await using var context = fixture.CreateContext();
@@ -41,6 +42,7 @@ public class MigrationsTests(PostgresFixture fixture)
             .SingleAsync();
 
         // Assert
-        applied.Should().Be(6);
+        // Counted from the shipped scripts, so adding one does not fail this for the wrong reason.
+        applied.Should().Be(DatabaseMigrator.ScriptCount);
     }
 }

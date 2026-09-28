@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Commands;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 
@@ -11,10 +12,12 @@ namespace Tarscord.Core.Modules;
 public class EventModule : ModuleBase<SocketCommandContext>
 {
     private readonly IMediator _mediator;
+    private readonly IConfigurationRoot _config;
 
-    public EventModule(IMediator mediator)
+    public EventModule(IMediator mediator, IConfigurationRoot config)
     {
         _mediator = mediator;
+        _config = config;
     }
 
     /// <summary>
@@ -57,8 +60,11 @@ public class EventModule : ModuleBase<SocketCommandContext>
 
         if (parts.Length < 2)
         {
-            await ReplyAsync(embed: "Usage: event create <name>, <when>, <description>".EmbedMessage(
-                "For example: event create Release party, next friday, in the usual place"));
+            string prefix = _config.CommandPrefix();
+
+            await ReplyAsync(embed:
+                $"Usage: {prefix}event create <name>, <when>, <description>".EmbedMessage(
+                    $"For example: {prefix}event create Release party, next friday, in the usual place"));
 
             return;
         }

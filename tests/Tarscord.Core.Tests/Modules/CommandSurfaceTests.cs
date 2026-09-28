@@ -91,7 +91,7 @@ public class CommandSurfaceTests
         var services = new ServiceCollection();
         Startup.ConfigureServices(services, configuration);
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var commands = provider.GetRequiredService<CommandService>();
 
         await commands.AddModulesAsync(typeof(Startup).Assembly, provider);

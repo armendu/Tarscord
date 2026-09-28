@@ -1,11 +1,11 @@
 using Discord;
+using Discord.Net;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
-using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
 
@@ -101,7 +101,19 @@ internal static class Apply
             // which means nothing ever expires it.
             await context.SaveChangesAsync(cancellationToken);
 
-            await DenyInDiscordAsync(channel, command.User, command.Kind);
+            try
+            {
+                await DenyInDiscordAsync(channel, command.User, command.Kind);
+            }
+            catch (HttpException exception)
+            {
+                // Almost always the bot lacking Manage Roles on the channel, which is something the
+                // person who typed the command can fix. The row stays, so the sweeper tidies it up.
+                logger.LogWarning(exception, "Could not restrict {User} in {ChannelId}",
+                    command.User.Username, command.ContextChannel.Id);
+
+                return new FailureResponse("I don't have permission to change this channel.");
+            }
 
             return RestrictionEnvelope.FromEntity(inForce);
         }

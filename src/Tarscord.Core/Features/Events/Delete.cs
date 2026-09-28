@@ -91,8 +91,11 @@ internal static class Delete
                     .ToListAsync(cancellationToken);
             }
 
+            // ILike, because == is case-sensitive in Postgres and nobody retypes their own
+            // capitalisation. Cancelled events are included so that both paths give the same answer:
+            // by id they reported "already cancelled", by name "there is no event called".
             return await context.EventInfos
-                .Where(candidate => candidate.EventName == idOrName && candidate.IsActive)
+                .Where(candidate => EF.Functions.ILike(candidate.EventName, idOrName))
                 .ToListAsync(cancellationToken);
         }
     }

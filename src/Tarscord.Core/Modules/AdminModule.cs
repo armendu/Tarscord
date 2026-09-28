@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Commands;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Restrictions;
 using Tarscord.Core.Persistence.Entities;
@@ -9,18 +10,18 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Admin commands")]
-public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
+public class AdminModule(IMediator mediator, IConfigurationRoot config) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: mute {user} {minutes}?
     /// </summary>
     [Command("mute"), Summary("Stops a user posting in this channel")]
-    public async Task MuteUser(
+    public async Task MuteUserAsync(
         [Summary("The user to be muted")] IUser? user = null,
         [Summary("How many minutes, or leave out to keep it until you lift it")]
         int minutes = 0)
     {
-        await ApplyAsync(user, RestrictionKind.Mute, minutes);
+        await ApplyAsync("mute", user, RestrictionKind.Mute, minutes);
     }
 
     /// <summary>
@@ -32,16 +33,16 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
         [Summary("How many minutes, or leave out to keep it until you lift it")]
         int minutes = 0)
     {
-        await ApplyAsync(user, RestrictionKind.DenyReacting, minutes);
+        await ApplyAsync("denyreacting", user, RestrictionKind.DenyReacting, minutes);
     }
 
     /// <summary>
     /// Usage: unmute {user}
     /// </summary>
     [Command("unmute"), Summary("Lets a muted user post again")]
-    public async Task UnmuteUser([Summary("The user to be unmuted")] IUser? user = null)
+    public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser? user = null)
     {
-        await LiftAsync(user, RestrictionKind.Mute);
+        await LiftAsync("unmute", user, RestrictionKind.Mute);
     }
 
     /// <summary>
@@ -51,15 +52,15 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
     [Alias("allowreactions")]
     public async Task AllowReactingAsync([Summary("The user to be allowed to react")] IUser? user = null)
     {
-        await LiftAsync(user, RestrictionKind.DenyReacting);
+        await LiftAsync("allowreacting", user, RestrictionKind.DenyReacting);
     }
 
-    private async Task ApplyAsync(IUser? user, RestrictionKind kind, int minutes)
+    private async Task ApplyAsync(string command, IUser? user, RestrictionKind kind, int minutes)
     {
         // Guarding here is what lets Apply.Command keep a non-nullable IUser.
         if (user is null)
         {
-            await ReplyAsync(embed: "Mention the user, like `?mute @name 10`.".EmbedMessage());
+            await ReplyAsync(embed: MentionSomeone(command).EmbedMessage());
             return;
         }
 
@@ -68,16 +69,14 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
         var response = await mediator.Send(
             new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username));
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyAsync(embed: response.ToEmbeddedMessage());
     }
 
-    private async Task LiftAsync(IUser? user, RestrictionKind kind)
+    private async Task LiftAsync(string command, IUser? user, RestrictionKind kind)
     {
         if (user is null)
         {
-            await ReplyAsync(embed: "Mention the user, like `?mute @name 10`.".EmbedMessage());
+            await ReplyAsync(embed: MentionSomeone(command).EmbedMessage());
             return;
         }
 
@@ -86,8 +85,10 @@ public class AdminModule(IMediator mediator) : ModuleBase<SocketCommandContext>
         var response = await mediator.Send(
             new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username));
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyAsync(embed: response.ToEmbeddedMessage());
     }
+
+    /// <summary>Names the command that was typed, at the configured prefix.</summary>
+    private string MentionSomeone(string command) =>
+        $"Mention the user, like `{config.CommandPrefix()}{command} @name`.";
 }

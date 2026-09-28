@@ -6,10 +6,10 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.EventAttendees;
 
-internal record AttendeeEnvelope(ulong AttendeeId, string AttendeeName, bool Confirmed)
+internal record AttendeeEnvelope(ulong AttendeeId, string AttendeeName)
 {
     public static AttendeeEnvelope FromEntity(EventAttendee attendee) =>
-        new(attendee.AttendeeId, attendee.AttendeeName, attendee.Confirmed);
+        new(attendee.AttendeeId, attendee.AttendeeName);
 }
 
 internal record AttendeeListEnvelope(string EventName, IReadOnlyList<AttendeeEnvelope> Attendees)

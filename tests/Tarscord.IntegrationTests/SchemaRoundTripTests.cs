@@ -107,7 +107,6 @@ public class SchemaRoundTripTests(PostgresFixture fixture)
             EventInfoId = eventInfo.Id,
             AttendeeId = attendeeId,
             AttendeeName = "bob",
-            Confirmed = true,
             Created = DateTime.UtcNow
         };
 
@@ -122,7 +121,6 @@ public class SchemaRoundTripTests(PostgresFixture fixture)
         reloaded.EventInfoId.Should().Be(eventInfo.Id);
         reloaded.AttendeeId.Should().Be(attendeeId);
         reloaded.AttendeeName.Should().Be("bob");
-        reloaded.Confirmed.Should().BeTrue();
     }
 
     [Fact]

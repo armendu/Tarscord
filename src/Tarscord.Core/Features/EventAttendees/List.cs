@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
-using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.EventAttendees;
@@ -52,7 +51,7 @@ internal static class List
             }
 
             var attendees = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == query.EventId && attendee.Confirmed)
+                .Where(attendee => attendee.EventInfoId == query.EventId)
                 .OrderBy(attendee => attendee.AttendeeName)
                 .ToListAsync(cancellationToken);
 

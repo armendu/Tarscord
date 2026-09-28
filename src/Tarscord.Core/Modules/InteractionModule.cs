@@ -1,13 +1,14 @@
 using Discord;
 using Discord.Commands;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to interact with the bot")]
-public class InteractionModule(IMediator mediator) : ModuleBase<SocketCommandContext>
+public class InteractionModule(IMediator mediator, IConfigurationRoot config) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: dare {user}
@@ -19,7 +20,8 @@ public class InteractionModule(IMediator mediator) : ModuleBase<SocketCommandCon
         // A bare Exception here used to be swallowed, so a bare ?dare did nothing.
         if (user is null)
         {
-            await ReplyAsync(embed: "Mention who you're daring, like `?dare @name`.".EmbedMessage());
+            await ReplyAsync(embed:
+                $"Mention who you're daring, like `{config.CommandPrefix()}dare @name`.".EmbedMessage());
             return;
         }
 

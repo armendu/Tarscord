@@ -56,12 +56,12 @@ internal static class Generate
             {
                 throw;
             }
-            catch (Exception exception) when (exception is HttpRequestException
-                                                 or OperationCanceledException
-                                                 or IOException
-                                                 or InvalidOperationException)
+            catch (Exception exception)
             {
-                // Ollama being down is normal, so warn and fall back rather than fail.
+                // Everything except the caller's own cancellation, which the filter above rethrows.
+                // A closed list of exception types kept missing cases - a JsonException from a proxy
+                // answering ollama:url with HTML was the last one - and each miss broke the promise
+                // that the bot keeps working when the model does not.
                 logger.LogWarning(exception, "Asking the model failed; using a canned reply instead");
             }
 

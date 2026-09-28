@@ -36,10 +36,20 @@ public sealed class RestrictionExpirySweeper(
 
             foreach (var restriction in expired.Restrictions)
             {
-                await mediator.Send(
+                var result = await mediator.Send(
                     new Lift.Command(restriction.UserId, restriction.ChannelId, restriction.Kind,
                         nameof(RestrictionExpirySweeper)),
                     cancellationToken);
+
+                // Lift reports "that channel is gone" and "I cannot find that user" as values. Ignored,
+                // they leave the row in force and it comes back on every tick with nothing logged.
+                result.Switch(
+                    lifted => logger.LogInformation("Lifted {Kind} for {User} in {ChannelId}",
+                        lifted.Kind, lifted.Username, lifted.ChannelId),
+                    failed => logger.LogWarning(
+                        "Could not lift {Kind} for {UserId} in {ChannelId}: {Reason}",
+                        restriction.Kind, restriction.UserId, restriction.ChannelId,
+                        failed.ErrorMessage));
             }
         }
         catch (OperationCanceledException)

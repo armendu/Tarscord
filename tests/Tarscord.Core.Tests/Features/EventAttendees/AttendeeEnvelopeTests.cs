@@ -27,8 +27,8 @@ public class AttendeeEnvelopeTests
         // Arrange
         var envelope = new AttendeeListEnvelope(EventName,
         [
-            new AttendeeEnvelope(1, "bob", true),
-            new AttendeeEnvelope(2, "carol", true)
+            new AttendeeEnvelope(1, "bob"),
+            new AttendeeEnvelope(2, "carol")
         ]);
 
         // Act

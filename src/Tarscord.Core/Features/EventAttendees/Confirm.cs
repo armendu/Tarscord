@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
-using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
 
@@ -89,14 +88,12 @@ internal static class Confirm
                         EventInfoId = command.EventId,
                         AttendeeId = attendee.AttendeeId,
                         AttendeeName = attendee.AttendeeName,
-                        Confirmed = true,
                         Created = now
                     });
                 }
                 else
                 {
                     row.AttendeeName = attendee.AttendeeName;
-                    row.Confirmed = true;
                     row.Updated = now;
                 }
             }
@@ -104,7 +101,7 @@ internal static class Confirm
             await context.SaveChangesAsync(cancellationToken);
 
             var confirmed = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == command.EventId && attendee.Confirmed)
+                .Where(attendee => attendee.EventInfoId == command.EventId)
                 .OrderBy(attendee => attendee.AttendeeName)
                 .ToListAsync(cancellationToken);
 

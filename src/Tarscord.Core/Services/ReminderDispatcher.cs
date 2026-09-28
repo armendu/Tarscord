@@ -45,7 +45,7 @@ public sealed class ReminderDispatcher(
 
             foreach (var reminder in due.Reminders)
             {
-                await DeliverAsync(mediator, reminder, cancellationToken);
+                await TryDeliverAsync(mediator, reminder, cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -56,6 +56,38 @@ public sealed class ReminderDispatcher(
         {
             // A loop that lets an exception escape stops running and the feature goes silent.
             logger.LogError(exception, "Delivering due reminders failed");
+        }
+    }
+
+    /// <summary>
+    /// Delivers one reminder, and treats a failure as that reminder's problem alone.
+    /// </summary>
+    /// <remarks>
+    /// Due reminders come back oldest first, so one the bot can no longer post (403 in a channel it
+    /// lost access to) used to abort the whole tick and be first again on the next one, holding up
+    /// every reminder behind it forever.
+    /// </remarks>
+    private async Task TryDeliverAsync(
+        IMediator mediator,
+        ReminderEnvelope reminder,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await DeliverAsync(mediator, reminder, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Reminder {ReminderId} could not be delivered; giving up on it",
+                reminder.ReminderId);
+
+            // Marked done so it stops blocking the queue. A reminder nobody can be told about is
+            // worse kept than dropped.
+            await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
         }
     }
 
