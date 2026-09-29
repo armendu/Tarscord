@@ -1,4 +1,5 @@
 using Discord;
+using Discord.Net;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,18 @@ internal static class Lift
                 return new FailureResponse("I cannot find that user any more.");
             }
 
-            await AllowInDiscordAsync(channel, user, command.Kind);
+            try
+            {
+                await AllowInDiscordAsync(channel, user, command.Kind);
+            }
+            catch (Exception exception) when (exception is HttpException or HttpRequestException)
+            {
+                // Unlifted on purpose, so the sweeper keeps trying rather than losing the row.
+                logger.LogWarning(exception, "Could not lift {Kind} for {User} in {ChannelId}",
+                    command.Kind, user.Username, command.ChannelId);
+
+                return new FailureResponse("I don't have permission to change this channel.");
+            }
 
             inForce.Lifted = true;
             inForce.Updated = timeProvider.GetUtcNow().UtcDateTime;

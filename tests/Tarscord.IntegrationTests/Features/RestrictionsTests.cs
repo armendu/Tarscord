@@ -228,7 +228,7 @@ public class RestrictionsTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task Apply_WhenDiscordRefuses_StillLeavesARowToExpire()
+    public async Task Apply_WhenDiscordRefuses_ReportsItAndStillLeavesARowToExpire()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -243,10 +243,10 @@ public class RestrictionsTests(PostgresFixture fixture)
         var command = new Apply.Command(channel, NewUser(), RestrictionKind.Mute, 10, "alice");
 
         // Act
-        Func<Task> act = () => NewApplyHandler(context).Handle(command, CancellationToken.None);
+        var response = await NewApplyHandler(context).Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<HttpRequestException>();
+        response.AsT1.ErrorMessage.Should().Contain("permission");
 
         await using var verification = fixture.CreateContext();
         (await verification.Restrictions.CountAsync()).Should().Be(1);
@@ -278,6 +278,25 @@ public class RestrictionsTests(PostgresFixture fixture)
 
         await channel.DidNotReceive().AddPermissionOverwriteAsync(
             Arg.Any<IUser>(), Arg.Any<OverwritePermissions>(), Arg.Any<RequestOptions>());
+    }
+
+    [Fact]
+    public async Task Lift_WhenDiscordRefuses_ReportsItAndLeavesTheRowInForce()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenARestriction(expiresInMinutes: 30);
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewLiftHandler(context, discordRefuses: true).Handle(
+            new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("permission");
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Restrictions.SingleAsync()).Lifted.Should().BeFalse();
     }
 
     private async Task GivenARestriction(double? expiresInMinutes)
@@ -327,7 +346,8 @@ public class RestrictionsTests(PostgresFixture fixture)
     private static List.QueryHandler NewListHandler(TarscordContext context) =>
         new(context, new FakeTimeProvider(Now));
 
-    private static Lift.CommandHandler NewLiftHandler(TarscordContext context)
+    private static Lift.CommandHandler NewLiftHandler(
+        TarscordContext context, bool discordRefuses = false)
     {
         var user = NewUser();
 
@@ -337,7 +357,9 @@ public class RestrictionsTests(PostgresFixture fixture)
             .Returns(new OverwritePermissions(sendMessages: PermValue.Deny));
         channel.AddPermissionOverwriteAsync(
                 Arg.Any<IUser>(), Arg.Any<OverwritePermissions>(), Arg.Any<RequestOptions>())
-            .Returns(Task.CompletedTask);
+            .Returns(discordRefuses
+                ? Task.FromException(new HttpRequestException("Discord is down"))
+                : Task.CompletedTask);
 
         var discord = Substitute.For<IDiscordClient>();
         discord.GetChannelAsync(ChannelId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())

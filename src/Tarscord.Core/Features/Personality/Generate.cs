@@ -8,7 +8,6 @@ using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Features.Personality;
 
-/// <summary>Falls back to the caller's fixed line when the model is down.</summary>
 internal static class Generate
 {
     public record Command(string Prompt, string Fallback, string PerformedByUser)
@@ -72,7 +71,6 @@ internal static class Generate
             return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
         }
 
-        /// <summary>Nothing callable configured means there is nothing to ask, so don't try.</summary>
         private bool IsConfigured() =>
             configuration.OllamaUrl() is not null && configuration.OllamaModel() is not null;
     }

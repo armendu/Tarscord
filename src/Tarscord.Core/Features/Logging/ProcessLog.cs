@@ -29,7 +29,7 @@ public static class ProcessLog
                 File.Create(LogFile).Dispose();
             }
 
-            string logText = $"{DateTime.UtcNow:hh:mm:ss} [{request.LogMessage.Severity}] {request.LogMessage.Source}: " +
+            string logText = $"{DateTime.UtcNow:HH:mm:ss} [{request.LogMessage.Severity}] {request.LogMessage.Source}: " +
                            $"{request.LogMessage.Exception?.ToString() ?? request.LogMessage.Message}";
 
             // Write the log text to a file

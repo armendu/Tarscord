@@ -103,7 +103,7 @@ internal static class Apply
             {
                 await DenyInDiscordAsync(channel, command.User, command.Kind);
             }
-            catch (HttpException exception)
+            catch (Exception exception) when (exception is HttpException or HttpRequestException)
             {
                 // Usually the bot lacking Manage Roles, which the caller can fix.
                 logger.LogWarning(exception, "Could not restrict {User} in {ChannelId}",

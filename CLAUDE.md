@@ -174,7 +174,9 @@ exception: it enumerates `CommandService` rather than rendering a feature, so it
 
 **Take time from `TimeProvider`.** It's registered in `Startup` and injected into every handler
 and extension that needs a clock, which is what makes them testable with `FakeTimeProvider`. Never
-`DateTime.Now` anywhere but a test.
+`DateTime.Now` anywhere but a test. `Features/Logging/ProcessLog.cs` is the one place still reading
+the clock ambiently, for a log filename and a timestamp; it predates the rule and nothing asserts on
+it.
 
 **Validators are wired one at a time.** There is no validation pipeline behavior. A validator runs
 only if its handler injects `IValidator<T>` *and* `Startup` registers it — both, or it is dead code.
@@ -204,6 +206,8 @@ future major does not, which makes a bump deliberate rather than silent.
 | OneOf | 3.0.271 | `OneOf<TEnvelope, FailureResponse>` result type |
 | Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.3 | EF Core against PostgreSQL |
 | NetEscapades.Configuration.Yaml | 3.1.0 | Lets `IConfiguration` read `config.yml` |
+| Microsoft.Extensions.Configuration | 10.0.12 | `IConfigurationRoot`, injected into handlers |
+| Microsoft.Extensions.Hosting | 10.0.12 | `BackgroundService` for the two loops |
 | Microsoft.Extensions.AI.Abstractions | 10.10.1 | `IChatClient`, the seam the LLM sits behind |
 | OllamaSharp | 5.3.1 | `IChatClient` over a local Ollama — pinned, see below |
 | dbup-postgresql | 7.0.1 | Migrations, in `Tarscord.DbMigrator` only |
@@ -211,7 +215,7 @@ future major does not, which makes a bump deliberate rather than silent.
 | NSubstitute | 6.2.0 | Faking Discord.Net interfaces and `IChatClient` |
 | Microsoft.Extensions.TimeProvider.Testing | 10.10.0 | `FakeTimeProvider` |
 | Testcontainers.PostgreSql | 4.15.0 | The integration suite's own database |
-| Roslynator.Analyzers | 5.0.0 everywhere | Analyzers |
+| Roslynator.Analyzers | 5.0.0 | Analyzers, in every project but `Tarscord.DbMigrator` |
 
 **OllamaSharp is pinned to 5.3.1 on purpose.** 5.4.x ships a source generator built against a
 newer Roslyn than the 10.0.201 SDK's compiler, which raises `CS9057` in every project that sees it
@@ -266,7 +270,8 @@ uncapped: they are work queues, and a cap would mean the eleventh due reminder n
 
 **Text limits come from Discord, not from taste.** `Persistence/TextLengths.cs` holds the two that
 matter - `Name` is 256 because that is all an embed title shows, `FreeText` is 2000 because that is
-all Discord lets someone type - and the validators and the `VARCHAR` widths both follow them. A
+all Discord lets someone type - and the validators and the `VARCHAR` widths follow them everywhere
+but `event_infos.event_organizer`, which `v1.00` made `VARCHAR(200)` and no migration has widened. A
 validator that disagrees with its column turns a readable reply into an unhandled Postgres error, so
 change the migration and the constant together.
 
@@ -384,10 +389,11 @@ that's what `OneOf<TEnvelope, FailureResponse>` is for here. Never throw bare
 > read, except the token check, which is a configuration failure and throws
 > `InvalidOperationException`. In a module, a `FailureResponse` is almost always what you want.
 >
-> The two `BackgroundService` loops do catch `Exception`, which the rule above forbids. That is
-> deliberate and commented at both sites: a background loop that lets an exception escape stops
-> running, and the feature goes silent with nothing in the log. They rethrow
-> `OperationCanceledException` so shutdown still works.
+> Three places catch `Exception`, which the rule above forbids, and all three are deliberate and
+> commented. The two `BackgroundService` loops do it because a loop that lets an exception escape
+> stops running and the feature goes silent with nothing in the log; both rethrow
+> `OperationCanceledException`. `Features/Personality/Generate.cs` does it because the model is
+> optional and a closed list of transport exceptions kept missing cases.
 
 **Async** — [Asynchronous programming scenarios](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios).
 `async void` only for event handlers. Suffix async methods with `Async`. Never `.Result` or
@@ -442,7 +448,7 @@ Three tests are worth knowing about because they guard whole classes of mistake:
 handler in the assembly and so catches a validator nobody registered;
 `CommandSurfaceTests` walks the discovered command surface and fails if anything lacks a summary;
 `SchemaRoundTripTests` writes and reads every entity, which is what keeps the model and the SQL
-honest.
+honest. Add a case to it when you add an entity, or the guard quietly stops covering everything.
 
 The standard is
 [Microsoft's unit testing best practices](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices):

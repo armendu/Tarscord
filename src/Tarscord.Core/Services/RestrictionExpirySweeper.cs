@@ -35,19 +35,7 @@ public sealed class RestrictionExpirySweeper(
 
             foreach (var restriction in expired.Restrictions)
             {
-                var result = await mediator.Send(
-                    new Lift.Command(restriction.UserId, restriction.ChannelId, restriction.Kind,
-                        nameof(RestrictionExpirySweeper)),
-                    cancellationToken);
-
-                // Ignored, a failure leaves the row in force and returns every tick.
-                result.Switch(
-                    lifted => logger.LogInformation("Lifted {Kind} for {User} in {ChannelId}",
-                        lifted.Kind, lifted.Username, lifted.ChannelId),
-                    failed => logger.LogWarning(
-                        "Could not lift {Kind} for {UserId} in {ChannelId}: {Reason}",
-                        restriction.Kind, restriction.UserId, restriction.ChannelId,
-                        failed.ErrorMessage));
+                await TryLiftAsync(mediator, restriction, cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -57,6 +45,39 @@ public sealed class RestrictionExpirySweeper(
         catch (Exception exception)
         {
             logger.LogError(exception, "Lifting expired restrictions failed");
+        }
+    }
+
+    private async Task TryLiftAsync(
+        IMediator mediator,
+        RestrictionEnvelope restriction,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await mediator.Send(
+                new Lift.Command(restriction.UserId, restriction.ChannelId, restriction.Kind,
+                    nameof(RestrictionExpirySweeper)),
+                cancellationToken);
+
+            // Ignored, a failure leaves the row in force and returns every tick.
+            result.Switch(
+                lifted => logger.LogInformation("Lifted {Kind} for {User} in {ChannelId}",
+                    lifted.Kind, lifted.Username, lifted.ChannelId),
+                failed => logger.LogWarning(
+                    "Could not lift {Kind} for {UserId} in {ChannelId}: {Reason}",
+                    restriction.Kind, restriction.UserId, restriction.ChannelId,
+                    failed.ErrorMessage));
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // One row nobody can lift must not stop every other restriction expiring.
+            logger.LogError(exception, "Lifting {Kind} for {UserId} in {ChannelId} threw",
+                restriction.Kind, restriction.UserId, restriction.ChannelId);
         }
     }
 }

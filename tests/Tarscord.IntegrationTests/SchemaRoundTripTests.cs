@@ -123,6 +123,43 @@ public class SchemaRoundTripTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Reminders_SaveAndReload_RoundTripsTheReminder()
+    {
+        // Arrange
+        const ulong userId = 666666666666666666;
+        const ulong channelId = 777777777777777777;
+        var remindAt = new DateTime(2026, 5, 1, 9, 15, 0, DateTimeKind.Utc);
+
+        await using var context = fixture.CreateContext();
+
+        var reminder = new Reminder
+        {
+            UserId = userId,
+            ChannelId = channelId,
+            Username = "dave",
+            Message = "stand up",
+            RemindAt = remindAt,
+            Sent = false,
+            Created = DateTime.UtcNow
+        };
+
+        // Act
+        context.Reminders.Add(reminder);
+        await context.SaveChangesAsync();
+
+        // Assert
+        await using var verification = fixture.CreateContext();
+        var reloaded = await verification.Reminders.SingleAsync(x => x.Id == reminder.Id);
+
+        reloaded.UserId.Should().Be(userId);
+        reloaded.ChannelId.Should().Be(channelId);
+        reloaded.Username.Should().Be("dave");
+        reloaded.Message.Should().Be("stand up");
+        reloaded.RemindAt.Should().Be(remindAt);
+        reloaded.Sent.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Restrictions_SaveAndReload_RoundTripsTheRestriction()
     {
         // Arrange

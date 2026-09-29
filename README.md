@@ -18,7 +18,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?random <min> <max>` (`?r`) | A random number between two bounds |
 | `?dare <@user>` | Dares someone, in the bot's current voice |
 | `@Tarscord <anything>` | Mention it with no command and it answers, once every 20s per person |
-| `?event list` | Every event on record |
+| `?event list` | The active events, soonest first |
 | `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
 | `?event remove <name or id>` (`delete`) | Cancel an event you organized |
@@ -37,8 +37,8 @@ usually several words:
 ?event create Release party, next friday, in the usual place
 ```
 
-Anywhere an event is named you can give its name instead of its id, and the latest active event with
-that name is used. `confirm` and `cancel` take mentions after it, so a multi-word name needs quotes
+`remove`, `confirm`, `cancel` and `confirmed` take an event's name instead of its id, and the latest
+active event with that name is used; `show` takes the id only. `confirm` and `cancel` take mentions after it, so a multi-word name needs quotes
 there: `?event confirm "Release party" @bob`.
 
 The description is optional. Dates can be written the way you'd say them — `today`, `tomorrow`,
@@ -137,7 +137,7 @@ generated URL.
 
 ## Configuration
 
-Three keys in `src/Tarscord.Core/Resources/config.yml` actually do something:
+Every key in `src/Tarscord.Core/Resources/config.yml`:
 
 | Key | What it's for |
 |---|---|
@@ -196,7 +196,7 @@ Pull requests are welcome. Branch off `master` as `feat/<topic>`, keep commits i
 [Conventional Commits](https://www.conventionalcommits.org) form, and open a PR.
 
 [CLAUDE.md](CLAUDE.md) is the real contributor guide — the architecture, the coding standard and
-its sources, and an honest list of what's currently broken. Read it before writing code.
+its sources, and the traps this repo has already sprung on someone. Read it before writing code.
 
 ## License
 
