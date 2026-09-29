@@ -12,8 +12,10 @@ internal record AttendeeEnvelope(ulong AttendeeId, string AttendeeName)
         new(attendee.AttendeeId, attendee.AttendeeName);
 }
 
-internal record AttendeeListEnvelope(string EventName, IReadOnlyList<AttendeeEnvelope> Attendees)
-    : IEmbeddedMessage
+internal record AttendeeListEnvelope(
+    string EventName,
+    IReadOnlyList<AttendeeEnvelope> Attendees,
+    bool More) : IEmbeddedMessage
 {
     public Embed ToEmbeddedMessage()
     {
@@ -27,6 +29,11 @@ internal record AttendeeListEnvelope(string EventName, IReadOnlyList<AttendeeEnv
         for (int position = 1; position <= Attendees.Count; position++)
         {
             names.Append(position).Append(". ").Append(Attendees[position - 1].AttendeeName).Append('\n');
+        }
+
+        if (More)
+        {
+            names.Append("...and more.");
         }
 
         return $"Confirmed for '{EventName}':".EmbedMessage(names.ToString());

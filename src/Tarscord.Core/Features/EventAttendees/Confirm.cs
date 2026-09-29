@@ -1,8 +1,10 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
@@ -35,6 +37,7 @@ internal static class Confirm
         ILogger<CommandHandler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
+        IConfigurationRoot configuration,
         IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<AttendeeListEnvelope, FailureResponse>>
     {
@@ -102,14 +105,15 @@ internal static class Confirm
 
             await context.SaveChangesAsync(cancellationToken);
 
-            var confirmed = await context.EventAttendees
+            var (confirmed, more) = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == eventInfo.Id)
                 .OrderBy(attendee => attendee.AttendeeName)
-                .ToListAsync(cancellationToken);
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 
             return new AttendeeListEnvelope(
                 eventInfo.EventName,
-                confirmed.ConvertAll(AttendeeEnvelope.FromEntity));
+                confirmed.ConvertAll(AttendeeEnvelope.FromEntity),
+                more);
         }
     }
 }

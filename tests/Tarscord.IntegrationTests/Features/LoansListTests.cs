@@ -127,6 +127,6 @@ public class LoansListTests(PostgresFixture fixture)
             Created = DateTime.UtcNow
         };
 
-    private static List.QueryHandler NewHandler(TarscordContext context) =>
-        new(NullLogger<List.QueryHandler>.Instance, context);
+    private static List.QueryHandler NewHandler(TarscordContext context, string maxListed = "10") =>
+        new(NullLogger<List.QueryHandler>.Instance, context, TestConfiguration.WithMaxListed(maxListed));
 }

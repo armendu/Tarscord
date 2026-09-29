@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tarscord.Core.Features.Events;
+using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
 using Xunit;
 
@@ -17,7 +18,7 @@ public class EventsListTests(PostgresFixture fixture)
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
-        var handler = new List.QueryHandler(NullLogger<List.QueryHandler>.Instance, context);
+        var handler = NewHandler(context);
 
         // Act
         var response = await handler.Handle(new List.Query(PerformedByUser), CancellationToken.None);
@@ -37,7 +38,7 @@ public class EventsListTests(PostgresFixture fixture)
         await arrangeContext.SaveChangesAsync();
 
         await using var context = fixture.CreateContext();
-        var handler = new List.QueryHandler(NullLogger<List.QueryHandler>.Instance, context);
+        var handler = NewHandler(context);
 
         // Act
         var response = await handler.Handle(new List.Query(PerformedByUser), CancellationToken.None);
@@ -58,7 +59,7 @@ public class EventsListTests(PostgresFixture fixture)
         await arrangeContext.SaveChangesAsync();
 
         await using var context = fixture.CreateContext();
-        var handler = new List.QueryHandler(NullLogger<List.QueryHandler>.Instance, context);
+        var handler = NewHandler(context);
 
         // Act
         var response = await handler.Handle(new List.Query(PerformedByUser), CancellationToken.None);
@@ -67,6 +68,31 @@ public class EventsListTests(PostgresFixture fixture)
         response.EventInfos.Select(eventInfo => eventInfo.EventName)
             .Should().ContainInOrder("Sooner", "Later");
     }
+
+    [Fact]
+    public async Task Handle_WithMoreEventsThanTheConfiguredLimit_ReturnsTheLimitAndSaysThereAreMore()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var arrangeContext = fixture.CreateContext();
+        arrangeContext.EventInfos.Add(NewEvent("First", isActive: true, daysFromNow: 1));
+        arrangeContext.EventInfos.Add(NewEvent("Second", isActive: true, daysFromNow: 2));
+        arrangeContext.EventInfos.Add(NewEvent("Third", isActive: true, daysFromNow: 3));
+        await arrangeContext.SaveChangesAsync();
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context, maxListed: "2");
+
+        // Act
+        var response = await handler.Handle(new List.Query(PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.EventInfos.Should().HaveCount(2);
+        response.More.Should().BeTrue();
+    }
+
+    private static List.QueryHandler NewHandler(TarscordContext context, string maxListed = "10") =>
+        new(NullLogger<List.QueryHandler>.Instance, context, TestConfiguration.WithMaxListed(maxListed));
 
     private static EventInfo NewEvent(string eventName, bool isActive, int daysFromNow = 1) =>
         new()

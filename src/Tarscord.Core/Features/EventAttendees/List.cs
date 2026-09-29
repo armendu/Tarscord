@@ -1,9 +1,11 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 
@@ -27,6 +29,7 @@ internal static class List
     public class QueryHandler(
         ILogger<QueryHandler> logger,
         TarscordContext context,
+        IConfigurationRoot configuration,
         IValidator<Query> validator)
         : IRequestHandler<Query, OneOf<AttendeeListEnvelope, FailureResponse>>
     {
@@ -52,14 +55,15 @@ internal static class List
                 return new FailureResponse($"There is no event called '{query.Event}'.");
             }
 
-            var attendees = await context.EventAttendees
+            var (attendees, more) = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == eventInfo.Id)
                 .OrderBy(attendee => attendee.AttendeeName)
-                .ToListAsync(cancellationToken);
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 
             return new AttendeeListEnvelope(
                 eventInfo.EventName,
-                attendees.ConvertAll(AttendeeEnvelope.FromEntity));
+                attendees.ConvertAll(AttendeeEnvelope.FromEntity),
+                more);
         }
     }
 }

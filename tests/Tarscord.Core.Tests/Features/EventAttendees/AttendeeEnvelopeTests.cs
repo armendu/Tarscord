@@ -12,7 +12,7 @@ public class AttendeeEnvelopeTests
     public void ToEmbeddedMessage_WithNobodyConfirmed_SaysSo()
     {
         // Arrange
-        var envelope = new AttendeeListEnvelope(EventName, []);
+        var envelope = new AttendeeListEnvelope(EventName, [], false);
 
         // Act
         var embed = envelope.ToEmbeddedMessage();
@@ -29,12 +29,25 @@ public class AttendeeEnvelopeTests
         [
             new AttendeeEnvelope(1, "bob"),
             new AttendeeEnvelope(2, "carol")
-        ]);
+        ], false);
 
         // Act
         var embed = envelope.ToEmbeddedMessage();
 
         // Assert
         embed.Description.Should().Contain("1. bob").And.Contain("2. carol");
+    }
+
+    [Fact]
+    public void ToEmbeddedMessage_WhenThereAreMoreAttendees_SaysSo()
+    {
+        // Arrange
+        var envelope = new AttendeeListEnvelope(EventName, [new AttendeeEnvelope(1, "bob")], true);
+
+        // Act
+        var embed = envelope.ToEmbeddedMessage();
+
+        // Assert
+        embed.Description.Should().Contain("...and more.");
     }
 }

@@ -257,6 +257,12 @@ The tree used to be mixed — 16 files with a BOM, the rest without — and an e
 file containing a non-ASCII character guesses wrong and reports it as loaded in the wrong encoding.
 Don't reintroduce a BOM, and write a symbol like the euro as `"\u20AC"`.
 
+**A list command shows `max-listed` rows and then says there are more.** The key defaults to 10 in
+`config.example.yml`, and `ConfigurationExtensions.MaxListed()` falls back to 10 for a missing or
+unusable value. Every user-facing list goes through `TakeListedAsync`, which reads one row past the
+limit to know whether to say it. The two `List` slices the background services use are deliberately
+uncapped: they are work queues, and a cap would mean the eleventh due reminder never fires.
+
 **Text limits come from Discord, not from taste.** `Persistence/TextLengths.cs` holds the two that
 matter - `Name` is 256 because that is all an embed title shows, `FreeText` is 2000 because that is
 all Discord lets someone type - and the validators and the `VARCHAR` widths both follow them. A

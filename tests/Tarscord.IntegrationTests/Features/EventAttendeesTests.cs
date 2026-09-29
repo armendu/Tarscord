@@ -16,6 +16,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
     private const ulong OrganizerId = 111111111111111111;
     private const ulong BobId = 222222222222222222;
     private const ulong CarolId = 333333333333333333;
+    private const ulong DaveId = 444444444444444444;
 
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
@@ -307,13 +308,44 @@ public class EventAttendeesTests(PostgresFixture fixture)
         return eventInfo.Id;
     }
 
+    [Fact]
+    public async Task List_WithMoreAttendeesThanTheConfiguredLimit_ReturnsTheLimitAndSaysThereAreMore()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent();
+
+        await using var arrangeContext = fixture.CreateContext();
+        await NewConfirmHandler(arrangeContext).Handle(
+            new Confirm.Command(eventId.ToString(),
+                [
+                    new Confirm.Attendee(BobId, "bob"),
+                    new Confirm.Attendee(CarolId, "carol"),
+                    new Confirm.Attendee(DaveId, "dave")
+                ],
+                PerformedByUser),
+            CancellationToken.None);
+
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewListHandler(context, maxListed: "2").Handle(
+            new List.Query(eventId.ToString(), PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.AsT0.Attendees.Should().HaveCount(2);
+        response.AsT0.More.Should().BeTrue();
+    }
+
     private static Confirm.CommandHandler NewConfirmHandler(TarscordContext context) =>
         new(NullLogger<Confirm.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
-            new Confirm.CommandValidator());
+            TestConfiguration.WithMaxListed(), new Confirm.CommandValidator());
 
     private static Cancel.CommandHandler NewCancelHandler(TarscordContext context) =>
-        new(NullLogger<Cancel.CommandHandler>.Instance, context, new Cancel.CommandValidator());
+        new(NullLogger<Cancel.CommandHandler>.Instance, context, TestConfiguration.WithMaxListed(),
+            new Cancel.CommandValidator());
 
-    private static List.QueryHandler NewListHandler(TarscordContext context) =>
-        new(NullLogger<List.QueryHandler>.Instance, context, new List.QueryValidator());
+    private static List.QueryHandler NewListHandler(TarscordContext context, string maxListed = "10") =>
+        new(NullLogger<List.QueryHandler>.Instance, context,
+            TestConfiguration.WithMaxListed(maxListed), new List.QueryValidator());
 }

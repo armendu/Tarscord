@@ -1,8 +1,10 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
@@ -34,6 +36,7 @@ internal static class Cancel
     public class CommandHandler(
         ILogger<CommandHandler> logger,
         TarscordContext context,
+        IConfigurationRoot configuration,
         IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<AttendeeListEnvelope, FailureResponse>>
     {
@@ -83,14 +86,15 @@ internal static class Cancel
             context.EventAttendees.RemoveRange(toRemove);
             await context.SaveChangesAsync(cancellationToken);
 
-            var remaining = await context.EventAttendees
+            var (remaining, more) = await context.EventAttendees
                 .Where(attendee => attendee.EventInfoId == eventInfo.Id)
                 .OrderBy(attendee => attendee.AttendeeName)
-                .ToListAsync(cancellationToken);
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 
             return new AttendeeListEnvelope(
                 eventInfo.EventName,
-                remaining.ConvertAll(AttendeeEnvelope.FromEntity));
+                remaining.ConvertAll(AttendeeEnvelope.FromEntity),
+                more);
         }
     }
 }

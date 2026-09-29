@@ -2,6 +2,7 @@ using System.Text;
 using Discord;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -11,7 +12,6 @@ namespace Tarscord.Core.Features.Events;
 
 internal static class List
 {
-    private const int MaxListed = 25;
     public const string DefaultHeading = "Here are all the events:";
 
     public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
@@ -44,26 +44,20 @@ internal static class List
         }
     }
 
-    public class QueryHandler(ILogger<QueryHandler> logger, TarscordContext context)
-        : IRequestHandler<Query, ListResponse>
+    public class QueryHandler(
+        ILogger<QueryHandler> logger,
+        TarscordContext context,
+        IConfigurationRoot configuration) : IRequestHandler<Query, ListResponse>
     {
         public async Task<ListResponse> Handle(Query request, CancellationToken cancellationToken)
         {
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), request.PerformedByUser);
 
-            var eventInfos = await context.EventInfos
+            var (eventInfos, more) = await context.EventInfos
                 .Where(eventInfo => eventInfo.IsActive)
                 .OrderBy(eventInfo => eventInfo.EventDate)
-                .Take(MaxListed + 1)
-                .ToListAsync(cancellationToken);
-
-            bool more = eventInfos.Count > MaxListed;
-
-            if (more)
-            {
-                eventInfos.RemoveAt(MaxListed);
-            }
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 
             return new ListResponse(eventInfos.ConvertAll(EventInfoEnvelope.FromEntity), more);
         }
