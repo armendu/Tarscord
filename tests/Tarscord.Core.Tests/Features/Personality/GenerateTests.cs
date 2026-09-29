@@ -141,6 +141,7 @@ public class GenerateTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
+    [InlineData("localhost:11434")]
     public async Task Handle_WithNoOllamaConfigured_ReturnsTheCannedLineWithoutAsking(string? ollamaUrl)
     {
         // Arrange

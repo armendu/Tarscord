@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OllamaSharp;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
 
@@ -55,13 +56,13 @@ public class Startup
 
     private static IChatClient CreateChatClient(IConfiguration configuration)
     {
-        string url = configuration["ollama:url"] ?? string.Empty;
-        string model = configuration["ollama:model"] ?? string.Empty;
+        var address = configuration.OllamaUrl();
+        string? model = configuration.OllamaModel();
 
-        // Blank config means the model is off, and Generate skips it, so this only has to resolve.
-        return Uri.TryCreate(url, UriKind.Absolute, out var address) && model.Length > 0
-            ? new OllamaApiClient(address, model)
-            : new OllamaApiClient(new Uri("http://localhost:11434"), "llama3.1");
+        // Unusable config means the model is off and Generate skips it, so this only has to resolve.
+        return address is null || model is null
+            ? new OllamaApiClient(new Uri("http://localhost:11434"), "llama3.1")
+            : new OllamaApiClient(address, model);
     }
 
     internal static void ConfigureServices(IServiceCollection services, IConfigurationRoot configuration)

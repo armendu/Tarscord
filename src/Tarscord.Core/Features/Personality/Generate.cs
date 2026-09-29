@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Services;
 
@@ -70,9 +71,8 @@ internal static class Generate
             return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
         }
 
-        /// <summary>No address or no model means there is nothing to ask, so don't try.</summary>
+        /// <summary>Nothing callable configured means there is nothing to ask, so don't try.</summary>
         private bool IsConfigured() =>
-            !string.IsNullOrWhiteSpace(configuration["ollama:url"])
-            && !string.IsNullOrWhiteSpace(configuration["ollama:model"]);
+            configuration.OllamaUrl() is not null && configuration.OllamaModel() is not null;
     }
 }

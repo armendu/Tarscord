@@ -144,7 +144,7 @@ Three keys in `src/Tarscord.Core/Resources/config.yml` actually do something:
 | `tokens.discord` | Your bot token. Required |
 | `tarscord-context.connection-string` | PostgreSQL connection string. Required |
 | `prefix` | The character that starts a command. Default `?` |
-| `max-listed` | Rows a list command shows before it says there are more. Default 10 |
+| `max-listed` | Rows a list command shows before it says there are more. Default 10, capped at 100 |
 | `sarcasm-level`, `humor-level` | 0–10, the starting values for the bot's voice |
 | `ollama.url`, `ollama.model` | Where the local model lives, and which one |
 

@@ -259,8 +259,9 @@ Don't reintroduce a BOM, and write a symbol like the euro as `"\u20AC"`.
 
 **A list command shows `max-listed` rows and then says there are more.** The key defaults to 10 in
 `config.example.yml`, and `ConfigurationExtensions.MaxListed()` falls back to 10 for a missing or
-unusable value. Every user-facing list goes through `TakeListedAsync`, which reads one row past the
-limit to know whether to say it. The two `List` slices the background services use are deliberately
+unusable value and caps the rest at 100, because `TakeListedAsync` reads one row past the limit and
+`max-listed: 2147483647` overflowed that into `LIMIT must not be negative`. A hundred rows is already
+more than an embed description can show. The two `List` slices the background services use are deliberately
 uncapped: they are work queues, and a cap would mean the eleventh due reminder never fires.
 
 **Text limits come from Discord, not from taste.** `Persistence/TextLengths.cs` holds the two that

@@ -8,7 +8,7 @@ tokens:
     # Discord Developer Portal -> your application -> Bot -> Reset Token. Set this in config.yml.
     discord: ""
 
-# How many rows a list command shows before it says there are more.
+# How many rows a list command shows before it says there are more. Anything above 100 is capped.
 max-listed: 10
 
 # Both 0-10, and both settable at runtime with ?sarcasm-level and ?humor-level.
