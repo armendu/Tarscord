@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Tarscord.Core.Persistence.Entities;
 
 public abstract class EntityBase
 {
     [Column("id")]
-    public ulong Id { get; set; }
+    public int Id { get; set; }
 
     [Column("created")]
     public DateTime Created { get; set; }

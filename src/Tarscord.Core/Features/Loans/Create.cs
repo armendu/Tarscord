@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
-using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
 
@@ -27,23 +26,42 @@ internal static class Create
     {
         public CommandValidator()
         {
-            RuleFor(x => x.Amount).GreaterThan(0);
+            RuleFor(command => command.Amount)
+                .GreaterThan(0)
+                .WithMessage("A loan has to be for more than nothing.");
+
+            RuleFor(command => command.LoanedToId)
+                .NotEqual(command => command.LoanedFromId)
+                .WithMessage("You cannot loan money to yourself.");
+
+            RuleFor(command => command.Description)
+                .MaximumLength(TextLengths.FreeText)
+                .WithMessage($"Keep the reason under {TextLengths.FreeText} characters.");
         }
     }
 
     public class CommandHandler(
         ILogger<CommandHandler> logger,
         TarscordContext context,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IValidator<Command> validator)
         : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
         public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
             CancellationToken cancellationToken)
         {
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-                nameof(Command), command.PerformedByUser);
+                nameof(Create), command.PerformedByUser);
 
-            var createdLoan = await context.AddAsync(new Loan
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            var createdLoan = await context.Loans.AddAsync(new Loan
             {
                 LoanedFrom = command.LoanedFrom,
                 LoanedFromId = command.LoanedFromId,

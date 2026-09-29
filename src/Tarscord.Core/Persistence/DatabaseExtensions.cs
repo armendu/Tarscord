@@ -10,15 +10,19 @@ public static class DatabaseExtensions
         this IServiceCollection serviceCollection,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetSection("tarscord-context:connection-string");
+        string? connectionString = configuration["tarscord-context:connection-string"];
 
-        if (string.IsNullOrEmpty(connectionString.Value))
+        // The one key with no default, so forgetting it fails here rather than silently.
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new ArgumentException("Connection string is missing");
+            throw new InvalidOperationException(
+                "No database connection string is configured. Set " +
+                "tarscord-context.connection-string in Resources/config.yml.");
         }
 
-        serviceCollection.AddDbContextPool<TarscordContext>(opt =>
-            opt.UseNpgsql(connectionString.Value));
+        serviceCollection.AddDbContextPool<TarscordContext>(options =>
+            options.UseNpgsql(connectionString));
+
         return serviceCollection;
     }
 }

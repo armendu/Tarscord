@@ -1,68 +1,94 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
-using System.ComponentModel.DataAnnotations;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
-using Tarscord.Core.Features.Mute;
+using Tarscord.Core.Features.Restrictions;
+using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Admin commands")]
-public class AdminModule(IMediator mediator) : ModuleBase
+public class AdminModule(IMediator mediator, IConfigurationRoot config) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: mute {user} {minutes}?
     /// </summary>
-    [Command("mute"), Summary("Mutes a user for a specified time")]
-    public async Task MuteUser(
-        [Summary("The user to be muted"), Required(ErrorMessage = "Please provide member of the channel.")]
-        IUser? user = null,
-        [Summary("Minutes for which the user is muted")]
-        int minutes = 1)
+    [Command("mute"), Summary("Stops a user posting in this channel")]
+    public async Task MuteUserAsync(
+        [Summary("The user to be muted")] IUser? user = null,
+        [Summary("How many minutes, or leave out to keep it until you lift it")]
+        int minutes = 0)
     {
-        using var typingState = Context.Channel.EnterTypingState();
-
-        var message = await mediator.Send(
-            new Mute.Command(Context.Channel, user, Mute.CommandType.Mute, Context.User.Username, minutes));
-
-        await ReplyAsync(embed: message.EmbedMessage());
-    }
-
-    /// <summary>
-    /// Usage: unmute {user}
-    /// </summary>
-    [Command("unmute"), Summary("Unmutes a user")]
-    public async Task UnmuteUser(
-        [Summary("The user to be unmuted"), Required(ErrorMessage = "Please provide member of the channel.")]
-        IUser? user = null)
-    {
-        using var typingState = Context.Channel.EnterTypingState();
-
-        var message = await mediator.Send(
-            new Mute.Command(Context.Channel, user, Mute.CommandType.Unmute, Context.User.Username));
-
-        await ReplyAsync(embed: message.EmbedMessage());
+        await ApplyAsync("mute", user, RestrictionKind.Mute, minutes);
     }
 
     /// <summary>
     /// Usage: denyreacting {user} {minutes}?
     /// </summary>
-    [Command("denyreacting"), Summary("Mutes a user for a specified time")]
+    [Command("denyreacting"), Summary("Stops a user reacting in this channel")]
     public async Task DenyReactingAsync(
-        [Summary("The user to be that's going to be denied of reacting"),
-         Required(ErrorMessage = "Please provide member of the channel.")]
-        IUser? user = null,
-        [Summary("Minutes for which the user cannot react")]
-        int minutes = 1)
+        [Summary("The user to be denied reacting")] IUser? user = null,
+        [Summary("How many minutes, or leave out to keep it until you lift it")]
+        int minutes = 0)
     {
+        await ApplyAsync("denyreacting", user, RestrictionKind.DenyReacting, minutes);
+    }
+
+    /// <summary>
+    /// Usage: unmute {user}
+    /// </summary>
+    [Command("unmute"), Summary("Lets a muted user post again")]
+    public async Task UnmuteUserAsync([Summary("The user to be unmuted")] IUser? user = null)
+    {
+        await LiftAsync("unmute", user, RestrictionKind.Mute);
+    }
+
+    /// <summary>
+    /// Usage: allowreacting {user}
+    /// </summary>
+    [Command("allowreacting"), Summary("Lets a user react again")]
+    [Alias("allowreactions")]
+    public async Task AllowReactingAsync([Summary("The user to be allowed to react")] IUser? user = null)
+    {
+        await LiftAsync("allowreacting", user, RestrictionKind.DenyReacting);
+    }
+
+    private async Task ApplyAsync(string command, IUser? user, RestrictionKind kind, int minutes)
+    {
+        // Guarding here is what lets Apply.Command keep a non-nullable IUser.
+        if (user is null)
+        {
+            await ReplyAsync(embed: MentionSomeone(command).EmbedMessage());
+            return;
+        }
+
         using var typingState = Context.Channel.EnterTypingState();
 
-        // TODO: Add small validation here
-        var message = await mediator.Send(
-            new Mute.Command(Context.Channel, user, Mute.CommandType.DenyReacting, Context.User.Username,
-                minutes));
+        var response = await mediator.Send(
+            new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username));
 
-        await ReplyAsync(embed: message.EmbedMessage());
+        await ReplyAsync(embed: response.ToEmbeddedMessage());
     }
+
+    private async Task LiftAsync(string command, IUser? user, RestrictionKind kind)
+    {
+        if (user is null)
+        {
+            await ReplyAsync(embed: MentionSomeone(command).EmbedMessage());
+            return;
+        }
+
+        using var typingState = Context.Channel.EnterTypingState();
+
+        var response = await mediator.Send(
+            new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username));
+
+        await ReplyAsync(embed: response.ToEmbeddedMessage());
+    }
+
+    /// <summary>Names the command that was typed, at the configured prefix.</summary>
+    private string MentionSomeone(string command) =>
+        $"Mention the user, like `{config.CommandPrefix()}{command} @name`.";
 }

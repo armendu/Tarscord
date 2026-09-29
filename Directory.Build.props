@@ -1,0 +1,8 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Without this the IDExxxx rules in .editorconfig never run on a command-line build. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+</Project>

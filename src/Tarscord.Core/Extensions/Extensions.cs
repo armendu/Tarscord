@@ -1,17 +1,22 @@
-﻿using Discord;
+using Discord;
 
 namespace Tarscord.Core.Extensions;
 
 public static class Extensions
 {
-    public static Embed EmbedMessage(this string name, object? message = null)
+    private const int TitleLimit = 256;
+    private const int DescriptionLimit = 4096;
+
+    public static Embed EmbedMessage(this string title, string? message = null)
     {
         return new EmbedBuilder
-            {
-                Title = name,
-                Description = message as string ?? "",
-                Color = Color.Blue
-            }
-            .Build();
+        {
+            Title = Clamp(title, TitleLimit),
+            Description = Clamp(message ?? "", DescriptionLimit),
+            Color = Color.Blue
+        }.Build();
     }
+
+    private static string Clamp(string text, int limit) =>
+        text.Length <= limit ? text : string.Concat(text.AsSpan(0, limit - 1), "\u2026");
 }

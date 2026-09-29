@@ -1,33 +1,52 @@
-﻿using Discord.Commands;
-using System;
-using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
+using MediatR;
+using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
+using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to generate random numbers")]
-public class RandomNumberModule : ModuleBase
+public class RandomNumberModule(
+    IMediator mediator,
+    IConfigurationRoot config,
+    GenerationCooldown cooldown) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: random {lower limit} {upper limit}
     /// </summary>
-    /// <returns>The generated random number</returns>
     [Command("random"), Summary("Generates a random number between two numbers")]
     [Alias("r")]
     public async Task GenerateRandomNumberAsync(
         [Summary("The lower limit")] int min,
         [Summary("The upper limit")] int max)
     {
-        int generatedNumber = 0;
-        try
+        if (min > max)
         {
-            generatedNumber = Random.Shared.Next(min, max);
-        }
-        catch (Exception)
-        {
-            throw new Exception("Wrong command usage. Try: random lower-limit upper-limit");
+            await ReplyAsync(embed:
+                $"The lower limit has to come first. Try `{config.CommandPrefix()}random 1 100`.".EmbedMessage());
+            return;
         }
 
-        await ReplyAsync(embed: generatedNumber.ToString().EmbedMessage()).ConfigureAwait(false);
+        int generatedNumber = (int)Random.Shared.NextInt64(min, (long)max + 1);
+        string reply = generatedNumber.ToString();
+
+        if (cooldown.TryGenerate(Context.User.Id))
+        {
+            using var typingState = Context.Channel.EnterTypingState();
+
+            // The model only announces the number, it never draws it.
+            var response = await mediator.Send(new Generate.Command(
+                Prompt: $"Announce that the random number drawn between {min} and {max} is " +
+                        $"{generatedNumber}. Quote that number exactly and do not offer a different one.",
+                Fallback: reply,
+                PerformedByUser: Context.User.Username));
+
+            reply = response.ToReplyText();
+        }
+
+        await ReplyAsync(reply, allowedMentions: AllowedMentions.None);
     }
 }

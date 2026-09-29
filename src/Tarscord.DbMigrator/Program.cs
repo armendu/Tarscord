@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using DbUp;
+using Tarscord.DbMigrator;
 
 return RunDbMigration(args);
 
@@ -9,14 +8,7 @@ static int RunDbMigration(string[] args)
         args.FirstOrDefault()
         ?? "Host=localhost;Username=root;Password=password;Database=tarscord_db";
 
-    var upgrader =
-        DeployChanges.To
-            .PostgresqlDatabase(connectionString)
-            .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
-            .LogToConsole()
-            .Build();
-
-    var result = upgrader.PerformUpgrade();
+    var result = DatabaseMigrator.Upgrade(connectionString);
 
     if (!result.Successful)
     {

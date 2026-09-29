@@ -1,13 +1,16 @@
-﻿using Discord;
+using System.Text;
+using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
-using System.Linq;
-using System.Threading.Tasks;
+using Tarscord.Core.Extensions;
 
 namespace Tarscord.Core.Modules;
 
+[Name(ModuleName)]
 public class HelpModule : ModuleBase<SocketCommandContext>
 {
+    private const string ModuleName = "Help";
+
     private readonly CommandService _service;
     private readonly IConfigurationRoot _config;
 
@@ -17,54 +20,67 @@ public class HelpModule : ModuleBase<SocketCommandContext>
         _config = config;
     }
 
-    [Command("help")]
+    [Command("help"), Summary("Lists every command you can use")]
     public async Task Help()
     {
-        var prefix = _config["prefix"]!;
+        string prefix = _config.CommandPrefix();
         var builder = new EmbedBuilder
         {
             Color = Color.Blue,
             Description = "These are the commands you can use"
         };
 
+        // Keyed by name, so two modules sharing a name become one section.
+        var sections = new Dictionary<string, StringBuilder>();
+
         foreach (var module in _service.Modules)
         {
-            // Exclude the Help module
-            if (module.Name == GetType().Name)
+            // This module lists the others; listing itself as well adds nothing.
+            if (module.Name == ModuleName)
             {
                 continue;
             }
 
-            string? description = null;
             foreach (var cmd in module.Commands)
             {
                 var result = await cmd.CheckPreconditionsAsync(Context);
-                if (result.IsSuccess)
-                    description += $"{prefix}{cmd.Aliases.First()} - {cmd.Summary}\n";
-            }
 
-            if (!string.IsNullOrWhiteSpace(description))
-            {
-                builder.AddField(x =>
+                if (!result.IsSuccess)
                 {
-                    x.Name = module.Name;
-                    x.Value = description;
-                    x.IsInline = false;
-                });
+                    continue;
+                }
+
+                if (!sections.TryGetValue(module.Name, out var commands))
+                {
+                    commands = new StringBuilder();
+                    sections[module.Name] = commands;
+                }
+
+                commands.Append(prefix).Append(cmd.Aliases.First())
+                    .Append(" - ").Append(cmd.Summary).Append('\n');
             }
+        }
+
+        foreach (var (name, commands) in sections)
+        {
+            builder.AddField(name, commands.ToString());
         }
 
         await ReplyAsync(embed: builder.Build());
     }
 
-    [Command("help")]
-    public async Task HelpAsync(string command)
+    [Command("help"), Summary("Explains one command")]
+    public async Task HelpAsync([Summary("The command to explain")] string command)
     {
         var result = _service.Search(Context, command);
 
         if (!result.IsSuccess)
         {
-            await ReplyAsync($"Sorry, I couldn't find a command like **{command}**.");
+            // Echoed verbatim, so the user's mentions must not become the bot's pings.
+            await ReplyAsync(
+                $"Sorry, I couldn't find a command like **{command}**.",
+                allowedMentions: AllowedMentions.None);
+
             return;
         }
 

@@ -1,37 +1,20 @@
+using System.Text;
 using Discord;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Events;
 
 internal record EventInfoEnvelope(
-    ulong EventId,
+    int EventId,
     string EventOrganizer,
-    string EventOrganizerId,
+    ulong EventOrganizerId,
     string EventName,
     DateTime? EventDate,
-    string EventDescription) // TODO: Create an interface to implement for envelopes
+    string EventDescription,
+    bool IsActive) : IEmbeddedMessage
 {
-    // public static Embed ToEmbeddedMessage(this EventInfoListEnvelope events)
-    // {
-    //     var eventsInformation = new StringBuilder();
-    //
-    //     foreach (var eventInfo in events.EventInfo)
-    //     {
-    //         eventsInformation
-    //             .Append(eventInfo.Id).Append(": '")
-    //             .Append(eventInfo.EventName)
-    //             .Append("' by user: ").Append(eventInfo.EventOrganizer).Append(".\n");
-    //     }
-    //
-    //     if (eventsInformation.Length == 0)
-    //     {
-    //         return "No events found".EmbedMessage();
-    //     }
-    //
-    //     return eventsInformation.ToString().EmbedMessage();
-    // }
-
     public static EventInfoEnvelope FromEntity(EventInfo eventInfo)
     {
         return new EventInfoEnvelope(
@@ -40,14 +23,44 @@ internal record EventInfoEnvelope(
             eventInfo.EventOrganizerId,
             eventInfo.EventName,
             eventInfo.EventDate,
-            eventInfo.EventDescription);
+            eventInfo.EventDescription,
+            eventInfo.IsActive);
+    }
+
+    /// <summary>One line, for the list.</summary>
+    public string ToSummary()
+    {
+        var summary = new StringBuilder();
+
+        summary.Append(EventId).Append(": '").Append(EventName).Append("' by ").Append(EventOrganizer);
+
+        if (EventDate.HasValue)
+        {
+            summary.Append(" on ").Append(EventDate.Value.ToString("f")).Append(" UTC");
+        }
+
+        return summary.ToString();
     }
 
     public Embed ToEmbeddedMessage()
     {
-        return
-            ($"'Event Name: {EventName}', " +
-             $"created by user '{EventOrganizer}', " +
-             $"with description '{EventDescription}'").EmbedMessage();
+        var details = new StringBuilder();
+
+        details.Append("Id: ").Append(EventId).Append('\n');
+        details.Append("Organized by: ").Append(EventOrganizer).Append('\n');
+
+        if (EventDate.HasValue)
+        {
+            details.Append("When: ").Append(EventDate.Value.ToString("f")).Append(" UTC").Append('\n');
+        }
+
+        if (!string.IsNullOrWhiteSpace(EventDescription))
+        {
+            details.Append(EventDescription);
+        }
+
+        string title = IsActive ? EventName : $"{EventName} (cancelled)";
+
+        return title.EmbedMessage(details.ToString());
     }
 }

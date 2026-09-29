@@ -1,26 +1,49 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
+using MediatR;
+using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
+using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to interact with the bot")]
-public class InteractionModule : ModuleBase
+public class InteractionModule(
+    IMediator mediator,
+    IConfigurationRoot config,
+    GenerationCooldown cooldown) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
-    /// Usage: dare {user} {minutes}?
+    /// Usage: dare {user}
     /// </summary>
-    [Command("dare"), Summary("Sends a sarcastic message based on the sarcasm level")]
+    [Command("dare"), Summary("Dares someone, at the current sarcasm level")]
     public async Task SendSarcasticMessageAsync(
-        [Summary("The user to be muted")] IUser? user = null)
+        [Summary("The user to dare")] IUser? user = null)
     {
-        // TODO: Check for sarcasm level
-        using (Context.Channel.EnterTypingState())
+        // A bare Exception here used to be swallowed, so a bare ?dare did nothing.
+        if (user is null)
         {
-            if (user == null)
-                throw new Exception("Please provide a member of the channel.");
-
-            await ReplyAsync(embed: $"I dare you to write that message {user.Username}".EmbedMessage());
+            await ReplyAsync(embed:
+                $"Mention who you're daring, like `{config.CommandPrefix()}dare @name`.".EmbedMessage());
+            return;
         }
+
+        string reply = $"I dare you to write that message, {user.Username}.";
+
+        if (cooldown.TryGenerate(Context.User.Id))
+        {
+            using var typingState = Context.Channel.EnterTypingState();
+
+            var response = await mediator.Send(new Generate.Command(
+                Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
+                        "Address them directly.",
+                Fallback: reply,
+                PerformedByUser: Context.User.Username));
+
+            reply = response.ToReplyText();
+        }
+
+        await ReplyAsync(reply, allowedMentions: AllowedMentions.None);
     }
 }

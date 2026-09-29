@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Tarscord.Core.Persistence.Entities;
 
@@ -9,10 +9,10 @@ public class EventInfo : EntityBase
     public required string EventOrganizer { get; set; }
 
     /// <summary>
-    /// The Id of the organizer, can be converted to ulong
+    /// The organizer's Discord id.
     /// </summary>
     [Column("event_organizer_id")]
-    public required string EventOrganizerId { get; set; }
+    public ulong EventOrganizerId { get; set; }
 
     [Column("event_name")]
     public required string EventName { get; set; }
@@ -25,15 +25,4 @@ public class EventInfo : EntityBase
 
     [Column("is_active")]
     public bool IsActive { get; set; }
-
-    public override string ToString()
-    {
-        return $"Organizer:\t {EventOrganizer}\n" +
-               $"Name:\t {EventName}\n" +
-               $"Date and time:\t {EventDate:F}\n" +
-               $"Description:\t {EventDescription}\n" +
-               $"Is active:\t {IsActive}\n" +
-               $"Date created:\t {Created:s}\n" +
-               $"Date updated:\t {Updated:s}\n";
-    }
 }

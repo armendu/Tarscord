@@ -1,43 +1,56 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Tarscord.Core.Persistence;
+using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Features.Common;
+using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
 internal static class Details
 {
-    public record Query(ulong EventId) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>;
+    public record Query(int EventId, string PerformedByUser)
+        : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>, IPerformedByUser;
 
     public class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
-            RuleFor(x => x.EventId).NotNull().NotEmpty().GreaterThan((ulong)0);
+            RuleFor(query => query.EventId)
+                .GreaterThan(0)
+                .WithMessage("An event id is a positive number. 'event list' shows them.");
         }
     }
 
-    public class QueryHandler(TarscordContext tarscordContext, IValidator<Query> validator)
+    public class QueryHandler(
+        ILogger<QueryHandler> logger,
+        TarscordContext context,
+        IValidator<Query> validator)
         : IRequestHandler<Query, OneOf<EventInfoEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(Query message,
+        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
+            Query query,
             CancellationToken cancellationToken)
         {
-            var isValid = await validator.ValidateAsync(message, cancellationToken);
+            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+                nameof(Details), query.PerformedByUser);
 
-            if (!isValid.IsValid)
+            var validation = await validator.ValidateAsync(query, cancellationToken);
+
+            // An unusable id used to report the same thing as a missing event.
+            if (!validation.IsValid)
             {
-                return new FailureResponse($"Event '{message.EventId}' does not exist");
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            var eventInfo = await tarscordContext.EventInfos
-                .FirstOrDefaultAsync(eventInfo => eventInfo.Id == message.EventId,
-                    cancellationToken: cancellationToken);
+            var eventInfo = await context.EventInfos
+                .FirstOrDefaultAsync(candidate => candidate.Id == query.EventId, cancellationToken);
 
             return eventInfo switch
             {
-                null => new FailureResponse($"Event '{message.EventId}' does not exist"),
+                null => new FailureResponse($"There is no event with id {query.EventId}"),
                 _ => EventInfoEnvelope.FromEntity(eventInfo)
             };
         }

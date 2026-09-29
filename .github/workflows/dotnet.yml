@@ -16,16 +16,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
-        # Explicit, not global-json-file: global.json pins 8.0.0 and relies on
-        # rollForward to reach the installed SDK, which would leave a runner with
-        # only 8.0.0 unable to build net10.0.
-        dotnet-version: 10.0.x
+        global-json-file: global.json
 
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build --no-restore --configuration Release -warnaserror
 
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal

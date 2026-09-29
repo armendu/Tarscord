@@ -1,29 +1,69 @@
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using OneOf;
+using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
+using Tarscord.Core.Features.Events;
+using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.EventAttendees;
 
-public class List
+internal static class List
 {
-    // public record Query : IRequest<EventAttendeesEnvelope>;
-    //
-    // public class QueryHandler : IRequestHandler<Query, EventAttendeesEnvelope>
-    // {
-    //     private readonly IEventAttendeesRepository _eventAttendeesRepository;
-    //
-    //     public QueryHandler(IEventAttendeesRepository eventAttendeesRepository)
-    //     {
-    //         _eventAttendeesRepository = eventAttendeesRepository;
-    //     }
-    //
-    //     public async Task<EventAttendeesEnvelope> Handle(Query message, CancellationToken cancellationToken)
-    //     {
-    //         var events =
-    //             await _eventAttendeesRepository.GetAllAsync().ConfigureAwait(false);
-    //
-    //         return new EventAttendeesEnvelope(events.ToList());
-    //     }
-    // }
+    public record Query(string Event, string PerformedByUser)
+        : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
+
+    public class QueryValidator : AbstractValidator<Query>
+    {
+        public QueryValidator()
+        {
+            RuleFor(query => query.Event)
+                .NotEmpty()
+                .WithMessage("Name the event, or give the id that 'event list' shows.");
+        }
+    }
+
+    public class QueryHandler(
+        ILogger<QueryHandler> logger,
+        TarscordContext context,
+        IConfigurationRoot configuration,
+        IValidator<Query> validator)
+        : IRequestHandler<Query, OneOf<AttendeeListEnvelope, FailureResponse>>
+    {
+        public async Task<OneOf<AttendeeListEnvelope, FailureResponse>> Handle(
+            Query query,
+            CancellationToken cancellationToken)
+        {
+            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+                nameof(List), query.PerformedByUser);
+
+            var validation = await validator.ValidateAsync(query, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            var eventInfo = await context.EventInfos.MatchAsync(query.Event, cancellationToken);
+
+            if (eventInfo is null)
+            {
+                return new FailureResponse($"There is no event called '{query.Event}'.");
+            }
+
+            var (attendees, more) = await context.EventAttendees
+                .Where(attendee => attendee.EventInfoId == eventInfo.Id)
+                .OrderBy(attendee => attendee.AttendeeName)
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
+
+            return new AttendeeListEnvelope(
+                eventInfo.EventName,
+                attendees.ConvertAll(AttendeeEnvelope.FromEntity),
+                more);
+        }
+    }
 }

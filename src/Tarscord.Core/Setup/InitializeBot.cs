@@ -32,9 +32,14 @@ public static class InitializeBot
 
         public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
         {
-            string discordToken = _config["tokens:discord"]!;
+            string? discordToken = _config["tokens:discord"];
+
             if (string.IsNullOrWhiteSpace(discordToken))
-                throw new Exception("Please enter your bot's token into the `config.yml` file.");
+            {
+                throw new InvalidOperationException(
+                    "No Discord bot token is configured. Copy Resources/config.example.yml to " +
+                    "Resources/config.yml and put your token in tokens.discord.");
+            }
 
             await _discord.LoginAsync(TokenType.Bot, discordToken);
             await _discord.StartAsync();

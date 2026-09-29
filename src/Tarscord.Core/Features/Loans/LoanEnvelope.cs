@@ -1,11 +1,15 @@
+using System.Text;
 using Discord;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Loans;
 
-public class LoanEnvelope
+public class LoanEnvelope : IEmbeddedMessage
 {
+    private const string CurrencySymbol = "\u20AC";
+
     public decimal Amount { get; init; }
     public ulong LoanedFromId { get; init; }
     public required string LoanedFrom { get; init; }
@@ -14,6 +18,8 @@ public class LoanEnvelope
     public string? Description { get; init; }
 
     public decimal AmountPaid { get; init; }
+
+    public decimal Outstanding => Amount - AmountPaid;
 
     public static LoanEnvelope FromEntity(Loan loan)
     {
@@ -29,9 +35,28 @@ public class LoanEnvelope
         };
     }
 
-    public Embed ToEmbeddedMessage()
+    public string ToSummary()
     {
-        return
-            ($"'Loan {LoanedFrom} {LoanedTo}").EmbedMessage();
+        var summary = new StringBuilder();
+
+        summary.Append(LoanedTo).Append(" owes ").Append(LoanedFrom).Append(' ')
+            .Append(Money(Outstanding));
+
+        if (AmountPaid > 0)
+        {
+            summary.Append(" (").Append(Money(AmountPaid))
+                .Append(" of ").Append(Money(Amount)).Append(" paid)");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Description))
+        {
+            summary.Append(" for ").Append(Description);
+        }
+
+        return summary.ToString();
     }
+
+    public Embed ToEmbeddedMessage() => ToSummary().EmbedMessage();
+
+    private static string Money(decimal amount) => $"{amount:0.00}{CurrencySymbol}";
 }

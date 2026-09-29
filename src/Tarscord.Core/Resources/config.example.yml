@@ -1,18 +1,26 @@
-# Copy this file to config.yml in the same directory and fill in your own values.
-# config.yml is gitignored; never commit a real token.
+# Defaults for every key. Put your own values in config.yml beside this file, which is read on top
+# of it and is gitignored; never commit a real token.
 
 # Prefix that starts a command, e.g. "?help".
 prefix: '?'
 
 tokens:
-    # Discord Developer Portal -> your application -> Bot -> Reset Token.
-    discord: "YOUR_DISCORD_BOT_TOKEN"
+    # Discord Developer Portal -> your application -> Bot -> Reset Token. Set this in config.yml.
+    discord: ""
 
+# How many rows a list command shows before it says there are more. Anything above 100 is capped.
+max-listed: 10
+
+# Both 0-10, and both settable at runtime with ?sarcasm-level and ?humor-level.
 sarcasm-level: 0
 humor-level: 0
 
-tarscord-context:
-    connection-string: "Host=localhost;Username=root;Password=password;Database=tarscord_db"
+# The local model the bot talks through. Tarscord works without it: leave either value blank, or let
+# nothing answer at this address, and every generated line falls back to a fixed one.
+ollama:
+    url: "http://localhost:11434"
+    model: "llama3.1"
 
-messages:
-    euro_sign: "€"
+tarscord-context:
+    # Required, no default. Compose stack: Host=localhost;Username=root;Password=password;Database=tarscord_db
+    connection-string: ""
