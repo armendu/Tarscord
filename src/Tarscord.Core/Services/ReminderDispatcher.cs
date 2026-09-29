@@ -8,8 +8,7 @@ using Tarscord.Core.Features.Reminders;
 
 namespace Tarscord.Core.Services;
 
-/// <summary>Delivers reminders that have come due.</summary>
-/// <remarks>A scope per tick, because TarscordContext is scoped.</remarks>
+/// <summary>Delivers reminders that have come due, in a scope per tick.</summary>
 public sealed class ReminderDispatcher(
     IServiceScopeFactory scopeFactory,
     IDiscordClient discord,
@@ -54,12 +53,10 @@ public sealed class ReminderDispatcher(
         }
         catch (Exception exception)
         {
-            // A loop that lets an exception escape stops running and the feature goes silent.
             logger.LogError(exception, "Delivering due reminders failed");
         }
     }
 
-    /// <summary>One failure is that reminder's problem, not the whole queue's.</summary>
     private async Task TryDeliverAsync(
         IMediator mediator,
         ReminderEnvelope reminder,
@@ -78,7 +75,7 @@ public sealed class ReminderDispatcher(
             logger.LogError(exception, "Reminder {ReminderId} could not be delivered; giving up on it",
                 reminder.ReminderId);
 
-            // Marked done, or it is first in the queue again on every tick.
+            // Marked done, or it heads the queue again on every tick.
             await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
         }
     }
@@ -93,7 +90,6 @@ public sealed class ReminderDispatcher(
             logger.LogWarning("Reminder {ReminderId} is for channel {ChannelId}, which is gone",
                 reminder.ReminderId, reminder.ChannelId);
 
-            // Marked done anyway, or it is retried on every tick forever.
             await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
 
             return;

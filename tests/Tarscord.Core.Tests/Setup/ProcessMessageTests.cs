@@ -27,8 +27,6 @@ public class ProcessMessageTests
     [InlineData(true, true)]
     public void IsFromPerson_ForABotOrWebhook_IsFalse(bool isBot, bool isWebhook)
     {
-        // Only self was filtered before, so two bots like this would answer each other forever.
-
         // Arrange
         var author = NewAuthor(isBot, isWebhook);
 

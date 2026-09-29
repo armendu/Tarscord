@@ -12,8 +12,6 @@ public class SetLevelsTests
     [Fact]
     public async Task Handle_ForAValidSarcasmLevel_ChangesIt()
     {
-        // ?sarcasm-level was a stub that awaited Task.CompletedTask and replied with nothing.
-
         // Arrange
         var personality = NewPersonality();
         var handler = NewHandler(personality);

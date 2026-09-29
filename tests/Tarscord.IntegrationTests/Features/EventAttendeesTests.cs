@@ -40,8 +40,6 @@ public class EventAttendeesTests(PostgresFixture fixture)
     [Fact]
     public async Task Confirm_ForAnAttendeeWhoAlreadyConfirmed_UpdatesInsteadOfDuplicating()
     {
-        // (event_info_id, attendee_id) is unique, so a second insert would be rejected outright.
-
         // Arrange
         await fixture.ResetAsync();
         int eventId = await GivenAnEvent();
@@ -87,8 +85,6 @@ public class EventAttendeesTests(PostgresFixture fixture)
     [Fact]
     public async Task Confirm_ForTheSamePersonNamedTwice_AddsThemOnce()
     {
-        // Mentioned twice, the loop queued two inserts and the unique index rejected the save.
-
         // Arrange
         await fixture.ResetAsync();
         int eventId = await GivenAnEvent();
@@ -184,8 +180,6 @@ public class EventAttendeesTests(PostgresFixture fixture)
     [Fact]
     public async Task Cancel_ForSomeoneElseByAnyoneButTheOrganizer_IsRefused()
     {
-        // Any member could delete anyone's RSVP: ?event cancel 7 @alice had no check at all.
-
         // Arrange
         await fixture.ResetAsync();
         int eventId = await GivenAnEvent();

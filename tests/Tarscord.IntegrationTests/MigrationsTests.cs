@@ -5,7 +5,6 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests;
 
-/// <summary>The DbUp migrations apply to an empty database and the context can read the result.</summary>
 [Collection(PostgresCollection.Name)]
 public class MigrationsTests(PostgresFixture fixture)
 {
@@ -42,7 +41,6 @@ public class MigrationsTests(PostgresFixture fixture)
             .SingleAsync();
 
         // Assert
-        // Counted from the shipped scripts, so adding one does not fail this for the wrong reason.
         applied.Should().Be(DatabaseMigrator.ScriptCount);
     }
 }

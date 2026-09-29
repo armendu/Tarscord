@@ -19,8 +19,6 @@ public class LoansCreateTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_WithAFractionalAmount_StoresTheCents()
     {
-        // amount_loaned was BIGINT, so 12.50 became 13 and no balance could ever settle.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
@@ -40,8 +38,6 @@ public class LoansCreateTests(PostgresFixture fixture)
     [InlineData(-50)]
     public async Task Handle_WithAnAmountThatIsNotPositive_ReturnsFailureAndStoresNothing(decimal amount)
     {
-        // The validator compiled, was never registered, and enforced nothing.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();

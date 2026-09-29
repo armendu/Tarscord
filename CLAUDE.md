@@ -98,7 +98,7 @@ does **not** protect a file that is still tracked. If you ever untrack it again,
 ## Commands
 
 ```sh
-docker compose up -d                           # PostgreSQL on port 5433
+docker compose up -d                           # PostgreSQL on port 5432
 dotnet build                                   # all four projects, via Tarscord.slnx
 dotnet test                                    # unit + integration
 dotnet test tests/Tarscord.Core.Tests          # unit only, no Docker needed
@@ -131,7 +131,7 @@ src/Tarscord.DbMigrator/       DbUp console app, Migrations/*.sql embedded as re
                                DatabaseMigrator is public so tests apply the real scripts
 tests/Tarscord.Core.Tests/         unit tests: no database, no gateway, no model
 tests/Tarscord.IntegrationTests/   Testcontainers PostgreSQL with the real migrations applied
-docker-compose.yml             PostgreSQL for running the bot, on host port 5433
+docker-compose.yml             PostgreSQL for running the bot
 .editorconfig                  the `dotnet new editorconfig` template, plus charset and severities
 Directory.Build.props          EnforceCodeStyleInBuild, so those severities reach the build
 ```
@@ -270,7 +270,7 @@ can still reach a cancelled event and be told it is cancelled; by name you canno
 **The connection string is the one key with no default.** Every other key falls back to
 `config.example.yml`, so forgetting one is silent; `tarscord-context:connection-string` is empty
 there and `AddDatabase` throws, because the alternative is a deployment quietly running against
-`localhost:5433` with the development password. A test pins it.
+`localhost` with the development password. A test pins it.
 
 **`config.yml` is optional; `config.example.yml` is not.** The example file is the defaults layer and
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
@@ -319,12 +319,6 @@ and that forward lags. Without both, the suite fails intermittently.
 **NSubstitute refuses a substitute created inside `Returns()`.** `discord.GetUserAsync(id).Returns(
 Task.FromResult(NewUser()))` throws `CouldNotSetReturnDueToNoLastCallException`. Build the inner
 substitute first, then pass it.
-
-**Write the database before calling Discord.** `Restrictions/Apply` and `Restrictions/Lift` both do.
-The other order can leave someone muted with no row, so nothing ever expires it; this way round a
-failed Discord call leaves a row the sweeper tidies up. `Lift` also checks for a stored restriction
-before touching the channel, so a "they are not restricted here" reply has not already changed
-permissions. Two tests pin the order, one by making Discord throw.
 
 **`?loan payback` picks the most recent open loan.** Not the oldest. That is what the original
 `LastOrDefault` was reaching for, and it is a behaviour choice, not an accident.
@@ -462,11 +456,6 @@ There is no service container for PostgreSQL: the integration suite starts its o
 Testcontainers, using the Docker daemon the runner already provides. There is no Ollama on the
 runner either, which is fine — the model is behind `IChatClient` and every test fakes it.
 
-It installs the SDK with an explicit `dotnet-version: 10.0.x` rather than
-`global-json-file: global.json`, deliberately: `global.json` pins `8.0.0` and leans on
-`rollForward: latestMajor` to reach a newer SDK, which works on a developer machine that has one
-but would leave a runner holding only 8.0.0 unable to build `net10.0`.
-
 It passes `-warnaserror`. The tree is warning-clean and the point is to keep it that way; the
 three `CS8604` warnings that used to be the baseline came from `AdminModule` handing a nullable
 `IUser` to a non-nullable parameter and are gone.
@@ -528,8 +517,9 @@ change. `?event remove`, `confirm`, `cancel` and `confirmed` were four such bodi
 be uncommented, because they called an `IEventAttendeesRepository` and an `IMapper` that do not exist
 in this repo, so they were rewritten against `TarscordContext`.
 
-**Write the database before calling Discord** in any handler that does both. See *Things that will
-bite you*.
+**In a handler that writes the database and calls Discord, order the two so the row is what still
+needs doing.** That is not the same order in both directions — see *`Apply` saves before calling
+Discord; `Lift` calls Discord before saving* under *Things that will bite you*.
 
 **Read the file before answering a question about it.** Every claim in this document that says
 "verified" was checked by running something. Answering from memory about this codebase has produced

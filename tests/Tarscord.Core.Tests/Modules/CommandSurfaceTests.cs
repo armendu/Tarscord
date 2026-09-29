@@ -7,14 +7,11 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Modules;
 
-/// <summary>?help is built from these attributes, so a missing one is an undescribable command.</summary>
 public class CommandSurfaceTests
 {
     [Fact]
     public async Task ModuleDiscovery_FindsTheWholeCommandSurface()
     {
-        // Guards the two tests below: they would pass trivially on an empty set.
-
         // Arrange
         using var commands = await BuildCommandServiceAsync();
 
@@ -44,8 +41,6 @@ public class CommandSurfaceTests
     [Fact]
     public async Task EveryModule_HasAName()
     {
-        // EventModule had none, so ?help showed the raw type name as a heading.
-
         // Arrange
         using var commands = await BuildCommandServiceAsync();
 
@@ -84,7 +79,7 @@ public class CommandSurfaceTests
             {
                 ["prefix"] = "?",
                 ["tarscord-context:connection-string"] =
-                    "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"
+                    "Host=localhost;Username=root;Password=password;Database=tarscord_db"
             })
             .Build();
 

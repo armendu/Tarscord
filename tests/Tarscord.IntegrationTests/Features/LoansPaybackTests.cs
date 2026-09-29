@@ -9,7 +9,6 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests.Features;
 
-/// <summary>Against PostgreSQL, because the defect was untranslatable LINQ, not arithmetic.</summary>
 [Collection(PostgresCollection.Name)]
 public class LoansPaybackTests(PostgresFixture fixture)
 {
@@ -21,8 +20,6 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForAnOpenLoan_RecordsThePayment()
     {
-        // The regression test: LastOrDefaultAsync threw before reaching the database.
-
         // Arrange
         await fixture.ResetAsync();
         await GivenALoan(amount: 20m, paid: 0m);
@@ -87,8 +84,6 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForAFractionalBalance_SettlesExactly()
     {
-        // While money was BIGINT this was impossible: 12.50 was stored as 13.
-
         // Arrange
         await fixture.ResetAsync();
         await GivenALoan(amount: 12.50m, paid: 0m);
@@ -135,8 +130,6 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForALoanTheOtherWayAround_DoesNotTouchIt()
     {
-        // alice lending to bob is not something bob's payback to alice can settle in reverse.
-
         // Arrange
         await fixture.ResetAsync();
         await using var arrangeContext = fixture.CreateContext();
@@ -157,8 +150,6 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [InlineData(-5)]
     public async Task Handle_WithAnAmountThatIsNotPositive_ReturnsFailure(decimal amount)
     {
-        // The validator was never registered, so a zero or negative payment mutated the balance.
-
         // Arrange
         await fixture.ResetAsync();
         await GivenALoan(amount: 20m, paid: 0m);
@@ -174,8 +165,6 @@ public class LoansPaybackTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForAPayment_StampsUpdated()
     {
-        // The handler had no TimeProvider, so a payback never recorded when it happened.
-
         // Arrange
         await fixture.ResetAsync();
         await GivenALoan(amount: 20m, paid: 0m);
@@ -212,7 +201,6 @@ public class LoansPaybackTests(PostgresFixture fixture)
             Created = Now.UtcDateTime.AddDays(-createdDaysAgo)
         };
 
-    // bob pays alice back.
     private static Update.Command NewCommand(decimal amount) =>
         new()
         {

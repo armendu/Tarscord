@@ -11,11 +11,10 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Setup;
 
-/// <summary>Guards the composition root: a missing registration fails here, not on one command.</summary>
 public class StartupTests
 {
     private const string ConnectionString =
-        "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db";
+        "Host=localhost;Username=root;Password=password;Database=tarscord_db";
 
     [Theory]
     [InlineData(null)]
@@ -23,8 +22,6 @@ public class StartupTests
     [InlineData("   ")]
     public void ConfigureServices_WithNoConnectionString_RefusesToStart(string? configured)
     {
-        // The one key with no default, so forgetting it cannot silently reach a dev database.
-
         // Arrange
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -81,8 +78,6 @@ public class StartupTests
     [Fact]
     public void ConfigureServices_ForTheDbContext_RefusesToResolveFromTheRoot()
     {
-        // A scoped DbContext from the root is shared process-wide; concurrent commands collided.
-
         // Arrange
         using var provider = BuildProvider();
 
@@ -97,8 +92,6 @@ public class StartupTests
     [MemberData(nameof(RequestHandlers))]
     public void ConfigureServices_ForAMediatRHandler_ResolvesItWithAllItsDependencies(Type handlerService)
     {
-        // Handlers resolve on demand, so an unregistered validator fails on one command only.
-
         // Arrange
         using var provider = BuildProvider();
         using var scope = provider.CreateScope();

@@ -1,7 +1,5 @@
 namespace Tarscord.IntegrationTests;
 
-/// <summary>Points Testcontainers at whichever Docker socket this machine has.</summary>
-/// <remarks>Rancher Desktop and Colima have no /var/run/docker.sock; DOCKER_HOST wins.</remarks>
 internal static class DockerEndpoint
 {
     private const string DockerHostVariable = "DOCKER_HOST";

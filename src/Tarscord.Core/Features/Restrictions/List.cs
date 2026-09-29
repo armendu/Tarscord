@@ -6,7 +6,6 @@ namespace Tarscord.Core.Features.Restrictions;
 
 internal static class List
 {
-    /// <summary>Restrictions whose time has run out and are still in force.</summary>
     public record Query : IRequest<ListResponse>;
 
     public record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);

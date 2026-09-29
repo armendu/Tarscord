@@ -18,8 +18,6 @@ public class EventsCreateTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_WithAValidDate_StoresTheOrganizerRatherThanTheDescription()
     {
-        // The handler assigned EventOrganizer = EventDescription, losing the organizer.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();

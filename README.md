@@ -89,7 +89,7 @@ Open `src/Tarscord.Core/Resources/config.yml` and set `tokens.discord` and
 `config.example.yml` is read first and supplies a default for every key except the connection
 string, which has none on purpose — the bot refuses to start rather than pointing itself at a
 database you did not choose. For the bundled compose stack use
-`Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db`.
+`Host=localhost;Username=root;Password=password;Database=tarscord_db`.
 
 ### 2. Turn on the Message Content intent
 
@@ -107,9 +107,7 @@ looks dead.
 docker compose up -d
 ```
 
-That brings up `tarscord-postgres` with the `tarscord_db` database, published on **port 5433**.
-5433 rather than the usual 5432 because a developer machine often already has something on 5432;
-the app's default connection string and the migrator's both point at 5433 to match.
+That brings up `tarscord-postgres` with the `tarscord_db` database on port 5432.
 
 ### 4. Create the schema
 
@@ -117,7 +115,7 @@ The migrator applies the SQL in `src/Tarscord.DbMigrator/Migrations/` with
 [DbUp](https://dbup.readthedocs.io). It takes the connection string as its first argument:
 
 ```sh
-dotnet run --project src/Tarscord.DbMigrator -- "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db"
+dotnet run --project src/Tarscord.DbMigrator -- "Host=localhost;Username=root;Password=password;Database=tarscord_db"
 ```
 
 Run with no argument and it falls back to exactly that localhost string.

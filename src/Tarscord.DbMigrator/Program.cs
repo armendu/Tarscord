@@ -6,7 +6,7 @@ static int RunDbMigration(string[] args)
 {
     var connectionString =
         args.FirstOrDefault()
-        ?? "Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db";
+        ?? "Host=localhost;Username=root;Password=password;Database=tarscord_db";
 
     var result = DatabaseMigrator.Upgrade(connectionString);
 

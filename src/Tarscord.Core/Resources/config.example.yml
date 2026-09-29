@@ -19,5 +19,5 @@ ollama:
     model: "llama3.1"
 
 tarscord-context:
-    # Required, no default. Compose stack: Host=localhost;Port=5433;Username=root;Password=password;Database=tarscord_db
+    # Required, no default. Compose stack: Host=localhost;Username=root;Password=password;Database=tarscord_db
     connection-string: ""

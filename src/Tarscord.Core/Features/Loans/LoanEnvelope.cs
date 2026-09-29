@@ -19,7 +19,6 @@ public class LoanEnvelope : IEmbeddedMessage
 
     public decimal AmountPaid { get; init; }
 
-    /// <summary>What is still owed.</summary>
     public decimal Outstanding => Amount - AmountPaid;
 
     public static LoanEnvelope FromEntity(Loan loan)
@@ -36,7 +35,6 @@ public class LoanEnvelope : IEmbeddedMessage
         };
     }
 
-    /// <summary>One line, shared by the list and the single-loan replies.</summary>
     public string ToSummary()
     {
         var summary = new StringBuilder();

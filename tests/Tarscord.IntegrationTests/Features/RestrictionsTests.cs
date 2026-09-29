@@ -22,8 +22,6 @@ public class RestrictionsTests(PostgresFixture fixture)
     [Fact]
     public async Task Apply_WithMinutes_RecordsWhenItExpires()
     {
-        // The minutes argument was parsed and ignored, so every mute was permanent.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
@@ -54,8 +52,6 @@ public class RestrictionsTests(PostgresFixture fixture)
     [Fact]
     public async Task Apply_WhenAlreadyInForce_ExtendsInsteadOfAddingASecondRow()
     {
-        // A partial unique index allows one restriction of a kind in force per user per channel.
-
         // Arrange
         await fixture.ResetAsync();
 
@@ -78,8 +74,6 @@ public class RestrictionsTests(PostgresFixture fixture)
     [Fact]
     public async Task Apply_ForTheSameUserInASecondChannel_IsTrackedSeparately()
     {
-        // This is what per-user columns could not express: two channels, two expiries.
-
         // Arrange
         await fixture.ResetAsync();
 
@@ -100,8 +94,6 @@ public class RestrictionsTests(PostgresFixture fixture)
     [Fact]
     public async Task Apply_OutsideAGuildChannel_ReturnsFailure()
     {
-        // The handler returned "", which became an embed Discord rejects.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
@@ -238,8 +230,6 @@ public class RestrictionsTests(PostgresFixture fixture)
     [Fact]
     public async Task Apply_WhenDiscordRefuses_StillLeavesARowToExpire()
     {
-        // Touching Discord first could leave someone muted with no row, so nothing ever lifted it.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
@@ -339,7 +329,6 @@ public class RestrictionsTests(PostgresFixture fixture)
 
     private static Lift.CommandHandler NewLiftHandler(TarscordContext context)
     {
-        // Built before any Returns() call: NSubstitute refuses a substitute created inside one.
         var user = NewUser();
 
         var channel = Substitute.For<IGuildChannel>();

@@ -2,8 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Tarscord.Core.Services;
 
-/// <summary>How sarcastic and how funny the bot is trying to be, and the prompt for it.</summary>
-/// <remarks>Seeded from config; the owner can change both at runtime.</remarks>
+/// <summary>How sarcastic and funny the bot is, seeded from config, settable at runtime.</summary>
 public sealed class BotPersonality
 {
     public const int MinimumLevel = 0;
@@ -22,7 +21,7 @@ public sealed class BotPersonality
 
     public int HumorLevel => Volatile.Read(ref _humorLevel);
 
-    /// <summary>Higher humour means a less predictable reply, so it steers sampling too.</summary>
+    /// <summary>Higher humour, less predictable reply.</summary>
     public float Temperature => 0.3f + HumorLevel * 0.07f;
 
     public string SystemPrompt =>

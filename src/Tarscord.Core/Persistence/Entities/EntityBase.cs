@@ -4,7 +4,6 @@ namespace Tarscord.Core.Persistence.Entities;
 
 public abstract class EntityBase
 {
-    // The surrogate key, matching SERIAL. A Discord snowflake belongs in its own column.
     [Column("id")]
     public int Id { get; set; }
 

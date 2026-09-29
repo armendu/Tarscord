@@ -9,8 +9,6 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_WithNoLoans_SaysSoOnlyOnce()
     {
-        // The module replied, then fell through with no return and sent a second, empty message.
-
         // Arrange
         var response = new List.ListResponse([], false);
 
@@ -25,8 +23,6 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_ForALoan_SaysWhoOwesWhom()
     {
-        // The old wording was "'bob' owns 'alice'", which reads as the opposite of the truth.
-
         // Arrange
         var response = new List.ListResponse([Loan(amount: 20m, paid: 0m)], false);
 

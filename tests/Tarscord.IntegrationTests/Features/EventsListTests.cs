@@ -6,7 +6,6 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests.Features;
 
-/// <summary>Runs the real query against PostgreSQL, the only way to know the LINQ translates.</summary>
 [Collection(PostgresCollection.Name)]
 public class EventsListTests(PostgresFixture fixture)
 {

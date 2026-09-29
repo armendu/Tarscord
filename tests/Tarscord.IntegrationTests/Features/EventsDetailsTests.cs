@@ -52,8 +52,6 @@ public class EventsDetailsTests(PostgresFixture fixture)
     [InlineData(-1)]
     public async Task Handle_ForAnIdThatCannotExist_SaysTheIdIsWrongRatherThanTheEventIsMissing(int eventId)
     {
-        // Both branches returned the same FailureResponse.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();

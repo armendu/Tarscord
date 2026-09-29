@@ -10,8 +10,6 @@ public class BotPersonalityTests
     [Fact]
     public void Levels_FromConfiguration_AreSeededFromIt()
     {
-        // sarcasm-level and humor-level have been in the config file all along, read by nobody.
-
         // Arrange
         var configuration = Build(sarcasm: "7", humor: "4");
 
@@ -60,8 +58,6 @@ public class BotPersonalityTests
     [Fact]
     public void SystemPrompt_AtAGivenLevel_MentionsThatLevel()
     {
-        // The levels only matter if they reach the model.
-
         // Arrange
         var personality = new BotPersonality(Build(sarcasm: "8", humor: "3"));
 

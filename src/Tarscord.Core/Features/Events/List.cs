@@ -13,7 +13,6 @@ internal static class List
 {
     private const int MaxListed = 25;
 
-    /// <summary>Every active event.</summary>
     public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
 
     public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos, bool More) : IEmbeddedMessage
@@ -49,7 +48,6 @@ internal static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), request.PerformedByUser);
 
-            // One row past the limit, so the reply can say there are more without a second query.
             var eventInfos = await context.EventInfos
                 .Where(eventInfo => eventInfo.IsActive)
                 .OrderBy(eventInfo => eventInfo.EventDate)

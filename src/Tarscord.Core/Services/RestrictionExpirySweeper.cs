@@ -7,7 +7,6 @@ using Tarscord.Core.Features.Restrictions;
 namespace Tarscord.Core.Services;
 
 /// <summary>Gives back permissions whose restriction has run out.</summary>
-/// <remarks>This is what makes the [minutes] argument mean anything.</remarks>
 public sealed class RestrictionExpirySweeper(
     IServiceScopeFactory scopeFactory,
     TimeProvider timeProvider,
@@ -41,8 +40,7 @@ public sealed class RestrictionExpirySweeper(
                         nameof(RestrictionExpirySweeper)),
                     cancellationToken);
 
-                // Lift reports "that channel is gone" and "I cannot find that user" as values. Ignored,
-                // they leave the row in force and it comes back on every tick with nothing logged.
+                // Ignored, a failure leaves the row in force and returns every tick.
                 result.Switch(
                     lifted => logger.LogInformation("Lifted {Kind} for {User} in {ChannelId}",
                         lifted.Kind, lifted.Username, lifted.ChannelId),
@@ -58,7 +56,6 @@ public sealed class RestrictionExpirySweeper(
         }
         catch (Exception exception)
         {
-            // If this loop dies, every future mute silently becomes permanent again.
             logger.LogError(exception, "Lifting expired restrictions failed");
         }
     }

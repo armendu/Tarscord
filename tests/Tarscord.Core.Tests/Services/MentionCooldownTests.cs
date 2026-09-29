@@ -26,8 +26,6 @@ public class MentionCooldownTests
     [Fact]
     public void TryReply_ForASecondMentionStraightAway_Refuses()
     {
-        // Every reply occupies the model for seconds, so one person cannot queue them up.
-
         // Arrange
         var cooldown = new MentionCooldown(new FakeTimeProvider());
         cooldown.TryReply(Alice);

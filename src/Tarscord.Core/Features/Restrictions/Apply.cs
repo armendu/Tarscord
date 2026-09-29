@@ -22,7 +22,6 @@ internal static class Apply
 
     public class CommandValidator : AbstractValidator<Command>
     {
-        // A year, so that AddMinutes cannot be handed something DateTime refuses.
         private const int MaximumMinutes = 365 * 24 * 60;
 
         public CommandValidator()
@@ -57,7 +56,7 @@ internal static class Apply
                     string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
             }
 
-            // Overwrites only exist on guild channels; this used to return "" and build an empty embed.
+            // Overwrites only exist on guild channels.
             if (command.ContextChannel is not IGuildChannel channel)
             {
                 return new FailureResponse("That only works in a server channel.");
@@ -74,7 +73,7 @@ internal static class Apply
                                  && !candidate.Lifted,
                     cancellationToken);
 
-            // Re-applying extends the existing row; the partial unique index forbids a second.
+            // Extends the existing row; the partial unique index forbids a second.
             if (inForce is null)
             {
                 inForce = new Restriction
@@ -97,8 +96,7 @@ internal static class Apply
                 inForce.Updated = now;
             }
 
-            // Stored before Discord is touched: the other order can leave someone muted with no row,
-            // which means nothing ever expires it.
+            // Stored first, or a failed save leaves someone muted with no row to expire.
             await context.SaveChangesAsync(cancellationToken);
 
             try
@@ -107,8 +105,7 @@ internal static class Apply
             }
             catch (HttpException exception)
             {
-                // Almost always the bot lacking Manage Roles on the channel, which is something the
-                // person who typed the command can fix. The row stays, so the sweeper tidies it up.
+                // Usually the bot lacking Manage Roles, which the caller can fix.
                 logger.LogWarning(exception, "Could not restrict {User} in {ChannelId}",
                     command.User.Username, command.ContextChannel.Id);
 

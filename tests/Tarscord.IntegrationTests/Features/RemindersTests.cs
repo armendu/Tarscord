@@ -20,8 +20,6 @@ public class RemindersTests(PostgresFixture fixture)
     [Fact]
     public async Task Create_ForAReminderInTheFuture_StoresItPending()
     {
-        // Reminders lived in a static SortedList and were lost on every restart.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
@@ -45,8 +43,6 @@ public class RemindersTests(PostgresFixture fixture)
     [InlineData(-5)]
     public async Task Create_WithMinutesThatAreNotPositive_ReturnsFailure(double minutes)
     {
-        // The module threw a bare Exception here, which was swallowed.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();
@@ -62,8 +58,6 @@ public class RemindersTests(PostgresFixture fixture)
     [Fact]
     public async Task Create_WithAnAbsurdlyDistantReminder_ReturnsFailureRatherThanThrowing()
     {
-        // DateTime arithmetic on an unbounded double throws ArgumentOutOfRangeException.
-
         // Arrange
         await fixture.ResetAsync();
         await using var context = fixture.CreateContext();

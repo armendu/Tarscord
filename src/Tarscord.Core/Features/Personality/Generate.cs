@@ -6,8 +6,7 @@ using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Features.Personality;
 
-/// <summary>Asks the local model for something to say.</summary>
-/// <remarks>No FailureResponse arm: the caller's fallback is used when the model is down.</remarks>
+/// <summary>Falls back to the caller's fixed line when the model is down.</summary>
 internal static class Generate
 {
     public record Command(string Prompt, string Fallback, string PerformedByUser)
@@ -18,7 +17,6 @@ internal static class Generate
         IChatClient chatClient,
         BotPersonality personality) : IRequestHandler<Command, GeneratedMessageEnvelope>
     {
-        // Past this a Discord reply reads as broken, and the canned line is better.
         private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(20);
 
         public async Task<GeneratedMessageEnvelope> Handle(
@@ -58,10 +56,7 @@ internal static class Generate
             }
             catch (Exception exception)
             {
-                // Everything except the caller's own cancellation, which the filter above rethrows.
-                // A closed list of exception types kept missing cases - a JsonException from a proxy
-                // answering ollama:url with HTML was the last one - and each miss broke the promise
-                // that the bot keeps working when the model does not.
+                // Everything but the caller's cancellation: a closed list kept missing cases.
                 logger.LogWarning(exception, "Asking the model failed; using a canned reply instead");
             }
 

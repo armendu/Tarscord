@@ -7,7 +7,6 @@ namespace Tarscord.Core.Tests.Extensions;
 
 public class ConfigurationExtensionsTests
 {
-
     [Fact]
     public void CommandPrefix_WhenConfigured_ReturnsIt()
     {
@@ -26,8 +25,6 @@ public class ConfigurationExtensionsTests
     [InlineData("")]
     public void CommandPrefix_WhenMissingOrEmpty_FallsBackToTheQuestionMark(string? configured)
     {
-        // Passing null straight to HasStringPrefix threw once per inbound message.
-
         // Arrange
         var configuration = Build(new Dictionary<string, string?> { ["prefix"] = configured });
 

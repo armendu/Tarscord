@@ -34,7 +34,6 @@ public static class InitializeBot
         {
             string? discordToken = _config["tokens:discord"];
 
-            // A configuration failure, not something a user can act on, so it throws.
             if (string.IsNullOrWhiteSpace(discordToken))
             {
                 throw new InvalidOperationException(

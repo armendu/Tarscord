@@ -9,8 +9,6 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-/// <summary>Gives a permission back, on request or on expiry.</summary>
-/// <remarks>Takes ids so the sweeper and ?unmute share one path.</remarks>
 internal static class Lift
 {
     public record Command(
@@ -58,9 +56,6 @@ internal static class Lift
                 return new FailureResponse("I cannot find that user any more.");
             }
 
-            // Discord first, which is the opposite of Apply. Marking the row lifted before the
-            // permission is actually back would leave the person denied with nothing left to find
-            // them: the sweeper only looks at rows where Lifted is false.
             await AllowInDiscordAsync(channel, user, command.Kind);
 
             inForce.Lifted = true;
@@ -80,7 +75,6 @@ internal static class Lift
                 return;
             }
 
-            // Inherit, not Allow: stop overriding the channel rather than grant something new.
             var restored = kind switch
             {
                 RestrictionKind.Mute => permissions.Modify(sendMessages: PermValue.Inherit),

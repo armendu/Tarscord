@@ -11,8 +11,6 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_WithNoEvents_SaysSoInsteadOfThrowing()
     {
-        // The module used to index EventInfos[0] with no emptiness check.
-
         // Arrange
         var response = new List.ListResponse([], false);
 
@@ -26,8 +24,6 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_WithSeveralEvents_ListsEveryOne()
     {
-        // The module showed only the first event's name, so it was wrong even when it worked.
-
         // Arrange
         var response = new List.ListResponse(
         [
@@ -48,8 +44,6 @@ public class ListTests
     [Fact]
     public void ToEmbeddedMessage_ForAnEvent_ShowsItsIdAndOrganizer()
     {
-        // The id is what ?event show takes, so a list without it is unusable.
-
         // Arrange
         var response = new List.ListResponse([Envelope(7, "Release party")], false);
 

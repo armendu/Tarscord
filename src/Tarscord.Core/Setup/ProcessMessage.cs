@@ -18,7 +18,6 @@ public static class ProcessMessage
         public required SocketMessage Message { get; init; }
     }
 
-    /// <summary>A bot answering another bot's messages never stops.</summary>
     internal static bool IsFromPerson(IUser author) => !author.IsBot && !author.IsWebhook;
 
     public class Handler(
@@ -56,7 +55,6 @@ public static class ProcessMessage
                 return false;
             }
 
-            // One scope per command; TarscordContext is scoped and was shared process-wide.
             using var scope = provider.CreateScope();
             var result = await commands.ExecuteAsync(context, argPos, scope.ServiceProvider);
 
@@ -75,7 +73,6 @@ public static class ProcessMessage
             bool wasMentioned,
             int argPos)
         {
-            // Reachable only because of RunMode.Sync; this used to be reported as success.
             if (result is ExecuteResult { Exception: not null } executeResult)
             {
                 logger.LogError(executeResult.Exception, "Command '{CommandText}' threw",
@@ -89,7 +86,6 @@ public static class ProcessMessage
 
             if (result.Error == CommandError.UnknownCommand)
             {
-                // Only a mention gets an answer; a typo after the prefix stays silent.
                 if (wasMentioned)
                 {
                     await AnswerMentionAsync(scope, context, argPos);
@@ -116,7 +112,6 @@ public static class ProcessMessage
                 return;
             }
 
-            // Each reply occupies the model for seconds, so one person cannot queue them up.
             if (!cooldown.TryReply(context.User.Id))
             {
                 logger.LogInformation("Mention from {User} ignored, still on cooldown",

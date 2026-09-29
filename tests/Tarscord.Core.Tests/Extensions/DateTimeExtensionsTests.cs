@@ -6,10 +6,8 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Extensions;
 
-/// <summary>What the parser rejects matters as much as what it accepts.</summary>
 public class DateTimeExtensionsTests
 {
-    // A Friday, so "next friday" has to roll forward a whole week rather than return today.
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Theory]
@@ -41,8 +39,6 @@ public class DateTimeExtensionsTests
     [InlineData("2026-12-24", "2026-12-24T00:00:00")]
     public void FromTextToDate_WithAnAbsoluteDate_ParsesIt(string input, string expected)
     {
-        // None of these worked before: the parser understood four phrasings and nothing else.
-
         // Arrange
         var timeProvider = new FakeTimeProvider(Now);
 
@@ -80,8 +76,6 @@ public class DateTimeExtensionsTests
     [InlineData("in -3 days")]
     public void FromTextToDate_WithTextItCannotRead_ReturnsNull(string input)
     {
-        // Unanchored patterns matched mid-sentence, and a large number threw out of the handler.
-
         // Arrange
         var timeProvider = new FakeTimeProvider(Now);
 
@@ -100,9 +94,6 @@ public class DateTimeExtensionsTests
     public void FromTextToDate_OnAHostThatIsNotInUtc_StillMeansTheDayTheUserNamed(
         string input, string expected)
     {
-        // Resolving a named day to local midnight and storing that as UTC moved it to the previous
-        // day, so "next friday" came back as a Thursday everywhere east of London.
-
         // Arrange
         var timeProvider = new FakeTimeProvider(Now);
         timeProvider.SetLocalTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin"));
@@ -117,8 +108,6 @@ public class DateTimeExtensionsTests
     [Fact]
     public void FromTextToDate_ForAnOffsetOnAHostThatIsNotInUtc_IsTheSameInstant()
     {
-        // An offset names an instant, so the zone must not move it.
-
         // Arrange
         var timeProvider = new FakeTimeProvider(Now);
         timeProvider.SetLocalTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin"));
@@ -137,8 +126,6 @@ public class DateTimeExtensionsTests
     [Fact]
     public void FromTextToDate_ForARelativeDate_ReturnsUtc()
     {
-        // The value goes straight into a timestamptz column.
-
         // Arrange
         var timeProvider = new FakeTimeProvider(Now);
 

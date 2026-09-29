@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Tarscord.Core.Tests.Features.Personality;
 
-/// <summary>Every branch is testable without Ollama, which is the point.</summary>
 public class GenerateTests
 {
     private const string Fallback = "I dare you to write that message, bob.";
@@ -38,8 +37,6 @@ public class GenerateTests
     [Fact]
     public async Task Handle_WhenOllamaIsNotRunning_ReturnsTheCannedLine()
     {
-        // This is the live case on a machine with no ollama serve: the command has to keep working.
-
         // Arrange
         var chatClient = Substitute.For<IChatClient>();
         chatClient
@@ -121,8 +118,6 @@ public class GenerateTests
     [Fact]
     public async Task Handle_WhenTheCallerCancels_DoesNotSwallowTheCancellation()
     {
-        // A cancelled command is not the same thing as a model that is down.
-
         // Arrange
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();

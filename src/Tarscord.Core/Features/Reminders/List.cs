@@ -6,7 +6,6 @@ namespace Tarscord.Core.Features.Reminders;
 
 internal static class List
 {
-    /// <summary>Reminders that are due and not yet sent.</summary>
     public record Query : IRequest<ListResponse>;
 
     public record ListResponse(IReadOnlyList<ReminderEnvelope> Reminders);

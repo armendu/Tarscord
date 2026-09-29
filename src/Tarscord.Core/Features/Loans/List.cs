@@ -13,7 +13,6 @@ internal static class List
 {
     private const int MaxListed = 25;
 
-    /// <summary>The caller's loans that are not yet settled, either side.</summary>
     public record Query(ulong PerformedByUserId, string PerformedByUser)
         : IRequest<ListResponse>, IPerformedByUser;
 
@@ -51,7 +50,6 @@ internal static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), request.PerformedByUser);
 
-            // By id, not username: a rename used to orphan the whole history.
             var loans = await context.Loans
                 .Where(loan => (loan.LoanedFromId == request.PerformedByUserId
                                 || loan.LoanedToId == request.PerformedByUserId)

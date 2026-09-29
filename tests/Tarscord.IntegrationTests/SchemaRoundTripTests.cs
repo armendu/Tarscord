@@ -5,7 +5,6 @@ using Xunit;
 
 namespace Tarscord.IntegrationTests;
 
-/// <summary>Proves the C# model and the migrated schema agree.</summary>
 [Collection(PostgresCollection.Name)]
 public class SchemaRoundTripTests(PostgresFixture fixture)
 {
@@ -162,8 +161,6 @@ public class SchemaRoundTripTests(PostgresFixture fixture)
     [Fact]
     public async Task Restrictions_StoredKind_IsReadableInTheDatabase()
     {
-        // The column holds the name rather than an integer whose meaning lives only in C#.
-
         // Arrange
         await using var context = fixture.CreateContext();
 

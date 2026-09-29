@@ -9,8 +9,6 @@ public class LoanEnvelopeTests
     [Fact]
     public void ToEmbeddedMessage_ForANewLoan_SaysWhoOwesWhomHowMuch()
     {
-        // The reply used to be "'Loan alice bob" - a stray quote, no verb, and no amount at all.
-
         // Arrange
         var envelope = Envelope(amount: 20m, paid: 0m);
 

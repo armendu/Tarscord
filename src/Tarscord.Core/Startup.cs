@@ -18,7 +18,6 @@ public class Startup
 
     public Startup()
     {
-        // The example file is the defaults layer, so a clone without config.yml still starts.
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddYamlFile("Resources/config.example.yml", optional: false, reloadOnChange: true)
@@ -35,7 +34,6 @@ public class Startup
         var services = new ServiceCollection();
         ConfigureServices(services, Configuration);
 
-        // Makes a scoped service resolved from the root a startup failure, not a concurrency bug.
         var provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateScopes = true,
@@ -55,8 +53,6 @@ public class Startup
         await Task.Delay(-1);
     }
 
-    /// <summary>The local model, behind Microsoft.Extensions.AI's abstraction.</summary>
-    /// <remarks>Nothing connects here; a handler falls back if the model is down.</remarks>
     private static IChatClient CreateChatClient(IConfiguration configuration)
     {
         string url = configuration["ollama:url"] ?? "http://localhost:11434";
@@ -77,10 +73,8 @@ public class Startup
             .AddSingleton(new CommandService(new CommandServiceConfig
             {
                 LogLevel = LogSeverity.Verbose,
-                // Sync: with Async, ExecuteAsync returns success before the body runs.
                 DefaultRunMode = RunMode.Sync,
             }))
-            // Also as IDiscordClient, so handlers can depend on the interface and be tested.
             .AddSingleton<IDiscordClient>(provider => provider.GetRequiredService<DiscordSocketClient>())
             .AddSingleton<CommandHandler>()
             .AddSingleton<StartupService>()
@@ -94,7 +88,6 @@ public class Startup
             .AddSingleton(configuration)
             .AddDatabase(configuration)
             .AddSingleton(TimeProvider.System)
-            // No validation pipeline: a validator missing from this list does nothing.
             .AddScoped<IValidator<Features.Events.Create.Command>, Features.Events.Create.CommandValidator>()
             .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
             .AddScoped<IValidator<Features.Events.Delete.Command>, Features.Events.Delete.CommandValidator>()

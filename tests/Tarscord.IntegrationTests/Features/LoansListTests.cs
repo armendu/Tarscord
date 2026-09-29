@@ -17,8 +17,6 @@ public class LoansListTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForAUserWhoRenamedThemselves_StillFindsTheirLoans()
     {
-        // The query matched on username, so a display-name change orphaned the whole history.
-
         // Arrange
         await fixture.ResetAsync();
         await using var arrangeContext = fixture.CreateContext();
@@ -78,8 +76,6 @@ public class LoansListTests(PostgresFixture fixture)
     [Fact]
     public async Task Handle_ForALoanTheUserOwes_IncludesIt()
     {
-        // Both sides of a loan are the user's business.
-
         // Arrange
         await fixture.ResetAsync();
         await using var arrangeContext = fixture.CreateContext();
