@@ -1,11 +1,15 @@
+using Discord;
 using Discord.Commands;
+using MediatR;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to generate random numbers")]
-public class RandomNumberModule(IConfigurationRoot config) : ModuleBase<SocketCommandContext>
+public class RandomNumberModule(IMediator mediator, IConfigurationRoot config)
+    : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: random {lower limit} {upper limit}
@@ -25,6 +29,15 @@ public class RandomNumberModule(IConfigurationRoot config) : ModuleBase<SocketCo
 
         int generatedNumber = (int)Random.Shared.NextInt64(min, (long)max + 1);
 
-        await ReplyAsync(embed: generatedNumber.ToString().EmbedMessage());
+        using var typingState = Context.Channel.EnterTypingState();
+
+        // The model only announces the number, it never draws it.
+        var response = await mediator.Send(new Generate.Command(
+            Prompt: $"Announce that the random number drawn between {min} and {max} is {generatedNumber}. " +
+                    "Quote that number exactly and do not offer a different one.",
+            Fallback: generatedNumber.ToString(),
+            PerformedByUser: Context.User.Username));
+
+        await ReplyAsync(response.ToReplyText(), allowedMentions: AllowedMentions.None);
     }
 }

@@ -149,7 +149,7 @@ Three keys in `src/Tarscord.Core/Resources/config.yml` actually do something:
 
 ### The local model
 
-`?dare` and replies to a mention are written by a local LLM through
+`?dare`, `?random` and replies to a mention are written by a local LLM through
 [Ollama](https://ollama.com), shaped by `sarcasm-level` and `humor-level`:
 
 ```sh
@@ -158,7 +158,8 @@ ollama serve
 ```
 
 It is optional. If nothing answers on `ollama.url`, the bot logs a warning and replies with a fixed
-line instead, so no command breaks because the model is down. Every other reply — loans, events,
+line instead, so no command breaks because the model is down. `?random` still draws its number
+with `Random.Shared` either way; the model only announces it. Every other reply — loans, events,
 help — is deterministic and never goes near the model.
 
 `?sarcasm-level 8` and `?humor-level 3` change the voice while the bot is running. They are held in
