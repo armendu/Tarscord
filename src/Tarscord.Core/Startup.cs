@@ -86,7 +86,7 @@ public class Startup
             .AddSingleton<ReminderDispatcher>()
             .AddSingleton<RestrictionExpirySweeper>()
             .AddSingleton<BotPersonality>()
-            .AddSingleton<MentionCooldown>()
+            .AddSingleton<GenerationCooldown>()
             .AddSingleton(CreateChatClient(configuration))
             .AddLogging(builder => builder.AddSimpleConsole(options => options.TimestampFormat = "HH:mm:ss "))
             .AddSingleton(configuration)

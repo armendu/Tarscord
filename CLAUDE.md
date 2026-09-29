@@ -283,6 +283,14 @@ there and `AddDatabase` throws, because the alternative is a deployment quietly 
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
 the example with a placeholder or nothing will read it. Both are copied to the output directory.
 
+**A generated reply is on a 5 second timeout and a 20 second per-user cooldown.** Both are about the
+gateway, not the model: `DefaultRunMode` is `Sync` and `CommandHandler` returns the task it gets, so
+the command body runs on the gateway callback and a slow model delays every other event. `Generate`
+owns the timeout; `GenerationCooldown.TryGenerate` is checked by each caller that can generate, and a
+caller on cooldown skips the model and replies with the same fallback it would have passed. Measured
+on this machine, a warm `llama3.1` answers one of these prompts in about half a second and a cold load
+took 4.5 seconds, so the first call after Ollama idles can lose the race and fall back.
+
 **Ollama is optional at runtime and must stay that way.** `Features/Personality/Generate.cs` has no
 `FailureResponse` arm: on any transport failure it logs a warning and returns the caller's fixed
 line. It also skips the request outright when `ollama:url` or `ollama:model` is blank, so an

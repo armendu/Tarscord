@@ -2,15 +2,15 @@ using System.Collections.Concurrent;
 
 namespace Tarscord.Core.Services;
 
-/// <summary>Stops one person keeping the model busy by mentioning the bot over and over.</summary>
-public sealed class MentionCooldown(TimeProvider timeProvider)
+/// <summary>Stops one person keeping the model busy, whether by mention or by command.</summary>
+public sealed class GenerationCooldown(TimeProvider timeProvider)
 {
     private static readonly TimeSpan PerUser = TimeSpan.FromSeconds(20);
 
     private readonly ConcurrentDictionary<ulong, DateTimeOffset> _lastReply = new();
 
-    /// <summary>True when this user is due a reply, which also starts their next cooldown.</summary>
-    public bool TryReply(ulong userId)
+    /// <summary>True when this user is due a generated reply, which starts their next cooldown.</summary>
+    public bool TryGenerate(ulong userId)
     {
         var now = timeProvider.GetUtcNow();
 

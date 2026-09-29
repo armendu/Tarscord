@@ -4,11 +4,15 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Personality;
+using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to interact with the bot")]
-public class InteractionModule(IMediator mediator, IConfigurationRoot config) : ModuleBase<SocketCommandContext>
+public class InteractionModule(
+    IMediator mediator,
+    IConfigurationRoot config,
+    GenerationCooldown cooldown) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: dare {user}
@@ -25,14 +29,21 @@ public class InteractionModule(IMediator mediator, IConfigurationRoot config) : 
             return;
         }
 
-        using var typingState = Context.Channel.EnterTypingState();
+        string reply = $"I dare you to write that message, {user.Username}.";
 
-        var response = await mediator.Send(new Generate.Command(
-            Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
-                    "Address them directly.",
-            Fallback: $"I dare you to write that message, {user.Username}.",
-            PerformedByUser: Context.User.Username));
+        if (cooldown.TryGenerate(Context.User.Id))
+        {
+            using var typingState = Context.Channel.EnterTypingState();
 
-        await ReplyAsync(response.ToReplyText(), allowedMentions: AllowedMentions.None);
+            var response = await mediator.Send(new Generate.Command(
+                Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
+                        "Address them directly.",
+                Fallback: reply,
+                PerformedByUser: Context.User.Username));
+
+            reply = response.ToReplyText();
+        }
+
+        await ReplyAsync(reply, allowedMentions: AllowedMentions.None);
     }
 }

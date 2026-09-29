@@ -25,7 +25,7 @@ public static class ProcessMessage
         CommandService commands,
         IConfigurationRoot config,
         IServiceProvider provider,
-        MentionCooldown cooldown,
+        GenerationCooldown cooldown,
         ILogger<Handler> logger)
         : IRequestHandler<Command, bool>
     {
@@ -112,7 +112,7 @@ public static class ProcessMessage
                 return;
             }
 
-            if (!cooldown.TryReply(context.User.Id))
+            if (!cooldown.TryGenerate(context.User.Id))
             {
                 logger.LogInformation("Mention from {User} ignored, still on cooldown",
                     context.User.Username);

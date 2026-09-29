@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Features.Personality;
+using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules;
 
@@ -14,11 +15,13 @@ public class EventModule : ModuleBase<SocketCommandContext>
 {
     private readonly IMediator _mediator;
     private readonly IConfigurationRoot _config;
+    private readonly GenerationCooldown _cooldown;
 
-    public EventModule(IMediator mediator, IConfigurationRoot config)
+    public EventModule(IMediator mediator, IConfigurationRoot config, GenerationCooldown cooldown)
     {
         _mediator = mediator;
         _config = config;
+        _cooldown = cooldown;
     }
 
     /// <summary>
@@ -29,7 +32,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     {
         var events = await _mediator.Send(new List.Query(Context.User.Username));
 
-        if (events.EventInfos.Count > 0)
+        if (events.EventInfos.Count > 0 && _cooldown.TryGenerate(Context.User.Id))
         {
             using var typingState = Context.Channel.EnterTypingState();
 

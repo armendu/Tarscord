@@ -20,7 +20,8 @@ internal static class Generate
         IConfigurationRoot configuration,
         BotPersonality personality) : IRequestHandler<Command, GeneratedMessageEnvelope>
     {
-        private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(20);
+        // The gateway callback waits on this, so it is a stall budget rather than a model budget.
+        private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(5);
 
         public async Task<GeneratedMessageEnvelope> Handle(
             Command command,
