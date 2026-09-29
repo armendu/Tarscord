@@ -55,10 +55,13 @@ public class Startup
 
     private static IChatClient CreateChatClient(IConfiguration configuration)
     {
-        string url = configuration["ollama:url"] ?? "http://localhost:11434";
-        string model = configuration["ollama:model"] ?? "llama3.1";
+        string url = configuration["ollama:url"] ?? string.Empty;
+        string model = configuration["ollama:model"] ?? string.Empty;
 
-        return new OllamaApiClient(new Uri(url), model);
+        // Blank config means the model is off, and Generate skips it, so this only has to resolve.
+        return Uri.TryCreate(url, UriKind.Absolute, out var address) && model.Length > 0
+            ? new OllamaApiClient(address, model)
+            : new OllamaApiClient(new Uri("http://localhost:11434"), "llama3.1");
     }
 
     internal static void ConfigureServices(IServiceCollection services, IConfigurationRoot configuration)

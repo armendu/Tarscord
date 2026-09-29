@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Services;
@@ -15,6 +16,7 @@ internal static class Generate
     public class CommandHandler(
         ILogger<CommandHandler> logger,
         IChatClient chatClient,
+        IConfigurationRoot configuration,
         BotPersonality personality) : IRequestHandler<Command, GeneratedMessageEnvelope>
     {
         private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(20);
@@ -25,6 +27,11 @@ internal static class Generate
         {
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
                 nameof(Generate), command.PerformedByUser);
+
+            if (!IsConfigured())
+            {
+                return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
+            }
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(GenerationTimeout);
@@ -62,5 +69,10 @@ internal static class Generate
 
             return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
         }
+
+        /// <summary>No address or no model means there is nothing to ask, so don't try.</summary>
+        private bool IsConfigured() =>
+            !string.IsNullOrWhiteSpace(configuration["ollama:url"])
+            && !string.IsNullOrWhiteSpace(configuration["ollama:model"]);
     }
 }

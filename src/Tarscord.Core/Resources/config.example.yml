@@ -12,8 +12,8 @@ tokens:
 sarcasm-level: 0
 humor-level: 0
 
-# The local model the bot talks through. Tarscord works without it: if nothing answers at this
-# address, ?dare, ?random and replies to a mention fall back to fixed lines.
+# The local model the bot talks through. Tarscord works without it: leave either value blank, or let
+# nothing answer at this address, and every generated line falls back to a fixed one.
 ollama:
     url: "http://localhost:11434"
     model: "llama3.1"

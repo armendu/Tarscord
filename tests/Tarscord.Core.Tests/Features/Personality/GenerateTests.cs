@@ -137,20 +137,42 @@ public class GenerateTests
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Handle_WithNoOllamaConfigured_ReturnsTheCannedLineWithoutAsking(string? ollamaUrl)
+    {
+        // Arrange
+        var chatClient = Substitute.For<IChatClient>();
+        var handler = NewHandler(chatClient, ollamaUrl: ollamaUrl);
+
+        // Act
+        var response = await handler.Handle(NewCommand(), CancellationToken.None);
+
+        // Assert
+        response.Message.Should().Be(Fallback);
+        await chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default!, default, default);
+    }
+
     private static Generate.Command NewCommand() =>
         new("Dare bob to say it out loud.", Fallback, "alice");
 
-    private static Generate.CommandHandler NewHandler(IChatClient chatClient, string sarcasmLevel = "5")
+    private static Generate.CommandHandler NewHandler(
+        IChatClient chatClient, string sarcasmLevel = "5", string? ollamaUrl = "http://localhost:11434")
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["sarcasm-level"] = sarcasmLevel,
-                ["humor-level"] = "5"
+                ["humor-level"] = "5",
+                ["ollama:url"] = ollamaUrl,
+                ["ollama:model"] = "llama3.1"
             })
             .Build();
 
         return new Generate.CommandHandler(
-            NullLogger<Generate.CommandHandler>.Instance, chatClient, new BotPersonality(configuration));
+            NullLogger<Generate.CommandHandler>.Instance, chatClient, configuration,
+            new BotPersonality(configuration));
     }
 }
