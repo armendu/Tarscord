@@ -275,6 +275,13 @@ but `event_infos.event_organizer`, which `v1.00` made `VARCHAR(200)` and no migr
 validator that disagrees with its column turns a readable reply into an unhandled Postgres error, so
 change the migration and the constant together.
 
+**Nothing is scoped to a guild, so the bot is single-guild by assumption.** No table has a
+`guild_id` column and no query filters on one, and `event_infos.id` is `SERIAL`. In a second guild,
+`?event list` and `?event confirmed` would show the first guild's events and attendee names, and
+`?event confirm` would write into them. Deleting and cancelling are safe, they check
+`EventOrganizerId`. Loans filter by user id; reminders and restrictions are channel-scoped. Adding a
+column and a predicate is the fix and it is its own change.
+
 **An event can be named instead of numbered.** `EventInfos.MatchAsync` takes the text as an id when
 it parses as one, otherwise as a name, and by name it takes the latest **active** event. So by id you
 can still reach a cancelled event and be told it is cancelled; by name you cannot see it at all.
