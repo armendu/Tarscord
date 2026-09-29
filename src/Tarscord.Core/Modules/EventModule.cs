@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
+using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Modules;
 
@@ -26,9 +27,25 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("list"), Summary("Lists all events")]
     public async Task ListEvents()
     {
-        var eventInfoList = await _mediator.Send(new List.Query(Context.User.Username));
+        var events = await _mediator.Send(new List.Query(Context.User.Username));
 
-        await ReplyAsync(embed: eventInfoList.ToEmbeddedMessage());
+        if (events.EventInfos.Count > 0)
+        {
+            using var typingState = Context.Channel.EnterTypingState();
+
+            // Only the heading is voiced; the list itself stays deterministic.
+            var heading = await _mediator.Send(new Generate.Command(
+                Prompt: $"Write the single line that introduces a list of {events.EventInfos.Count} " +
+                        "upcoming events. The events are listed under it, so name none of them and " +
+                        "invent nothing. Reply with that one line only, at most twelve words.",
+                Fallback: List.DefaultHeading,
+                PerformedByUser: Context.User.Username));
+
+            // The model sometimes quotes the line or tacks a list of its own under it.
+            events = events with { Heading = heading.Message.Split('\n')[0].Trim(' ', '"') };
+        }
+
+        await ReplyAsync(embed: events.ToEmbeddedMessage());
     }
 
     /// <summary>

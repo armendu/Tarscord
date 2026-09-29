@@ -278,9 +278,13 @@ the example with a placeholder or nothing will read it. Both are copied to the o
 
 **Ollama is optional at runtime and must stay that way.** `Features/Personality/Generate.cs` has no
 `FailureResponse` arm: on any transport failure it logs a warning and returns the caller's fixed
-line. If you add something that talks to the model, it degrades the same way. Nothing that people
-rely on reading — loans, events, help — goes near it. `?random` is the edge of that: the model
-announces the draw, it never makes it.
+line. It also skips the request outright when `ollama:url` or `ollama:model` is blank, so an
+unconfigured bot takes the fallback without waiting on a call that cannot work. If you add something
+that talks to the model, it degrades the same way.
+
+What the model is allowed to touch is the *voice*, never the data: `?dare` and a reply to a mention
+are entirely generated, and `?random` and `?event list` generate only the line around a number and a
+list that were both produced deterministically. Never route the numbers or the rows through it.
 
 **`Apply` saves before calling Discord; `Lift` calls Discord before saving.** Opposite orders, for
 the same reason — leave the row as the thing that still needs doing. If `Apply` denied in Discord

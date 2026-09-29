@@ -12,10 +12,14 @@ namespace Tarscord.Core.Features.Events;
 internal static class List
 {
     private const int MaxListed = 25;
+    public const string DefaultHeading = "Here are all the events:";
 
     public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
 
-    public record ListResponse(IReadOnlyList<EventInfoEnvelope> EventInfos, bool More) : IEmbeddedMessage
+    public record ListResponse(
+        IReadOnlyList<EventInfoEnvelope> EventInfos,
+        bool More,
+        string Heading = DefaultHeading) : IEmbeddedMessage
     {
         public Embed ToEmbeddedMessage()
         {
@@ -36,7 +40,7 @@ internal static class List
                 events.Append("...and more.");
             }
 
-            return "Here are all the events:".EmbedMessage(events.ToString());
+            return Heading.EmbedMessage(events.ToString());
         }
     }
 

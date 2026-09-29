@@ -7,6 +7,7 @@ namespace Tarscord.Core.Tests.Features.Events;
 public class ListTests
 {
     private const string Organizer = "alice";
+    private const string GeneratedHeading = "Three things you will find an excuse to miss:";
 
     [Fact]
     public void ToEmbeddedMessage_WithNoEvents_SaysSoInsteadOfThrowing()
@@ -68,6 +69,32 @@ public class ListTests
 
         // Assert
         embed.Description.Should().Contain("Release party").And.NotContain(" on ");
+    }
+
+    [Fact]
+    public void ToEmbeddedMessage_WithNoHeadingOfItsOwn_FallsBackToTheFixedOne()
+    {
+        // Arrange
+        var response = new List.ListResponse([Envelope(1, "Release party")], false);
+
+        // Act
+        var embed = response.ToEmbeddedMessage();
+
+        // Assert
+        embed.Title.Should().Be(List.DefaultHeading);
+    }
+
+    [Fact]
+    public void ToEmbeddedMessage_WithAGeneratedHeading_UsesItAsTheTitle()
+    {
+        // Arrange
+        var response = new List.ListResponse([Envelope(1, "Release party")], false, GeneratedHeading);
+
+        // Act
+        var embed = response.ToEmbeddedMessage();
+
+        // Assert
+        embed.Title.Should().Be(GeneratedHeading);
     }
 
     private static EventInfoEnvelope Envelope(int eventId, string eventName) =>
