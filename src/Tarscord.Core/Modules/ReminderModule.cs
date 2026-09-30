@@ -1,12 +1,11 @@
 using Discord.Commands;
-using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Reminders;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to create reminders")]
-public class ReminderModule(IMediator mediator) : ModuleBase<SocketCommandContext>
+public class ReminderModule(Create.Handle create) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: remindme {minutes} {message}
@@ -17,13 +16,15 @@ public class ReminderModule(IMediator mediator) : ModuleBase<SocketCommandContex
         [Summary("What to remind you about")] [Remainder]
         string message)
     {
-        var response = await mediator.Send(new Create.Command(
-            Context.User.Id,
-            Context.Channel.Id,
-            Context.User.Username,
-            message,
-            minutes,
-            Context.User.Username));
+        var response = await create(
+            new Create.Command(
+                Context.User.Id,
+                Context.Channel.Id,
+                Context.User.Username,
+                message,
+                minutes,
+                Context.User.Username),
+            CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 

@@ -1,28 +1,36 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Reminders;
 
-internal static class List
+public static class List
 {
-    public record Query : IRequest<ListResponse>;
+    public sealed record ListResponse(IReadOnlyList<ReminderEnvelope> Reminders);
 
-    public record ListResponse(IReadOnlyList<ReminderEnvelope> Reminders);
+    public delegate Task<ListResponse> Handle(CancellationToken cancellationToken);
 
-    public class QueryHandler(TarscordContext context, TimeProvider timeProvider)
-        : IRequestHandler<Query, ListResponse>
-    {
-        public async Task<ListResponse> Handle(Query query, CancellationToken cancellationToken)
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handle>(provider =>
         {
-            var now = timeProvider.GetUtcNow().UtcDateTime;
+            var context = provider.GetRequiredService<TarscordContext>();
+            var timeProvider = provider.GetRequiredService<TimeProvider>();
 
-            var due = await context.Reminders
-                .Where(reminder => !reminder.Sent && reminder.RemindAt <= now)
-                .OrderBy(reminder => reminder.RemindAt)
-                .ToListAsync(cancellationToken);
+            return cancellationToken => HandleAsync(context, timeProvider, cancellationToken);
+        });
 
-            return new ListResponse(due.ConvertAll(ReminderEnvelope.FromEntity));
-        }
+    public static async Task<ListResponse> HandleAsync(
+        TarscordContext context,
+        TimeProvider timeProvider,
+        CancellationToken cancellationToken)
+    {
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+
+        var due = await context.Reminders
+            .Where(reminder => !reminder.Sent && reminder.RemindAt <= now)
+            .OrderBy(reminder => reminder.RemindAt)
+            .ToListAsync(cancellationToken);
+
+        return new ListResponse(due.ConvertAll(ReminderEnvelope.FromEntity));
     }
 }

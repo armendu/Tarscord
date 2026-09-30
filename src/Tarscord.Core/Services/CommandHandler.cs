@@ -1,5 +1,4 @@
 using Discord.WebSocket;
-using MediatR;
 using Tarscord.Core.Setup;
 
 namespace Tarscord.Core.Services;
@@ -7,20 +6,20 @@ namespace Tarscord.Core.Services;
 public class CommandHandler
 {
     private readonly DiscordSocketClient _discord;
-    private readonly IMediator _mediator;
+    private readonly ProcessMessage.Handle _processMessage;
 
     public CommandHandler(
         DiscordSocketClient discord,
-        IMediator mediator)
+        ProcessMessage.Handle processMessage)
     {
         _discord = discord;
-        _mediator = mediator;
+        _processMessage = processMessage;
 
         _discord.MessageReceived += OnMessageReceivedAsync;
     }
 
     private Task OnMessageReceivedAsync(SocketMessage message)
     {
-        return _mediator.Send(new ProcessMessage.Command { Message = message });
+        return _processMessage(message);
     }
 }

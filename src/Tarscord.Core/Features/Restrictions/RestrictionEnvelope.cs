@@ -5,7 +5,7 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-internal record RestrictionEnvelope(
+public sealed record RestrictionEnvelope(
     int RestrictionId,
     ulong UserId,
     string Username,

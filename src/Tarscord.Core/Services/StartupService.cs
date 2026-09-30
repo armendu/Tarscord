@@ -1,12 +1,11 @@
-using MediatR;
 using Tarscord.Core.Setup;
 
 namespace Tarscord.Core.Services;
 
-public class StartupService(IMediator mediator)
+public class StartupService(InitializeBot.Handle initializeBot)
 {
     public async Task StartAsync()
     {
-        await mediator.Send(new InitializeBot.Command());
+        await initializeBot();
     }
 }

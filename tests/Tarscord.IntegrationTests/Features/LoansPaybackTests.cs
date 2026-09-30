@@ -26,7 +26,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(5m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(5m), CancellationToken.None);
 
         // Assert
         response.AsT0.AmountPaid.Should().Be(5m);
@@ -41,7 +41,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        await NewHandler(context).Handle(NewCommand(7.50m), CancellationToken.None);
+        await NewHandler(context).Invoke(NewCommand(7.50m), CancellationToken.None);
 
         // Assert
         await using var verification = fixture.CreateContext();
@@ -57,7 +57,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(5m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(5m), CancellationToken.None);
 
         // Assert
         response.AsT0.Outstanding.Should().Be(0m);
@@ -72,7 +72,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(10m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(10m), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("more than the 5.00 still owed");
@@ -90,7 +90,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(12.50m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(12.50m), CancellationToken.None);
 
         // Assert
         response.AsT0.Outstanding.Should().Be(0m);
@@ -106,7 +106,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(5m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(5m), CancellationToken.None);
 
         // Assert
         response.AsT0.Amount.Should().Be(30m);
@@ -121,7 +121,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(5m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(5m), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("no open loan");
@@ -139,7 +139,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(5m), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(5m), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("no open loan");
@@ -156,7 +156,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(amount), CancellationToken.None);
+        var response = await NewHandler(context).Invoke(NewCommand(amount), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("more than nothing");
@@ -171,7 +171,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        await NewHandler(context).Handle(NewCommand(5m), CancellationToken.None);
+        await NewHandler(context).Invoke(NewCommand(5m), CancellationToken.None);
 
         // Assert
         await using var verification = fixture.CreateContext();
@@ -212,7 +212,7 @@ public class LoansPaybackTests(PostgresFixture fixture)
             PerformedByUser = "bob"
         };
 
-    private static Update.CommandHandler NewHandler(TarscordContext context) =>
-        new(NullLogger<Update.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
-            new Update.CommandValidator());
+    private static Update.Handle NewHandler(TarscordContext context) =>
+        (command, cancellationToken) => Update.HandleAsync(command, context, new FakeTimeProvider(Now),
+            new Update.CommandValidator(), NullLogger.Instance, cancellationToken);
 }

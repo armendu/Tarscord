@@ -1,6 +1,5 @@
 using Discord;
 using Discord.Commands;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Personality;
@@ -10,7 +9,7 @@ namespace Tarscord.Core.Modules;
 
 [Name("Commands to interact with the bot")]
 public class InteractionModule(
-    IMediator mediator,
+    Generate.Handle generate,
     IConfigurationRoot config,
     GenerationCooldown cooldown) : ModuleBase<SocketCommandContext>
 {
@@ -35,11 +34,13 @@ public class InteractionModule(
         {
             using var typingState = Context.Channel.EnterTypingState();
 
-            var response = await mediator.Send(new Generate.Command(
-                Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
-                        "Address them directly.",
-                Fallback: reply,
-                PerformedByUser: Context.User.Username));
+            var response = await generate(
+                new Generate.Command(
+                    Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
+                            "Address them directly.",
+                    Fallback: reply,
+                    PerformedByUser: Context.User.Username),
+                CancellationToken.None);
 
             reply = response.ToReplyText();
         }

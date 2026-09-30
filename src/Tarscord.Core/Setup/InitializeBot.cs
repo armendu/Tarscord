@@ -2,50 +2,42 @@ using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MediatR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tarscord.Core.Setup;
 
 public static class InitializeBot
 {
-    public record Command : IRequest<Unit>;
+    public delegate Task Handle();
 
-    public class Handler : IRequestHandler<Command, Unit>
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddSingleton<Handle>(provider =>
+        {
+            var discord = provider.GetRequiredService<DiscordSocketClient>();
+            var commands = provider.GetRequiredService<CommandService>();
+            var config = provider.GetRequiredService<IConfigurationRoot>();
+
+            return () => HandleAsync(provider, discord, commands, config);
+        });
+
+    public static async Task HandleAsync(
+        IServiceProvider provider,
+        DiscordSocketClient discord,
+        CommandService commands,
+        IConfigurationRoot config)
     {
-        private readonly IServiceProvider _provider;
-        private readonly DiscordSocketClient _discord;
-        private readonly CommandService _commands;
-        private readonly IConfigurationRoot _config;
+        string? discordToken = config["tokens:discord"];
 
-        public Handler(
-            IServiceProvider provider,
-            DiscordSocketClient discord,
-            CommandService commands,
-            IConfigurationRoot config)
+        if (string.IsNullOrWhiteSpace(discordToken))
         {
-            _provider = provider;
-            _discord = discord;
-            _commands = commands;
-            _config = config;
+            throw new InvalidOperationException(
+                "No Discord bot token is configured. Copy Resources/config.example.yml to " +
+                "Resources/config.yml and put your token in tokens.discord.");
         }
 
-        public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
-        {
-            string? discordToken = _config["tokens:discord"];
-
-            if (string.IsNullOrWhiteSpace(discordToken))
-            {
-                throw new InvalidOperationException(
-                    "No Discord bot token is configured. Copy Resources/config.example.yml to " +
-                    "Resources/config.yml and put your token in tokens.discord.");
-            }
-
-            await _discord.LoginAsync(TokenType.Bot, discordToken);
-            await _discord.StartAsync();
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
-
-            return Unit.Value;
-        }
+        await discord.LoginAsync(TokenType.Bot, discordToken);
+        await discord.StartAsync();
+        await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
     }
 }

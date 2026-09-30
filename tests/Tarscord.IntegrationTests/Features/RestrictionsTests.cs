@@ -27,7 +27,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewApplyHandler(context).Handle(
+        var response = await NewApplyHandler(context).Invoke(
             NewApplyCommand(minutes: 10), CancellationToken.None);
 
         // Assert
@@ -42,7 +42,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewApplyHandler(context).Handle(
+        var response = await NewApplyHandler(context).Invoke(
             NewApplyCommand(minutes: 0), CancellationToken.None);
 
         // Assert
@@ -56,12 +56,12 @@ public class RestrictionsTests(PostgresFixture fixture)
         await fixture.ResetAsync();
 
         await using var firstContext = fixture.CreateContext();
-        await NewApplyHandler(firstContext).Handle(NewApplyCommand(minutes: 10), CancellationToken.None);
+        await NewApplyHandler(firstContext).Invoke(NewApplyCommand(minutes: 10), CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewApplyHandler(context).Handle(
+        var response = await NewApplyHandler(context).Invoke(
             NewApplyCommand(minutes: 60), CancellationToken.None);
 
         // Assert
@@ -78,12 +78,12 @@ public class RestrictionsTests(PostgresFixture fixture)
         await fixture.ResetAsync();
 
         await using var firstContext = fixture.CreateContext();
-        await NewApplyHandler(firstContext).Handle(NewApplyCommand(minutes: 10), CancellationToken.None);
+        await NewApplyHandler(firstContext).Invoke(NewApplyCommand(minutes: 10), CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
-        await NewApplyHandler(context).Handle(
+        await NewApplyHandler(context).Invoke(
             NewApplyCommand(minutes: 60, channelId: 888888888888888888), CancellationToken.None);
 
         // Assert
@@ -102,7 +102,7 @@ public class RestrictionsTests(PostgresFixture fixture)
             Substitute.For<IMessageChannel>(), NewUser(), RestrictionKind.Mute, 10, "alice");
 
         // Act
-        var response = await NewApplyHandler(context).Handle(command, CancellationToken.None);
+        var response = await NewApplyHandler(context).Invoke(command, CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("server channel");
@@ -116,7 +116,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewApplyHandler(context).Handle(
+        var response = await NewApplyHandler(context).Invoke(
             NewApplyCommand(minutes: -5), CancellationToken.None);
 
         // Assert
@@ -132,8 +132,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Handle(
-            new List.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Invoke(CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().BeEmpty();
@@ -148,8 +147,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Handle(
-            new List.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Invoke(CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().BeEmpty();
@@ -164,8 +162,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Handle(
-            new List.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Invoke(CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().ContainSingle()
@@ -181,7 +178,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewLiftHandler(context).Handle(
+        var response = await NewLiftHandler(context).Invoke(
             new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
 
         // Assert
@@ -199,7 +196,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewLiftHandler(context).Handle(
+        var response = await NewLiftHandler(context).Invoke(
             new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
 
         // Assert
@@ -214,14 +211,13 @@ public class RestrictionsTests(PostgresFixture fixture)
         await GivenARestriction(expiresInMinutes: -1);
 
         await using var liftContext = fixture.CreateContext();
-        await NewLiftHandler(liftContext).Handle(
+        await NewLiftHandler(liftContext).Invoke(
             new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Handle(
-            new List.Query(), CancellationToken.None);
+        var response = await NewListHandler(context).Invoke(CancellationToken.None);
 
         // Assert
         response.Restrictions.Should().BeEmpty();
@@ -243,7 +239,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         var command = new Apply.Command(channel, NewUser(), RestrictionKind.Mute, 10, "alice");
 
         // Act
-        var response = await NewApplyHandler(context).Handle(command, CancellationToken.None);
+        var response = await NewApplyHandler(context).Invoke(command, CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("permission");
@@ -266,11 +262,11 @@ public class RestrictionsTests(PostgresFixture fixture)
         discord.GetChannelAsync(ChannelId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
             .Returns(Task.FromResult<IChannel>(channel));
 
-        var handler = new Lift.CommandHandler(NullLogger<Lift.CommandHandler>.Instance, context,
-            new FakeTimeProvider(Now), discord);
+        Lift.Handle handler = (command, cancellationToken) => Lift.HandleAsync(command, context,
+            new FakeTimeProvider(Now), discord, NullLogger.Instance, cancellationToken);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.Invoke(
             new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
 
         // Assert
@@ -289,7 +285,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewLiftHandler(context, discordRefuses: true).Handle(
+        var response = await NewLiftHandler(context, discordRefuses: true).Invoke(
             new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
 
         // Assert
@@ -339,14 +335,14 @@ public class RestrictionsTests(PostgresFixture fixture)
         return new Apply.Command(channel, NewUser(), RestrictionKind.Mute, minutes, "alice");
     }
 
-    private static Apply.CommandHandler NewApplyHandler(TarscordContext context) =>
-        new(NullLogger<Apply.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
-            new Apply.CommandValidator());
+    private static Apply.Handle NewApplyHandler(TarscordContext context) =>
+        (command, cancellationToken) => Apply.HandleAsync(command, context, new FakeTimeProvider(Now),
+            new Apply.CommandValidator(), NullLogger.Instance, cancellationToken);
 
-    private static List.QueryHandler NewListHandler(TarscordContext context) =>
-        new(context, new FakeTimeProvider(Now));
+    private static List.Handle NewListHandler(TarscordContext context) =>
+        cancellationToken => List.HandleAsync(context, new FakeTimeProvider(Now), cancellationToken);
 
-    private static Lift.CommandHandler NewLiftHandler(
+    private static Lift.Handle NewLiftHandler(
         TarscordContext context, bool discordRefuses = false)
     {
         var user = NewUser();
@@ -367,7 +363,7 @@ public class RestrictionsTests(PostgresFixture fixture)
         discord.GetUserAsync(UserId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
             .Returns(Task.FromResult(user));
 
-        return new Lift.CommandHandler(NullLogger<Lift.CommandHandler>.Instance, context,
-            new FakeTimeProvider(Now), discord);
+        return (command, cancellationToken) => Lift.HandleAsync(command, context,
+            new FakeTimeProvider(Now), discord, NullLogger.Instance, cancellationToken);
     }
 }

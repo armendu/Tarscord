@@ -1,8 +1,8 @@
 using System.Text;
 using Discord;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -10,12 +10,11 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Loans;
 
-internal static class List
+public static class List
 {
-    public record Query(ulong PerformedByUserId, string PerformedByUser)
-        : IRequest<ListResponse>, IPerformedByUser;
+    public sealed record Query(ulong PerformedByUserId, string PerformedByUser) : IPerformedByUser;
 
-    public record ListResponse(IReadOnlyList<LoanEnvelope> Loans, bool More) : IEmbeddedMessage
+    public sealed record ListResponse(IReadOnlyList<LoanEnvelope> Loans, bool More) : IEmbeddedMessage
     {
         public Embed ToEmbeddedMessage()
         {
@@ -41,24 +40,36 @@ internal static class List
         }
     }
 
-    public class QueryHandler(
-        ILogger<QueryHandler> logger,
-        TarscordContext context,
-        IConfigurationRoot configuration) : IRequestHandler<Query, ListResponse>
-    {
-        public async Task<ListResponse> Handle(Query request, CancellationToken cancellationToken)
+    public delegate Task<ListResponse> Handle(Query query, CancellationToken cancellationToken);
+
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handle>(provider =>
         {
-            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-                nameof(List), request.PerformedByUser);
+            var context = provider.GetRequiredService<TarscordContext>();
+            var configuration = provider.GetRequiredService<IConfigurationRoot>();
+            var logger = provider.GetRequiredService<ILogger<Query>>();
 
-            var (loans, more) = await context.Loans
-                .Where(loan => (loan.LoanedFromId == request.PerformedByUserId
-                                || loan.LoanedToId == request.PerformedByUserId)
-                               && loan.AmountPayed < loan.AmountLoaned)
-                .OrderBy(loan => loan.Created)
-                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
+            return (query, cancellationToken) =>
+                HandleAsync(query, context, configuration, logger, cancellationToken);
+        });
 
-            return new ListResponse(loans.ConvertAll(LoanEnvelope.FromEntity), more);
-        }
+    public static async Task<ListResponse> HandleAsync(
+        Query query,
+        TarscordContext context,
+        IConfigurationRoot configuration,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+            nameof(List), query.PerformedByUser);
+
+        var (loans, more) = await context.Loans
+            .Where(loan => (loan.LoanedFromId == query.PerformedByUserId
+                            || loan.LoanedToId == query.PerformedByUserId)
+                           && loan.AmountPayed < loan.AmountLoaned)
+            .OrderBy(loan => loan.Created)
+            .TakeListedAsync(configuration.MaxListed(), cancellationToken);
+
+        return new ListResponse(loans.ConvertAll(LoanEnvelope.FromEntity), more);
     }
 }

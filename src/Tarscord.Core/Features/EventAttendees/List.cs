@@ -1,7 +1,7 @@
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Extensions;
@@ -11,12 +11,11 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.EventAttendees;
 
-internal static class List
+public static class List
 {
-    public record Query(string Event, string PerformedByUser)
-        : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
+    public sealed record Query(string Event, string PerformedByUser) : IPerformedByUser;
 
-    public class QueryValidator : AbstractValidator<Query>
+    public sealed class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
@@ -26,44 +25,57 @@ internal static class List
         }
     }
 
-    public class QueryHandler(
-        ILogger<QueryHandler> logger,
+    public delegate Task<OneOf<AttendeeListEnvelope, FailureResponse>> Handle(
+        Query query,
+        CancellationToken cancellationToken);
+
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Query>, QueryValidator>()
+            .AddScoped<Handle>(provider =>
+            {
+                var context = provider.GetRequiredService<TarscordContext>();
+                var configuration = provider.GetRequiredService<IConfigurationRoot>();
+                var validator = provider.GetRequiredService<IValidator<Query>>();
+                var logger = provider.GetRequiredService<ILogger<Query>>();
+
+                return (query, cancellationToken) =>
+                    HandleAsync(query, context, configuration, validator, logger, cancellationToken);
+            });
+
+    public static async Task<OneOf<AttendeeListEnvelope, FailureResponse>> HandleAsync(
+        Query query,
         TarscordContext context,
         IConfigurationRoot configuration,
-        IValidator<Query> validator)
-        : IRequestHandler<Query, OneOf<AttendeeListEnvelope, FailureResponse>>
+        IValidator<Query> validator,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
-        public async Task<OneOf<AttendeeListEnvelope, FailureResponse>> Handle(
-            Query query,
-            CancellationToken cancellationToken)
+        logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+            nameof(List), query.PerformedByUser);
+
+        var validation = await validator.ValidateAsync(query, cancellationToken);
+
+        if (!validation.IsValid)
         {
-            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-                nameof(List), query.PerformedByUser);
-
-            var validation = await validator.ValidateAsync(query, cancellationToken);
-
-            if (!validation.IsValid)
-            {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
-            }
-
-            var eventInfo = await context.EventInfos.MatchAsync(query.Event, cancellationToken);
-
-            if (eventInfo is null)
-            {
-                return new FailureResponse($"There is no event called '{query.Event}'.");
-            }
-
-            var (attendees, more) = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == eventInfo.Id)
-                .OrderBy(attendee => attendee.AttendeeName)
-                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
-
-            return new AttendeeListEnvelope(
-                eventInfo.EventName,
-                attendees.ConvertAll(AttendeeEnvelope.FromEntity),
-                more);
+            return new FailureResponse(
+                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
         }
+
+        var eventInfo = await context.EventInfos.MatchAsync(query.Event, cancellationToken);
+
+        if (eventInfo is null)
+        {
+            return new FailureResponse($"There is no event called '{query.Event}'.");
+        }
+
+        var (attendees, more) = await context.EventAttendees
+            .Where(attendee => attendee.EventInfoId == eventInfo.Id)
+            .OrderBy(attendee => attendee.AttendeeName)
+            .TakeListedAsync(configuration.MaxListed(), cancellationToken);
+
+        return new AttendeeListEnvelope(
+            eventInfo.EventName,
+            attendees.ConvertAll(AttendeeEnvelope.FromEntity),
+            more);
     }
 }

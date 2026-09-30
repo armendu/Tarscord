@@ -1,6 +1,5 @@
 using Discord;
 using Discord.Commands;
-using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Loans;
 
@@ -10,11 +9,15 @@ namespace Tarscord.Core.Modules;
 [Group("loan")]
 public class LoanModule : ModuleBase<SocketCommandContext>
 {
-    private readonly IMediator _mediator;
+    private readonly List.Handle _list;
+    private readonly Create.Handle _create;
+    private readonly Update.Handle _update;
 
-    public LoanModule(IMediator mediator)
+    public LoanModule(List.Handle list, Create.Handle create, Update.Handle update)
     {
-        _mediator = mediator;
+        _list = list;
+        _create = create;
+        _update = update;
     }
 
     /// <summary>
@@ -24,8 +27,9 @@ public class LoanModule : ModuleBase<SocketCommandContext>
     [Alias("show")]
     public async Task ShowLoans()
     {
-        var loanList = await _mediator.Send(
-            new List.Query(Context.User.Id, Context.User.Username));
+        var loanList = await _list(
+            new List.Query(Context.User.Id, Context.User.Username),
+            CancellationToken.None);
 
         await ReplyAsync(embed: loanList.ToEmbeddedMessage());
     }
@@ -49,16 +53,18 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var response = await _mediator.Send(new Create.Command
-        {
-            Amount = amount,
-            LoanedToId = guildUser.Id,
-            LoanedTo = guildUser.Username,
-            LoanedFromId = Context.User.Id,
-            LoanedFrom = Context.User.Username,
-            Description = string.Join(" ", description),
-            PerformedByUser = Context.User.Username
-        });
+        var response = await _create(
+            new Create.Command
+            {
+                Amount = amount,
+                LoanedToId = guildUser.Id,
+                LoanedTo = guildUser.Username,
+                LoanedFromId = Context.User.Id,
+                LoanedFrom = Context.User.Username,
+                Description = string.Join(" ", description),
+                PerformedByUser = Context.User.Username
+            },
+            CancellationToken.None);
 
         var embeddedMessage = response.ToEmbeddedMessage();
 
@@ -83,15 +89,17 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var response = await _mediator.Send(new Update.Command
-        {
-            Amount = amountBeingPayedBack,
-            LenderId = guildUser.Id,
-            LenderUsername = guildUser.Username,
-            PayerId = Context.User.Id,
-            PayerUsername = Context.User.Username,
-            PerformedByUser = Context.User.Username
-        });
+        var response = await _update(
+            new Update.Command
+            {
+                Amount = amountBeingPayedBack,
+                LenderId = guildUser.Id,
+                LenderUsername = guildUser.Username,
+                PayerId = Context.User.Id,
+                PayerUsername = Context.User.Username,
+                PerformedByUser = Context.User.Username
+            },
+            CancellationToken.None);
 
         var embeddedMessage = response.ToEmbeddedMessage();
 

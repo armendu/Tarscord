@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -29,13 +28,14 @@ public sealed class RestrictionExpirySweeper(
         try
         {
             using var scope = scopeFactory.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var listExpired = scope.ServiceProvider.GetRequiredService<List.Handle>();
+            var lift = scope.ServiceProvider.GetRequiredService<Lift.Handle>();
 
-            var expired = await mediator.Send(new List.Query(), cancellationToken);
+            var expired = await listExpired(cancellationToken);
 
             foreach (var restriction in expired.Restrictions)
             {
-                await TryLiftAsync(mediator, restriction, cancellationToken);
+                await TryLiftAsync(lift, restriction, cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -49,13 +49,13 @@ public sealed class RestrictionExpirySweeper(
     }
 
     private async Task TryLiftAsync(
-        IMediator mediator,
+        Lift.Handle lift,
         RestrictionEnvelope restriction,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await mediator.Send(
+            var result = await lift(
                 new Lift.Command(restriction.UserId, restriction.ChannelId, restriction.Kind,
                     nameof(RestrictionExpirySweeper)),
                 cancellationToken);

@@ -5,7 +5,7 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Reminders;
 
-internal record ReminderEnvelope(
+public sealed record ReminderEnvelope(
     int ReminderId,
     ulong UserId,
     ulong ChannelId,

@@ -1,6 +1,5 @@
 using Discord;
 using Discord.Commands;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
@@ -13,13 +12,28 @@ namespace Tarscord.Core.Modules;
 [Group("event")]
 public class EventModule : ModuleBase<SocketCommandContext>
 {
-    private readonly IMediator _mediator;
+    private readonly List.Handle _list;
+    private readonly Details.Handle _details;
+    private readonly Create.Handle _create;
+    private readonly Delete.Handle _delete;
+    private readonly Generate.Handle _generate;
     private readonly IConfigurationRoot _config;
     private readonly GenerationCooldown _cooldown;
 
-    public EventModule(IMediator mediator, IConfigurationRoot config, GenerationCooldown cooldown)
+    public EventModule(
+        List.Handle list,
+        Details.Handle details,
+        Create.Handle create,
+        Delete.Handle delete,
+        Generate.Handle generate,
+        IConfigurationRoot config,
+        GenerationCooldown cooldown)
     {
-        _mediator = mediator;
+        _list = list;
+        _details = details;
+        _create = create;
+        _delete = delete;
+        _generate = generate;
         _config = config;
         _cooldown = cooldown;
     }
@@ -30,19 +44,21 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("list"), Summary("Lists all events")]
     public async Task ListEvents()
     {
-        var events = await _mediator.Send(new List.Query(Context.User.Username));
+        var events = await _list(new List.Query(Context.User.Username), CancellationToken.None);
 
         if (events.EventInfos.Count > 0 && _cooldown.TryGenerate(Context.User.Id))
         {
             using var typingState = Context.Channel.EnterTypingState();
 
             // Only the heading is voiced; the list itself stays deterministic.
-            var heading = await _mediator.Send(new Generate.Command(
-                Prompt: $"Write the single line that introduces a list of {events.EventInfos.Count} " +
-                        "upcoming events. The events are listed under it, so name none of them and " +
-                        "invent nothing. Reply with that one line only, at most twelve words.",
-                Fallback: List.DefaultHeading,
-                PerformedByUser: Context.User.Username));
+            var heading = await _generate(
+                new Generate.Command(
+                    Prompt: $"Write the single line that introduces a list of {events.EventInfos.Count} " +
+                            "upcoming events. The events are listed under it, so name none of them and " +
+                            "invent nothing. Reply with that one line only, at most twelve words.",
+                    Fallback: List.DefaultHeading,
+                    PerformedByUser: Context.User.Username),
+                CancellationToken.None);
 
             // The model sometimes quotes the line or tacks a list of its own under it.
             events = events with { Heading = heading.Message.Split('\n')[0].Trim().Trim('"') };
@@ -59,7 +75,9 @@ public class EventModule : ModuleBase<SocketCommandContext>
     public async Task ShowEventInformation(
         [Summary("The event Id")] int eventId)
     {
-        var response = await _mediator.Send(new Details.Query(eventId, Context.User.Username));
+        var response = await _details(
+            new Details.Query(eventId, Context.User.Username),
+            CancellationToken.None);
 
         var embeddedMessage = response.ToEmbeddedMessage();
 
@@ -96,7 +114,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
             parts[1],
             string.Join(", ", parts.Skip(2)));
 
-        var response = await _mediator.Send(eventInfo);
+        var response = await _create(eventInfo, CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 
@@ -112,8 +130,9 @@ public class EventModule : ModuleBase<SocketCommandContext>
         [Summary("The event name, or the id from 'event list'")] [Remainder]
         string eventNameOrId)
     {
-        var response = await _mediator.Send(
-            new Delete.Command(eventNameOrId, Context.User.Id, Context.User.Username));
+        var response = await _delete(
+            new Delete.Command(eventNameOrId, Context.User.Id, Context.User.Username),
+            CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 

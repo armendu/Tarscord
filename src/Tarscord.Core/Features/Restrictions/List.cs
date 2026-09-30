@@ -1,30 +1,38 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-internal static class List
+public static class List
 {
-    public record Query : IRequest<ListResponse>;
+    public sealed record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
 
-    public record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
+    public delegate Task<ListResponse> Handle(CancellationToken cancellationToken);
 
-    public class QueryHandler(TarscordContext context, TimeProvider timeProvider)
-        : IRequestHandler<Query, ListResponse>
-    {
-        public async Task<ListResponse> Handle(Query query, CancellationToken cancellationToken)
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handle>(provider =>
         {
-            var now = timeProvider.GetUtcNow().UtcDateTime;
+            var context = provider.GetRequiredService<TarscordContext>();
+            var timeProvider = provider.GetRequiredService<TimeProvider>();
 
-            var expired = await context.Restrictions
-                .Where(restriction => !restriction.Lifted
-                                      && restriction.ExpiresAt != null
-                                      && restriction.ExpiresAt <= now)
-                .OrderBy(restriction => restriction.ExpiresAt)
-                .ToListAsync(cancellationToken);
+            return cancellationToken => HandleAsync(context, timeProvider, cancellationToken);
+        });
 
-            return new ListResponse(expired.ConvertAll(RestrictionEnvelope.FromEntity));
-        }
+    public static async Task<ListResponse> HandleAsync(
+        TarscordContext context,
+        TimeProvider timeProvider,
+        CancellationToken cancellationToken)
+    {
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+
+        var expired = await context.Restrictions
+            .Where(restriction => !restriction.Lifted
+                                  && restriction.ExpiresAt != null
+                                  && restriction.ExpiresAt <= now)
+            .OrderBy(restriction => restriction.ExpiresAt)
+            .ToListAsync(cancellationToken);
+
+        return new ListResponse(expired.ConvertAll(RestrictionEnvelope.FromEntity));
     }
 }

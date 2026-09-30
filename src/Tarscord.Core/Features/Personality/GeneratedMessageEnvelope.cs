@@ -1,6 +1,6 @@
 namespace Tarscord.Core.Features.Personality;
 
-internal record GeneratedMessageEnvelope(string Message, bool FromModel)
+public sealed record GeneratedMessageEnvelope(string Message, bool FromModel)
 {
     private const int DiscordMessageLimit = 2000;
 

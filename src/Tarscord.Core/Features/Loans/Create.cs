@@ -1,5 +1,5 @@
 using FluentValidation;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -8,9 +8,9 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Loans;
 
-internal static class Create
+public static class Create
 {
-    public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUser
+    public sealed class Command : IPerformedByUser
     {
         public decimal Amount { get; set; }
         public ulong LoanedFromId { get; set; }
@@ -22,7 +22,7 @@ internal static class Create
         public required string PerformedByUser { get; set; }
     }
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
@@ -40,43 +40,57 @@ internal static class Create
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public delegate Task<OneOf<LoanEnvelope, FailureResponse>> Handle(
+        Command command,
+        CancellationToken cancellationToken);
+
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handle>(provider =>
+            {
+                var context = provider.GetRequiredService<TarscordContext>();
+                var timeProvider = provider.GetRequiredService<TimeProvider>();
+                var validator = provider.GetRequiredService<IValidator<Command>>();
+                var logger = provider.GetRequiredService<ILogger<Command>>();
+
+                return (command, cancellationToken) =>
+                    HandleAsync(command, context, timeProvider, validator, logger, cancellationToken);
+            });
+
+    public static async Task<OneOf<LoanEnvelope, FailureResponse>> HandleAsync(
+        Command command,
         TarscordContext context,
         TimeProvider timeProvider,
-        IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
+        IValidator<Command> validator,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
-        public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
-            CancellationToken cancellationToken)
+        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+            nameof(Create), command.PerformedByUser);
+
+        var validation = await validator.ValidateAsync(command, cancellationToken);
+
+        if (!validation.IsValid)
         {
-            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-                nameof(Create), command.PerformedByUser);
-
-            var validation = await validator.ValidateAsync(command, cancellationToken);
-
-            if (!validation.IsValid)
-            {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
-            }
-
-            var createdLoan = await context.Loans.AddAsync(new Loan
-            {
-                LoanedFrom = command.LoanedFrom,
-                LoanedFromId = command.LoanedFromId,
-                LoanedTo = command.LoanedTo,
-                LoanedToId = command.LoanedToId,
-                Description = command.Description ?? "",
-                AmountLoaned = command.Amount,
-                AmountPayed = 0,
-                Confirmed = false,
-                Created = timeProvider.GetUtcNow().UtcDateTime
-            }, cancellationToken);
-
-            await context.SaveChangesAsync(cancellationToken);
-
-            return LoanEnvelope.FromEntity(createdLoan.Entity);
+            return new FailureResponse(
+                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
         }
+
+        var createdLoan = await context.Loans.AddAsync(new Loan
+        {
+            LoanedFrom = command.LoanedFrom,
+            LoanedFromId = command.LoanedFromId,
+            LoanedTo = command.LoanedTo,
+            LoanedToId = command.LoanedToId,
+            Description = command.Description ?? "",
+            AmountLoaned = command.Amount,
+            AmountPayed = 0,
+            Confirmed = false,
+            Created = timeProvider.GetUtcNow().UtcDateTime
+        }, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return LoanEnvelope.FromEntity(createdLoan.Entity);
     }
 }

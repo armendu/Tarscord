@@ -1,44 +1,41 @@
 using Discord;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tarscord.Core.Features.Logging;
 
 public static class ProcessLog
 {
-    public record Command : IRequest<Unit>
-    {
-        public LogMessage LogMessage { get; init; }
-    }
+    private static string LogDirectory => Path.Combine(AppContext.BaseDirectory, "logs");
+    private static string LogFile => Path.Combine(LogDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.txt");
 
-    public class Handler : IRequestHandler<Command, Unit>
-    {
-        private string LogDirectory => Path.Combine(AppContext.BaseDirectory, "logs");
-        private string LogFile => Path.Combine(LogDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.txt");
+    public delegate Task Handle(LogMessage logMessage);
 
-        public Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddSingleton<Handle>(_ => HandleAsync);
+
+    public static Task HandleAsync(LogMessage logMessage)
+    {
+        // Create the log directory if it doesn't exist
+        if (!Directory.Exists(LogDirectory))
         {
-            // Create the log directory if it doesn't exist
-            if (!Directory.Exists(LogDirectory))
-            {
-                Directory.CreateDirectory(LogDirectory);
-            }
-
-            // Create today's log file if it doesn't exist
-            if (!File.Exists(LogFile))
-            {
-                File.Create(LogFile).Dispose();
-            }
-
-            string logText = $"{DateTime.UtcNow:HH:mm:ss} [{request.LogMessage.Severity}] {request.LogMessage.Source}: " +
-                           $"{request.LogMessage.Exception?.ToString() ?? request.LogMessage.Message}";
-
-            // Write the log text to a file
-            File.AppendAllText(LogFile, logText + "\n");
-
-            // Write the log text to the console
-            Console.WriteLine(logText);
-
-            return Task.FromResult(Unit.Value);
+            Directory.CreateDirectory(LogDirectory);
         }
+
+        // Create today's log file if it doesn't exist
+        if (!File.Exists(LogFile))
+        {
+            File.Create(LogFile).Dispose();
+        }
+
+        string logText = $"{DateTime.UtcNow:HH:mm:ss} [{logMessage.Severity}] {logMessage.Source}: " +
+                         $"{logMessage.Exception?.ToString() ?? logMessage.Message}";
+
+        // Write the log text to a file
+        File.AppendAllText(LogFile, logText + "\n");
+
+        // Write the log text to the console
+        Console.WriteLine(logText);
+
+        return Task.CompletedTask;
     }
 }

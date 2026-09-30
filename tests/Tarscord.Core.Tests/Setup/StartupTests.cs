@@ -1,7 +1,6 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using FluentAssertions;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core;
@@ -47,7 +46,6 @@ public class StartupTests
     [InlineData(typeof(CommandHandler))]
     [InlineData(typeof(LoggingService))]
     [InlineData(typeof(StartupService))]
-    [InlineData(typeof(IMediator))]
     [InlineData(typeof(TimeProvider))]
     public void ConfigureServices_ForAGatewayService_ResolvesIt(Type serviceType)
     {
@@ -89,36 +87,30 @@ public class StartupTests
     }
 
     [Theory]
-    [MemberData(nameof(RequestHandlers))]
-    public void ConfigureServices_ForAMediatRHandler_ResolvesItWithAllItsDependencies(Type handlerService)
+    [MemberData(nameof(Slices))]
+    public void ConfigureServices_ForASlice_ResolvesItWithAllItsDependencies(Type slice)
     {
         // Arrange
         using var provider = BuildProvider();
         using var scope = provider.CreateScope();
 
         // Act
-        object? handler = scope.ServiceProvider.GetService(handlerService);
+        object? handle = scope.ServiceProvider.GetService(slice);
 
         // Assert
-        handler.Should().NotBeNull();
+        handle.Should().NotBeNull();
     }
 
-    public static TheoryData<Type> RequestHandlers()
+    public static TheoryData<Type> Slices()
     {
-        Type[] handlerInterfaces = [typeof(IRequestHandler<,>), typeof(IRequestHandler<>)];
-
-        var services = typeof(Startup).Assembly.GetTypes()
-            .Where(type => type is { IsAbstract: false, IsInterface: false })
-            .SelectMany(type => type.GetInterfaces())
-            .Where(contract => contract.IsGenericType
-                               && handlerInterfaces.Contains(contract.GetGenericTypeDefinition()))
-            .Distinct();
+        var slices = typeof(Startup).Assembly.GetTypes()
+            .Where(type => type.IsSubclassOf(typeof(Delegate)) && type.Name == "Handle");
 
         var data = new TheoryData<Type>();
 
-        foreach (var service in services)
+        foreach (var slice in slices)
         {
-            data.Add(service);
+            data.Add(slice);
         }
 
         return data;
