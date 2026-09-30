@@ -71,7 +71,11 @@ public class Startup
                 {
                     LogLevel = LogSeverity.Verbose,
                     MessageCacheSize = 1000,
-                    GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+                    GatewayIntents = GatewayIntents.AllUnprivileged
+                                     | GatewayIntents.MessageContent
+                                     | GatewayIntents.GuildMembers,
+                    // The IUser type reader only looks in the cache, so the cache has to hold everyone.
+                    AlwaysDownloadUsers = true
                 }))
             .AddSingleton(new CommandService(new CommandServiceConfig
             {

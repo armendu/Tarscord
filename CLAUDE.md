@@ -246,6 +246,12 @@ hold is gone — those commands are fixed and have tests. What is left is what s
 the Developer Portal the bot connects, logs nothing unusual, and ignores every command. A "the bot
 does nothing" report is this until proven otherwise.
 
+**So is the Server Members intent, and it has to be on.** `Startup` requests
+`GatewayIntents.GuildMembers` with `AlwaysDownloadUsers`, because Discord.Net's `IUser` type reader
+only looks in the member cache: without a full cache, `?dare @someone` answers "User not found." for
+anyone the bot has not seen yet. Discord refuses the connection outright (close code 4014) if the
+intent is requested but not enabled in the Developer Portal.
+
 **A command runs in its own DI scope, and that is load-bearing.** `TarscordContext` is scoped, and
 `ProcessMessage` creates a scope per message and hands it to `commands.ExecuteAsync`. Resolve
 anything scoped from the root provider and `ValidateScopes` fails at startup. The bot ran for years
