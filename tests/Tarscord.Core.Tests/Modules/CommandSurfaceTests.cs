@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core;
+using Tarscord.Core.Setup;
 using Xunit;
 
 namespace Tarscord.Core.Tests.Modules;
@@ -86,10 +87,10 @@ public class CommandSurfaceTests
         var services = new ServiceCollection();
         Startup.ConfigureServices(services, configuration);
 
-        using var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         var commands = provider.GetRequiredService<CommandService>();
 
-        await commands.AddModulesAsync(typeof(Startup).Assembly, provider);
+        await InitializeBot.AddModulesAsync(commands, provider);
 
         return commands;
     }

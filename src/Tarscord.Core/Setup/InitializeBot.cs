@@ -1,4 +1,3 @@
-using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -38,6 +37,14 @@ public static class InitializeBot
 
         await discord.LoginAsync(TokenType.Bot, discordToken);
         await discord.StartAsync();
-        await commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
+        await AddModulesAsync(commands, provider);
+    }
+
+    internal static async Task AddModulesAsync(CommandService commands, IServiceProvider provider)
+    {
+        // Discord.Net builds every module once here, and modules take scoped slices.
+        using var scope = provider.CreateScope();
+
+        await commands.AddModulesAsync(typeof(InitializeBot).Assembly, scope.ServiceProvider);
     }
 }

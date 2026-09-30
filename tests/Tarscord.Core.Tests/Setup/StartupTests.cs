@@ -116,7 +116,7 @@ public class StartupTests
         return data;
     }
 
-    // Discord.Net builds modules itself per command, so no other test sees a missing dependency.
+    // Modules are not registered in DI; each command builds one from its scope, as this does.
     [Theory]
     [MemberData(nameof(Modules))]
     public void ConfigureServices_ForAModule_BuildsItWithAllItsDependencies(Type module)
