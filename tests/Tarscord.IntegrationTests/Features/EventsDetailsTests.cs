@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using FluentValidation;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tarscord.Core.Features.Events;

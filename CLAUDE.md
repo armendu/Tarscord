@@ -220,7 +220,7 @@ future major does not, which makes a bump deliberate rather than silent.
 | Microsoft.Extensions.AI.Abstractions | 10.10.1 | `IChatClient`, the seam the LLM sits behind |
 | OllamaSharp | 5.3.1 | `IChatClient` over a local Ollama — pinned, see below |
 | dbup-postgresql | 7.0.1 | Migrations, in `Tarscord.DbMigrator` only |
-| xunit / FluentAssertions | 2.9.3 / 8.11.0 | Tests |
+| xunit / AwesomeAssertions | 2.9.3 / 9.6.0 | Tests; the Apache-2.0 fork, as FluentAssertions 8 is not open source |
 | NSubstitute | 6.2.0 | Faking Discord.Net interfaces and `IChatClient` |
 | Microsoft.Extensions.TimeProvider.Testing | 10.10.0 | `FakeTimeProvider` |
 | Testcontainers.PostgreSql | 4.15.0 | The integration suite's own database |

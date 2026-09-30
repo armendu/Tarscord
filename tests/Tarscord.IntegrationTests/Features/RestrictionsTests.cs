@@ -1,5 +1,5 @@
+using AwesomeAssertions;
 using Discord;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
