@@ -116,6 +116,37 @@ public class StartupTests
         return data;
     }
 
+    // Discord.Net builds modules itself per command, so no other test sees a missing dependency.
+    [Theory]
+    [MemberData(nameof(Modules))]
+    public void ConfigureServices_ForAModule_BuildsItWithAllItsDependencies(Type module)
+    {
+        // Arrange
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        // Act
+        object instance = ActivatorUtilities.CreateInstance(scope.ServiceProvider, module);
+
+        // Assert
+        instance.Should().NotBeNull();
+    }
+
+    public static TheoryData<Type> Modules()
+    {
+        var modules = typeof(Startup).Assembly.GetTypes()
+            .Where(type => typeof(IModuleBase).IsAssignableFrom(type) && !type.IsAbstract);
+
+        var data = new TheoryData<Type>();
+
+        foreach (var module in modules)
+        {
+            data.Add(module);
+        }
+
+        return data;
+    }
+
     private static ServiceProvider BuildProvider()
     {
         var configuration = new ConfigurationBuilder()
