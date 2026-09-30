@@ -8,29 +8,24 @@ public static class List
 {
     public sealed record ListResponse(IReadOnlyList<ReminderEnvelope> Reminders);
 
-    public delegate Task<ListResponse> Handle(CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var context = provider.GetRequiredService<TarscordContext>();
-            var timeProvider = provider.GetRequiredService<TimeProvider>();
+        services.AddScoped<Handler>();
 
-            return cancellationToken => HandleAsync(context, timeProvider, cancellationToken);
-        });
-
-    public static async Task<ListResponse> HandleAsync(
+    public sealed class Handler(
         TarscordContext context,
-        TimeProvider timeProvider,
-        CancellationToken cancellationToken)
+        TimeProvider timeProvider)
     {
-        var now = timeProvider.GetUtcNow().UtcDateTime;
+        public async Task<ListResponse> HandleAsync(
+            CancellationToken cancellationToken)
+        {
+            var now = timeProvider.GetUtcNow().UtcDateTime;
 
-        var due = await context.Reminders
-            .Where(reminder => !reminder.Sent && reminder.RemindAt <= now)
-            .OrderBy(reminder => reminder.RemindAt)
-            .ToListAsync(cancellationToken);
+            var due = await context.Reminders
+                .Where(reminder => !reminder.Sent && reminder.RemindAt <= now)
+                .OrderBy(reminder => reminder.RemindAt)
+                .ToListAsync(cancellationToken);
 
-        return new ListResponse(due.ConvertAll(ReminderEnvelope.FromEntity));
+            return new ListResponse(due.ConvertAll(ReminderEnvelope.FromEntity));
+        }
     }
 }

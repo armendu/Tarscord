@@ -44,34 +44,27 @@ public static class List
         }
     }
 
-    public delegate Task<ListResponse> Handle(Query query, CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var context = provider.GetRequiredService<TarscordContext>();
-            var configuration = provider.GetRequiredService<IConfigurationRoot>();
-            var logger = provider.GetRequiredService<ILogger<Query>>();
+        services.AddScoped<Handler>();
 
-            return (query, cancellationToken) =>
-                HandleAsync(query, context, configuration, logger, cancellationToken);
-        });
-
-    public static async Task<ListResponse> HandleAsync(
-        Query query,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
-        IConfigurationRoot configuration,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IConfigurationRoot configuration)
     {
-        logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-            nameof(List), query.PerformedByUser);
+        public async Task<ListResponse> HandleAsync(
+            Query query,
+            CancellationToken cancellationToken)
+        {
+            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+                nameof(List), query.PerformedByUser);
 
-        var (eventInfos, more) = await context.EventInfos
-            .Where(eventInfo => eventInfo.IsActive)
-            .OrderBy(eventInfo => eventInfo.EventDate)
-            .TakeListedAsync(configuration.MaxListed(), cancellationToken);
+            var (eventInfos, more) = await context.EventInfos
+                .Where(eventInfo => eventInfo.IsActive)
+                .OrderBy(eventInfo => eventInfo.EventDate)
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 
-        return new ListResponse(eventInfos.ConvertAll(EventInfoEnvelope.FromEntity), more);
+            return new ListResponse(eventInfos.ConvertAll(EventInfoEnvelope.FromEntity), more);
+        }
     }
 }

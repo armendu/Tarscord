@@ -95,16 +95,16 @@ public class StartupTests
         using var scope = provider.CreateScope();
 
         // Act
-        object? handle = scope.ServiceProvider.GetService(slice);
+        object? handler = scope.ServiceProvider.GetService(slice);
 
         // Assert
-        handle.Should().NotBeNull();
+        handler.Should().NotBeNull();
     }
 
     public static TheoryData<Type> Slices()
     {
         var slices = typeof(Startup).Assembly.GetTypes()
-            .Where(type => type.IsSubclassOf(typeof(Delegate)) && type.Name == "Handle");
+            .Where(type => type.IsNested && type.Name == "Handler");
 
         var data = new TheoryData<Type>();
 

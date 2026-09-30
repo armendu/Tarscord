@@ -37,10 +37,10 @@ public sealed class ReminderDispatcher(
         try
         {
             using var scope = scopeFactory.CreateScope();
-            var listDue = scope.ServiceProvider.GetRequiredService<List.Handle>();
-            var complete = scope.ServiceProvider.GetRequiredService<Complete.Handle>();
+            var listDue = scope.ServiceProvider.GetRequiredService<List.Handler>();
+            var complete = scope.ServiceProvider.GetRequiredService<Complete.Handler>();
 
-            var due = await listDue(cancellationToken);
+            var due = await listDue.HandleAsync(cancellationToken);
 
             foreach (var reminder in due.Reminders)
             {
@@ -58,7 +58,7 @@ public sealed class ReminderDispatcher(
     }
 
     private async Task TryDeliverAsync(
-        Complete.Handle complete,
+        Complete.Handler complete,
         ReminderEnvelope reminder,
         CancellationToken cancellationToken)
     {
@@ -76,12 +76,12 @@ public sealed class ReminderDispatcher(
                 reminder.ReminderId);
 
             // Marked done, or it heads the queue again on every tick.
-            await complete(reminder.ReminderId, cancellationToken);
+            await complete.HandleAsync(reminder.ReminderId, cancellationToken);
         }
     }
 
     private async Task DeliverAsync(
-        Complete.Handle complete,
+        Complete.Handler complete,
         ReminderEnvelope reminder,
         CancellationToken cancellationToken)
     {
@@ -90,7 +90,7 @@ public sealed class ReminderDispatcher(
             logger.LogWarning("Reminder {ReminderId} is for channel {ChannelId}, which is gone",
                 reminder.ReminderId, reminder.ChannelId);
 
-            await complete(reminder.ReminderId, cancellationToken);
+            await complete.HandleAsync(reminder.ReminderId, cancellationToken);
 
             return;
         }
@@ -101,6 +101,6 @@ public sealed class ReminderDispatcher(
             embed: "Reminder".EmbedMessage(reminder.Message),
             allowedMentions: new AllowedMentions { UserIds = [reminder.UserId] });
 
-        await complete(reminder.ReminderId, cancellationToken);
+        await complete.HandleAsync(reminder.ReminderId, cancellationToken);
     }
 }

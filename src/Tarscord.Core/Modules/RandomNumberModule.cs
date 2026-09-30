@@ -9,7 +9,7 @@ namespace Tarscord.Core.Modules;
 
 [Name("Commands to generate random numbers")]
 public class RandomNumberModule(
-    Generate.Handle generate,
+    Generate.Handler generate,
     IConfigurationRoot config,
     GenerationCooldown cooldown) : ModuleBase<SocketCommandContext>
 {
@@ -37,7 +37,7 @@ public class RandomNumberModule(
             using var typingState = Context.Channel.EnterTypingState();
 
             // The model only announces the number, it never draws it.
-            var response = await generate(
+            var response = await generate.HandleAsync(
                 new Generate.Command(
                     Prompt: $"Announce that the random number drawn between {min} and {max} is " +
                             $"{generatedNumber}. Quote that number exactly and do not offer a different one.",

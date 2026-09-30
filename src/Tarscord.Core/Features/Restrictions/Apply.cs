@@ -34,99 +34,89 @@ public static class Apply
         }
     }
 
-    public delegate Task<OneOf<RestrictionEnvelope, FailureResponse>> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<IValidator<Command>, CommandValidator>()
-            .AddScoped<Handle>(provider =>
-            {
-                var context = provider.GetRequiredService<TarscordContext>();
-                var timeProvider = provider.GetRequiredService<TimeProvider>();
-                var validator = provider.GetRequiredService<IValidator<Command>>();
-                var logger = provider.GetRequiredService<ILogger<Command>>();
+            .AddScoped<Handler>();
 
-                return (command, cancellationToken) =>
-                    HandleAsync(command, context, timeProvider, validator, logger, cancellationToken);
-            });
-
-    public static async Task<OneOf<RestrictionEnvelope, FailureResponse>> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IValidator<Command> validator,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IValidator<Command> validator)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(Apply), command.PerformedByUser);
-
-        var validation = await validator.ValidateAsync(command, cancellationToken);
-
-        if (!validation.IsValid)
+        public async Task<OneOf<RestrictionEnvelope, FailureResponse>> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse(
-                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
-        }
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Apply), command.PerformedByUser);
 
-        // Overwrites only exist on guild channels.
-        if (command.ContextChannel is not IGuildChannel channel)
-        {
-            return new FailureResponse("That only works in a server channel.");
-        }
+            var validation = await validator.ValidateAsync(command, cancellationToken);
 
-        var now = timeProvider.GetUtcNow().UtcDateTime;
-        DateTime? expiresAt = command.Minutes > 0 ? now.AddMinutes(command.Minutes) : null;
-
-        var inForce = await context.Restrictions
-            .FirstOrDefaultAsync(
-                candidate => candidate.UserId == command.User.Id
-                             && candidate.ChannelId == command.ContextChannel.Id
-                             && candidate.Kind == command.Kind
-                             && !candidate.Lifted,
-                cancellationToken);
-
-        // Extends the existing row; the partial unique index forbids a second.
-        if (inForce is null)
-        {
-            inForce = new Restriction
+            if (!validation.IsValid)
             {
-                UserId = command.User.Id,
-                Username = command.User.Username,
-                ChannelId = command.ContextChannel.Id,
-                Kind = command.Kind,
-                ExpiresAt = expiresAt,
-                Lifted = false,
-                Created = now
-            };
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
 
-            context.Restrictions.Add(inForce);
+            // Overwrites only exist on guild channels.
+            if (command.ContextChannel is not IGuildChannel channel)
+            {
+                return new FailureResponse("That only works in a server channel.");
+            }
+
+            var now = timeProvider.GetUtcNow().UtcDateTime;
+            DateTime? expiresAt = command.Minutes > 0 ? now.AddMinutes(command.Minutes) : null;
+
+            var inForce = await context.Restrictions
+                .FirstOrDefaultAsync(
+                    candidate => candidate.UserId == command.User.Id
+                                 && candidate.ChannelId == command.ContextChannel.Id
+                                 && candidate.Kind == command.Kind
+                                 && !candidate.Lifted,
+                    cancellationToken);
+
+            // Extends the existing row; the partial unique index forbids a second.
+            if (inForce is null)
+            {
+                inForce = new Restriction
+                {
+                    UserId = command.User.Id,
+                    Username = command.User.Username,
+                    ChannelId = command.ContextChannel.Id,
+                    Kind = command.Kind,
+                    ExpiresAt = expiresAt,
+                    Lifted = false,
+                    Created = now
+                };
+
+                context.Restrictions.Add(inForce);
+            }
+            else
+            {
+                inForce.Username = command.User.Username;
+                inForce.ExpiresAt = expiresAt;
+                inForce.Updated = now;
+            }
+
+            // Stored first, or a failed save leaves someone muted with no row to expire.
+            await context.SaveChangesAsync(cancellationToken);
+
+            try
+            {
+                await DenyInDiscordAsync(channel, command.User, command.Kind);
+            }
+            catch (Exception exception) when (exception is HttpException or HttpRequestException)
+            {
+                // Usually the bot lacking Manage Roles, which the caller can fix.
+                logger.LogWarning(exception, "Could not restrict {User} in {ChannelId}",
+                    command.User.Username, command.ContextChannel.Id);
+
+                return new FailureResponse("I don't have permission to change this channel.");
+            }
+
+            return RestrictionEnvelope.FromEntity(inForce);
         }
-        else
-        {
-            inForce.Username = command.User.Username;
-            inForce.ExpiresAt = expiresAt;
-            inForce.Updated = now;
-        }
-
-        // Stored first, or a failed save leaves someone muted with no row to expire.
-        await context.SaveChangesAsync(cancellationToken);
-
-        try
-        {
-            await DenyInDiscordAsync(channel, command.User, command.Kind);
-        }
-        catch (Exception exception) when (exception is HttpException or HttpRequestException)
-        {
-            // Usually the bot lacking Manage Roles, which the caller can fix.
-            logger.LogWarning(exception, "Could not restrict {User} in {ChannelId}",
-                command.User.Username, command.ContextChannel.Id);
-
-            return new FailureResponse("I don't have permission to change this channel.");
-        }
-
-        return RestrictionEnvelope.FromEntity(inForce);
     }
 
     private static async Task DenyInDiscordAsync(IGuildChannel channel, IUser user, RestrictionKind kind)

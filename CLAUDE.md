@@ -1,8 +1,8 @@
 # Working on Tarscord
 
-A Discord bot in C# on .NET 10, using Discord.Net for the gateway, static vertical slices in the
-shape of Minimal API handlers for the command/query layer, EF Core + Npgsql for storage, DbUp for
-schema migrations, and a local LLM through Ollama for the bot's own voice. See
+A Discord bot in C# on .NET 10, using Discord.Net for the gateway, vertical slices with injected
+handler classes for the command/query layer, EF Core + Npgsql for storage, DbUp for schema
+migrations, and a local LLM through Ollama for the bot's own voice. See
 [README.md](README.md) for how to run it.
 
 Every command in `?help` works, and there are tests. That was not true until recently — most of
@@ -144,25 +144,23 @@ Directory.Build.props          EnforceCodeStyleInBuild, so those severities reac
 The shape to copy when adding anything. These are the repo's own patterns, read off the code.
 
 **A feature is a file.** One `public static class` per operation under `Features/<Area>/`,
-named after the verb — `Create`, `Update`, `List`, `Details` — holding, in order: the request
-record and its validator, a `Handle` delegate, a static `AddSlice(IServiceCollection)`, and a static
-`HandleAsync` whose parameters are its dependencies, the way a Minimal API handler's are.
+named after the verb — `Create`, `Update`, `List`, `Details` — holding the request record and its
+validator, a static `AddSlice(IServiceCollection)` that registers both, and a nested `Handler`
+class whose constructor takes its dependencies and whose `HandleAsync` does the work.
 `Features/Events/Create.cs` is the shape to copy. Adding an operation means adding a file and one
 `AddSlice` line in `Startup`, never widening a service class. A record that would hold nothing or a
 single value is left out and the value passed directly: `Reminders/Complete.cs` takes the id.
 
-**`AddSlice` resolves eagerly.** Its factory resolves every dependency and closes over the
-results, so a missing registration fails when the delegate is resolved, where `StartupTests` sees
-it, rather than when someone types the command. `ValidateOnBuild` cannot check a factory, so that
-test is the only check. `HandleAsync` takes non-generic `ILogger`, since a static class cannot be a
-type argument; `AddSlice` passes the logger for its request type.
+**DI builds the handler, so `ValidateOnBuild` checks it.** A handler nobody registered, or one
+missing a dependency, stops `Startup` building its provider. `AddSlice` registers the handler by
+type for exactly that reason; a factory lambda would hide it from that check.
 
 **Slices are public because modules are.** Discord.Net only discovers a public module, and a
-public constructor cannot take an internal delegate (CS0051). `IPerformedByUser` and
+public constructor cannot take an internal handler (CS0051). `IPerformedByUser` and
 `IEmbeddedMessage` stay internal, which a public type implementing them allows.
 
 **Modules stay thin.** A module parses Discord input, guards what Discord's parser cannot
-(a missing mention), calls one slice's `Handle` delegate, and replies. No EF Core, no business
+(a missing mention), calls one slice's `Handler`, and replies. No EF Core, no business
 rules, no `DbContext`. `Modules/LoanModule.cs` and `Modules/AdminModule.cs` are the shape to copy.
 
 **Entities never reach Discord.** Each feature owns an envelope with a static `FromEntity` and
@@ -193,13 +191,12 @@ the clock ambiently, for a log filename and a timestamp; it predates the rule an
 it.
 
 **Validators are wired one at a time.** There is no validation pipeline. A validator runs only if
-`HandleAsync` takes an `IValidator<T>` *and* calls it; the slice's own `AddSlice` registers it
-beside the delegate that needs it, so a validator nobody registered fails the `StartupTests`
-theory. What nothing catches is a validator that is registered and passed in but never called.
+its `Handler` takes an `IValidator<T>` *and* calls it; the slice's own `AddSlice` registers it
+beside the handler that needs it, so a validator nobody registered fails `ValidateOnBuild`. What nothing catches is a validator that is registered and passed in but never called.
 
 **Background work is a `BackgroundService` with a scope per tick.** `ReminderDispatcher` and
 `RestrictionExpirySweeper` are the two. `TarscordContext` is scoped, so each tick opens an
-`IServiceScope` and resolves the `Handle` delegates it needs from it. Both catch and log rather
+`IServiceScope` and resolves the handlers it needs from it. Both catch and log rather
 than letting an exception escape, because a loop that dies takes its whole feature with it silently.
 
 **Depend on `IDiscordClient`, not `DiscordSocketClient`, in a handler.** The concrete client's
@@ -255,7 +252,7 @@ anything scoped from the root provider and `ValidateScopes` fails at startup. Th
 sharing one `DbContext` across the whole process; don't reintroduce that.
 
 **Discord.Net builds every module once at registration, not only per command.** `AddModulesAsync`
-constructs each module from the provider it is given, and modules take scoped `Handle` delegates,
+constructs each module from the provider it is given, and modules take scoped handlers,
 so `InitializeBot.AddModulesAsync` hands it a scope. Given the root provider, `ValidateScopes`
 throws and the bot never starts. The first draft of the MediatR removal did exactly that, with
 every test green, because `CommandSurfaceTests` built its provider without `ValidateScopes`.
@@ -469,8 +466,8 @@ translate, which no in-memory provider would have caught. If a handler touches `
 its test runs against PostgreSQL.
 
 Four tests are worth knowing about because they guard whole classes of mistake:
-`StartupTests.ConfigureServices_ForASlice_ResolvesItWithAllItsDependencies` resolves every `Handle`
-delegate in the assembly and so catches a slice or a validator nobody registered;
+`StartupTests.ConfigureServices_ForASlice_ResolvesItWithAllItsDependencies` resolves every
+`Handler` in the assembly and so catches a slice or a validator nobody registered;
 `StartupTests.ConfigureServices_ForAModule_BuildsItWithAllItsDependencies` builds every module
 from a scope, the way each command does;
 `CommandSurfaceTests` registers the modules through `InitializeBot.AddModulesAsync`, as startup does,
@@ -490,9 +487,9 @@ The standard is
 - Inject seams for anything ambient. `TimeProvider` is already injected into the handlers for
   exactly this reason — use it rather than freezing the clock globally.
 
-Handlers are the natural unit here: `HandleAsync` takes its dependencies as arguments and returns a
-value, so a test calls it with no container at all. Use `FakeTimeProvider` for the clock,
-`NullLogger.Instance` for logging, and `NSubstitute` for Discord.Net's interfaces and `IChatClient`.
+Handlers are the natural unit here: they take injected dependencies and return a value. Use
+`FakeTimeProvider` for the clock, `NullLogger<T>.Instance` for logging, and `NSubstitute` for
+Discord.Net's interfaces and `IChatClient`.
 
 Nothing in either suite talks to a real Discord gateway or a real language model. Verifying
 generation against Ollama is a manual step, because a test that needs a model running is neither a

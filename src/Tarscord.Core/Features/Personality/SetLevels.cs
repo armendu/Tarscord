@@ -28,54 +28,45 @@ public static class SetLevels
         }
     }
 
-    public delegate Task<OneOf<LevelsEnvelope, FailureResponse>> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<IValidator<Command>, CommandValidator>()
-            .AddScoped<Handle>(provider =>
-            {
-                var personality = provider.GetRequiredService<BotPersonality>();
-                var validator = provider.GetRequiredService<IValidator<Command>>();
-                var logger = provider.GetRequiredService<ILogger<Command>>();
+            .AddScoped<Handler>();
 
-                return (command, cancellationToken) =>
-                    HandleAsync(command, personality, validator, logger, cancellationToken);
-            });
-
-    public static async Task<OneOf<LevelsEnvelope, FailureResponse>> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         BotPersonality personality,
-        IValidator<Command> validator,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IValidator<Command> validator)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(SetLevels), command.PerformedByUser);
-
-        var validation = await validator.ValidateAsync(command, cancellationToken);
-
-        if (!validation.IsValid)
+        public async Task<OneOf<LevelsEnvelope, FailureResponse>> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse(
-                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(SetLevels), command.PerformedByUser);
+
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            switch (command.Which)
+            {
+                case Trait.Sarcasm:
+                    personality.SetSarcasmLevel(command.Level);
+                    break;
+
+                case Trait.Humor:
+                    personality.SetHumorLevel(command.Level);
+                    break;
+
+                default:
+                    return new FailureResponse($"I do not know what '{command.Which}' is.");
+            }
+
+            return new LevelsEnvelope(personality.SarcasmLevel, personality.HumorLevel);
         }
-
-        switch (command.Which)
-        {
-            case Trait.Sarcasm:
-                personality.SetSarcasmLevel(command.Level);
-                break;
-
-            case Trait.Humor:
-                personality.SetHumorLevel(command.Level);
-                break;
-
-            default:
-                return new FailureResponse($"I do not know what '{command.Which}' is.");
-        }
-
-        return new LevelsEnvelope(personality.SarcasmLevel, personality.HumorLevel);
     }
 }

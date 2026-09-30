@@ -9,11 +9,11 @@ namespace Tarscord.Core.Modules;
 [Group("event")]
 public class EventAttendanceModule : ModuleBase<SocketCommandContext>
 {
-    private readonly Confirm.Handle _confirm;
-    private readonly Cancel.Handle _cancel;
-    private readonly List.Handle _list;
+    private readonly Confirm.Handler _confirm;
+    private readonly Cancel.Handler _cancel;
+    private readonly List.Handler _list;
 
-    public EventAttendanceModule(Confirm.Handle confirm, Cancel.Handle cancel, List.Handle list)
+    public EventAttendanceModule(Confirm.Handler confirm, Cancel.Handler cancel, List.Handler list)
     {
         _confirm = confirm;
         _cancel = cancel;
@@ -33,7 +33,7 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             .Select(user => new Confirm.Attendee(user.Id, user.Username))
             .ToList();
 
-        var response = await _confirm(
+        var response = await _confirm.HandleAsync(
             new Confirm.Command(eventNameOrId, attendees, Context.User.Username),
             CancellationToken.None);
 
@@ -56,7 +56,7 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             .Select(user => user.Id)
             .ToList();
 
-        var response = await _cancel(
+        var response = await _cancel.HandleAsync(
             new Cancel.Command(eventNameOrId, attendeeIds, Context.User.Id, Context.User.Username),
             CancellationToken.None);
 
@@ -72,7 +72,7 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
     public async Task ShowConfirmed(
         [Summary("The event name, or its id")][Remainder] string eventNameOrId)
     {
-        var response = await _list(
+        var response = await _list.HandleAsync(
             new List.Query(eventNameOrId, Context.User.Username),
             CancellationToken.None);
 

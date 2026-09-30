@@ -6,38 +6,32 @@ namespace Tarscord.Core.Features.Reminders;
 
 public static class Complete
 {
-    public delegate Task<bool> Handle(int reminderId, CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var context = provider.GetRequiredService<TarscordContext>();
-            var timeProvider = provider.GetRequiredService<TimeProvider>();
+        services.AddScoped<Handler>();
 
-            return (reminderId, cancellationToken) =>
-                HandleAsync(reminderId, context, timeProvider, cancellationToken);
-        });
-
-    public static async Task<bool> HandleAsync(
-        int reminderId,
+    public sealed class Handler(
         TarscordContext context,
-        TimeProvider timeProvider,
-        CancellationToken cancellationToken)
+        TimeProvider timeProvider)
     {
-        var reminder = await context.Reminders
-            .FirstOrDefaultAsync(candidate => candidate.Id == reminderId, cancellationToken);
-
-        if (reminder is null)
+        public async Task<bool> HandleAsync(
+            int reminderId,
+            CancellationToken cancellationToken)
         {
-            return false;
+            var reminder = await context.Reminders
+                .FirstOrDefaultAsync(candidate => candidate.Id == reminderId, cancellationToken);
+
+            if (reminder is null)
+            {
+                return false;
+            }
+
+            // One at a time, after delivery, so a failed send is retried next tick.
+            reminder.Sent = true;
+            reminder.Updated = timeProvider.GetUtcNow().UtcDateTime;
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
-
-        // One at a time, after delivery, so a failed send is retried next tick.
-        reminder.Sent = true;
-        reminder.Updated = timeProvider.GetUtcNow().UtcDateTime;
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return true;
     }
 }

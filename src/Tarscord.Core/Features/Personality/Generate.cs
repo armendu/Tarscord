@@ -15,73 +15,63 @@ public static class Generate
 
     public sealed record Command(string Prompt, string Fallback, string PerformedByUser) : IPerformedByUser;
 
-    public delegate Task<GeneratedMessageEnvelope> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var chatClient = provider.GetRequiredService<IChatClient>();
-            var configuration = provider.GetRequiredService<IConfigurationRoot>();
-            var personality = provider.GetRequiredService<BotPersonality>();
-            var logger = provider.GetRequiredService<ILogger<Command>>();
+        services.AddScoped<Handler>();
 
-            return (command, cancellationToken) =>
-                HandleAsync(command, chatClient, configuration, personality, logger, cancellationToken);
-        });
-
-    public static async Task<GeneratedMessageEnvelope> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         IChatClient chatClient,
         IConfigurationRoot configuration,
-        BotPersonality personality,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        BotPersonality personality)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(Generate), command.PerformedByUser);
-
-        if (!IsConfigured(configuration))
+        public async Task<GeneratedMessageEnvelope> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
-        }
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Generate), command.PerformedByUser);
 
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(GenerationTimeout);
-
-        try
-        {
-            List<ChatMessage> messages =
-            [
-                new(ChatRole.System, personality.SystemPrompt),
-                new(ChatRole.User, command.Prompt)
-            ];
-
-            var options = new ChatOptions { Temperature = personality.Temperature };
-
-            var response = await chatClient.GetResponseAsync(messages, options, timeout.Token);
-
-            string generated = response.Text.Trim();
-
-            if (generated.Length > 0)
+            if (!IsConfigured(configuration))
             {
-                return new GeneratedMessageEnvelope(generated, FromModel: true);
+                return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
             }
 
-            logger.LogWarning("The model returned an empty reply");
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            // Everything but the caller's cancellation: a closed list kept missing cases.
-            logger.LogWarning(exception, "Asking the model failed; using a canned reply instead");
-        }
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(GenerationTimeout);
 
-        return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
+            try
+            {
+                List<ChatMessage> messages =
+                [
+                    new(ChatRole.System, personality.SystemPrompt),
+                    new(ChatRole.User, command.Prompt)
+                ];
+
+                var options = new ChatOptions { Temperature = personality.Temperature };
+
+                var response = await chatClient.GetResponseAsync(messages, options, timeout.Token);
+
+                string generated = response.Text.Trim();
+
+                if (generated.Length > 0)
+                {
+                    return new GeneratedMessageEnvelope(generated, FromModel: true);
+                }
+
+                logger.LogWarning("The model returned an empty reply");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                // Everything but the caller's cancellation: a closed list kept missing cases.
+                logger.LogWarning(exception, "Asking the model failed; using a canned reply instead");
+            }
+
+            return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
+        }
     }
 
     private static bool IsConfigured(IConfiguration configuration) =>

@@ -9,7 +9,7 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Admin commands")]
-public class AdminModule(Apply.Handle apply, Lift.Handle lift, IConfigurationRoot config)
+public class AdminModule(Apply.Handler apply, Lift.Handler lift, IConfigurationRoot config)
     : ModuleBase<SocketCommandContext>
 {
     /// <summary>
@@ -66,7 +66,7 @@ public class AdminModule(Apply.Handle apply, Lift.Handle lift, IConfigurationRoo
 
         using var typingState = Context.Channel.EnterTypingState();
 
-        var response = await apply(
+        var response = await apply.HandleAsync(
             new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username),
             CancellationToken.None);
 
@@ -83,7 +83,7 @@ public class AdminModule(Apply.Handle apply, Lift.Handle lift, IConfigurationRoo
 
         using var typingState = Context.Channel.EnterTypingState();
 
-        var response = await lift(
+        var response = await lift.HandleAsync(
             new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username),
             CancellationToken.None);
 

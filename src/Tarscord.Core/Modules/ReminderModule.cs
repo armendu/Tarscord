@@ -5,7 +5,7 @@ using Tarscord.Core.Features.Reminders;
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to create reminders")]
-public class ReminderModule(Create.Handle create) : ModuleBase<SocketCommandContext>
+public class ReminderModule(Create.Handler create) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: remindme {minutes} {message}
@@ -16,7 +16,7 @@ public class ReminderModule(Create.Handle create) : ModuleBase<SocketCommandCont
         [Summary("What to remind you about")] [Remainder]
         string message)
     {
-        var response = await create(
+        var response = await create.HandleAsync(
             new Create.Command(
                 Context.User.Id,
                 Context.Channel.Id,

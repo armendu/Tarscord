@@ -40,36 +40,29 @@ public static class List
         }
     }
 
-    public delegate Task<ListResponse> Handle(Query query, CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var context = provider.GetRequiredService<TarscordContext>();
-            var configuration = provider.GetRequiredService<IConfigurationRoot>();
-            var logger = provider.GetRequiredService<ILogger<Query>>();
+        services.AddScoped<Handler>();
 
-            return (query, cancellationToken) =>
-                HandleAsync(query, context, configuration, logger, cancellationToken);
-        });
-
-    public static async Task<ListResponse> HandleAsync(
-        Query query,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
-        IConfigurationRoot configuration,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IConfigurationRoot configuration)
     {
-        logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-            nameof(List), query.PerformedByUser);
+        public async Task<ListResponse> HandleAsync(
+            Query query,
+            CancellationToken cancellationToken)
+        {
+            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+                nameof(List), query.PerformedByUser);
 
-        var (loans, more) = await context.Loans
-            .Where(loan => (loan.LoanedFromId == query.PerformedByUserId
-                            || loan.LoanedToId == query.PerformedByUserId)
-                           && loan.AmountPayed < loan.AmountLoaned)
-            .OrderBy(loan => loan.Created)
-            .TakeListedAsync(configuration.MaxListed(), cancellationToken);
+            var (loans, more) = await context.Loans
+                .Where(loan => (loan.LoanedFromId == query.PerformedByUserId
+                                || loan.LoanedToId == query.PerformedByUserId)
+                               && loan.AmountPayed < loan.AmountLoaned)
+                .OrderBy(loan => loan.Created)
+                .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 
-        return new ListResponse(loans.ConvertAll(LoanEnvelope.FromEntity), more);
+            return new ListResponse(loans.ConvertAll(LoanEnvelope.FromEntity), more);
+        }
     }
 }

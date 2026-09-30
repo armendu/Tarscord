@@ -21,7 +21,7 @@ public class EventsListTests(PostgresFixture fixture)
         var handler = NewHandler(context);
 
         // Act
-        var response = await handler.Invoke(new List.Query(PerformedByUser), CancellationToken.None);
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
 
         // Assert
         response.EventInfos.Should().BeEmpty();
@@ -41,7 +41,7 @@ public class EventsListTests(PostgresFixture fixture)
         var handler = NewHandler(context);
 
         // Act
-        var response = await handler.Invoke(new List.Query(PerformedByUser), CancellationToken.None);
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
 
         // Assert
         response.EventInfos.Should().ContainSingle()
@@ -62,7 +62,7 @@ public class EventsListTests(PostgresFixture fixture)
         var handler = NewHandler(context);
 
         // Act
-        var response = await handler.Invoke(new List.Query(PerformedByUser), CancellationToken.None);
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
 
         // Assert
         response.EventInfos.Select(eventInfo => eventInfo.EventName)
@@ -84,16 +84,15 @@ public class EventsListTests(PostgresFixture fixture)
         var handler = NewHandler(context, maxListed: "2");
 
         // Act
-        var response = await handler.Invoke(new List.Query(PerformedByUser), CancellationToken.None);
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
 
         // Assert
         response.EventInfos.Should().HaveCount(2);
         response.More.Should().BeTrue();
     }
 
-    private static List.Handle NewHandler(TarscordContext context, string maxListed = "10") =>
-        (query, cancellationToken) => List.HandleAsync(query, context,
-            TestConfiguration.WithMaxListed(maxListed), NullLogger.Instance, cancellationToken);
+    private static List.Handler NewHandler(TarscordContext context, string maxListed = "10") =>
+        new(NullLogger<List.Handler>.Instance, context, TestConfiguration.WithMaxListed(maxListed));
 
     private static EventInfo NewEvent(string eventName, bool isActive, int daysFromNow = 1) =>
         new()

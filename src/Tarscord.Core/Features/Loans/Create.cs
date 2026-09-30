@@ -40,57 +40,47 @@ public static class Create
         }
     }
 
-    public delegate Task<OneOf<LoanEnvelope, FailureResponse>> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<IValidator<Command>, CommandValidator>()
-            .AddScoped<Handle>(provider =>
-            {
-                var context = provider.GetRequiredService<TarscordContext>();
-                var timeProvider = provider.GetRequiredService<TimeProvider>();
-                var validator = provider.GetRequiredService<IValidator<Command>>();
-                var logger = provider.GetRequiredService<ILogger<Command>>();
+            .AddScoped<Handler>();
 
-                return (command, cancellationToken) =>
-                    HandleAsync(command, context, timeProvider, validator, logger, cancellationToken);
-            });
-
-    public static async Task<OneOf<LoanEnvelope, FailureResponse>> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IValidator<Command> validator,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IValidator<Command> validator)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(Create), command.PerformedByUser);
-
-        var validation = await validator.ValidateAsync(command, cancellationToken);
-
-        if (!validation.IsValid)
+        public async Task<OneOf<LoanEnvelope, FailureResponse>> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse(
-                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Create), command.PerformedByUser);
+
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            var createdLoan = await context.Loans.AddAsync(new Loan
+            {
+                LoanedFrom = command.LoanedFrom,
+                LoanedFromId = command.LoanedFromId,
+                LoanedTo = command.LoanedTo,
+                LoanedToId = command.LoanedToId,
+                Description = command.Description ?? "",
+                AmountLoaned = command.Amount,
+                AmountPayed = 0,
+                Confirmed = false,
+                Created = timeProvider.GetUtcNow().UtcDateTime
+            }, cancellationToken);
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return LoanEnvelope.FromEntity(createdLoan.Entity);
         }
-
-        var createdLoan = await context.Loans.AddAsync(new Loan
-        {
-            LoanedFrom = command.LoanedFrom,
-            LoanedFromId = command.LoanedFromId,
-            LoanedTo = command.LoanedTo,
-            LoanedToId = command.LoanedToId,
-            Description = command.Description ?? "",
-            AmountLoaned = command.Amount,
-            AmountPayed = 0,
-            Confirmed = false,
-            Created = timeProvider.GetUtcNow().UtcDateTime
-        }, cancellationToken);
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return LoanEnvelope.FromEntity(createdLoan.Entity);
     }
 }

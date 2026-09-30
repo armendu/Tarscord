@@ -12,20 +12,20 @@ namespace Tarscord.Core.Modules;
 [Group("event")]
 public class EventModule : ModuleBase<SocketCommandContext>
 {
-    private readonly List.Handle _list;
-    private readonly Details.Handle _details;
-    private readonly Create.Handle _create;
-    private readonly Delete.Handle _delete;
-    private readonly Generate.Handle _generate;
+    private readonly List.Handler _list;
+    private readonly Details.Handler _details;
+    private readonly Create.Handler _create;
+    private readonly Delete.Handler _delete;
+    private readonly Generate.Handler _generate;
     private readonly IConfigurationRoot _config;
     private readonly GenerationCooldown _cooldown;
 
     public EventModule(
-        List.Handle list,
-        Details.Handle details,
-        Create.Handle create,
-        Delete.Handle delete,
-        Generate.Handle generate,
+        List.Handler list,
+        Details.Handler details,
+        Create.Handler create,
+        Delete.Handler delete,
+        Generate.Handler generate,
         IConfigurationRoot config,
         GenerationCooldown cooldown)
     {
@@ -44,14 +44,14 @@ public class EventModule : ModuleBase<SocketCommandContext>
     [Command("list"), Summary("Lists all events")]
     public async Task ListEvents()
     {
-        var events = await _list(new List.Query(Context.User.Username), CancellationToken.None);
+        var events = await _list.HandleAsync(new List.Query(Context.User.Username), CancellationToken.None);
 
         if (events.EventInfos.Count > 0 && _cooldown.TryGenerate(Context.User.Id))
         {
             using var typingState = Context.Channel.EnterTypingState();
 
             // Only the heading is voiced; the list itself stays deterministic.
-            var heading = await _generate(
+            var heading = await _generate.HandleAsync(
                 new Generate.Command(
                     Prompt: $"Write the single line that introduces a list of {events.EventInfos.Count} " +
                             "upcoming events. The events are listed under it, so name none of them and " +
@@ -75,7 +75,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     public async Task ShowEventInformation(
         [Summary("The event Id")] int eventId)
     {
-        var response = await _details(
+        var response = await _details.HandleAsync(
             new Details.Query(eventId, Context.User.Username),
             CancellationToken.None);
 
@@ -114,7 +114,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
             parts[1],
             string.Join(", ", parts.Skip(2)));
 
-        var response = await _create(eventInfo, CancellationToken.None);
+        var response = await _create.HandleAsync(eventInfo, CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 
@@ -130,7 +130,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
         [Summary("The event name, or the id from 'event list'")] [Remainder]
         string eventNameOrId)
     {
-        var response = await _delete(
+        var response = await _delete.HandleAsync(
             new Delete.Command(eventNameOrId, Context.User.Id, Context.User.Username),
             CancellationToken.None);
 

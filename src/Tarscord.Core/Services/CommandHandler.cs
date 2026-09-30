@@ -6,11 +6,11 @@ namespace Tarscord.Core.Services;
 public class CommandHandler
 {
     private readonly DiscordSocketClient _discord;
-    private readonly ProcessMessage.Handle _processMessage;
+    private readonly ProcessMessage.Handler _processMessage;
 
     public CommandHandler(
         DiscordSocketClient discord,
-        ProcessMessage.Handle processMessage)
+        ProcessMessage.Handler processMessage)
     {
         _discord = discord;
         _processMessage = processMessage;
@@ -20,6 +20,6 @@ public class CommandHandler
 
     private Task OnMessageReceivedAsync(SocketMessage message)
     {
-        return _processMessage(message);
+        return _processMessage.HandleAsync(message);
     }
 }

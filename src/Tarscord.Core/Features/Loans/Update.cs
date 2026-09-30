@@ -35,70 +35,60 @@ public static class Update
         }
     }
 
-    public delegate Task<OneOf<LoanEnvelope, FailureResponse>> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<IValidator<Command>, CommandValidator>()
-            .AddScoped<Handle>(provider =>
-            {
-                var context = provider.GetRequiredService<TarscordContext>();
-                var timeProvider = provider.GetRequiredService<TimeProvider>();
-                var validator = provider.GetRequiredService<IValidator<Command>>();
-                var logger = provider.GetRequiredService<ILogger<Command>>();
+            .AddScoped<Handler>();
 
-                return (command, cancellationToken) =>
-                    HandleAsync(command, context, timeProvider, validator, logger, cancellationToken);
-            });
-
-    public static async Task<OneOf<LoanEnvelope, FailureResponse>> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IValidator<Command> validator,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IValidator<Command> validator)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(Update), command.PerformedByUser);
-
-        var validation = await validator.ValidateAsync(command, cancellationToken);
-
-        if (!validation.IsValid)
+        public async Task<OneOf<LoanEnvelope, FailureResponse>> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse(
-                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Update), command.PerformedByUser);
+
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            // The most recent loan still owed. LastOrDefaultAsync here was untranslatable.
+            var loan = await context.Loans
+                .Where(candidate => candidate.LoanedFromId == command.LenderId
+                                    && candidate.LoanedToId == command.PayerId
+                                    && candidate.AmountPayed < candidate.AmountLoaned)
+                .OrderByDescending(candidate => candidate.Created)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (loan is null)
+            {
+                return new FailureResponse(
+                    $"You have no open loan from {command.LenderUsername} to pay back.");
+            }
+
+            decimal remainingBalance = loan.AmountLoaned - loan.AmountPayed;
+
+            if (command.Amount > remainingBalance)
+            {
+                return new FailureResponse(
+                    $"Paying {command.Amount:0.00} would be more than the " +
+                    $"{remainingBalance:0.00} still owed.");
+            }
+
+            loan.AmountPayed += command.Amount;
+            loan.Updated = timeProvider.GetUtcNow().UtcDateTime;
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return LoanEnvelope.FromEntity(loan);
         }
-
-        // The most recent loan still owed. LastOrDefaultAsync here was untranslatable.
-        var loan = await context.Loans
-            .Where(candidate => candidate.LoanedFromId == command.LenderId
-                                && candidate.LoanedToId == command.PayerId
-                                && candidate.AmountPayed < candidate.AmountLoaned)
-            .OrderByDescending(candidate => candidate.Created)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (loan is null)
-        {
-            return new FailureResponse(
-                $"You have no open loan from {command.LenderUsername} to pay back.");
-        }
-
-        decimal remainingBalance = loan.AmountLoaned - loan.AmountPayed;
-
-        if (command.Amount > remainingBalance)
-        {
-            return new FailureResponse(
-                $"Paying {command.Amount:0.00} would be more than the " +
-                $"{remainingBalance:0.00} still owed.");
-        }
-
-        loan.AmountPayed += command.Amount;
-        loan.Updated = timeProvider.GetUtcNow().UtcDateTime;
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return LoanEnvelope.FromEntity(loan);
     }
 }

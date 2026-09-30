@@ -18,77 +18,67 @@ public static class Lift
         RestrictionKind Kind,
         string PerformedByUser) : IPerformedByUser;
 
-    public delegate Task<OneOf<RestrictionEnvelope, FailureResponse>> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var context = provider.GetRequiredService<TarscordContext>();
-            var timeProvider = provider.GetRequiredService<TimeProvider>();
-            var discord = provider.GetRequiredService<IDiscordClient>();
-            var logger = provider.GetRequiredService<ILogger<Command>>();
+        services.AddScoped<Handler>();
 
-            return (command, cancellationToken) =>
-                HandleAsync(command, context, timeProvider, discord, logger, cancellationToken);
-        });
-
-    public static async Task<OneOf<RestrictionEnvelope, FailureResponse>> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IDiscordClient discord,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IDiscordClient discord)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(Lift), command.PerformedByUser);
-
-        var inForce = await context.Restrictions
-            .FirstOrDefaultAsync(
-                candidate => candidate.UserId == command.UserId
-                             && candidate.ChannelId == command.ChannelId
-                             && candidate.Kind == command.Kind
-                             && !candidate.Lifted,
-                cancellationToken);
-
-        if (inForce is null)
+        public async Task<OneOf<RestrictionEnvelope, FailureResponse>> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse("They are not restricted here.");
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Lift), command.PerformedByUser);
+
+            var inForce = await context.Restrictions
+                .FirstOrDefaultAsync(
+                    candidate => candidate.UserId == command.UserId
+                                 && candidate.ChannelId == command.ChannelId
+                                 && candidate.Kind == command.Kind
+                                 && !candidate.Lifted,
+                    cancellationToken);
+
+            if (inForce is null)
+            {
+                return new FailureResponse("They are not restricted here.");
+            }
+
+            if (await discord.GetChannelAsync(command.ChannelId) is not IGuildChannel channel)
+            {
+                return new FailureResponse("That channel is gone.");
+            }
+
+            var user = await discord.GetUserAsync(command.UserId);
+
+            if (user is null)
+            {
+                return new FailureResponse("I cannot find that user any more.");
+            }
+
+            try
+            {
+                await AllowInDiscordAsync(channel, user, command.Kind);
+            }
+            catch (Exception exception) when (exception is HttpException or HttpRequestException)
+            {
+                // Unlifted on purpose, so the sweeper keeps trying rather than losing the row.
+                logger.LogWarning(exception, "Could not lift {Kind} for {User} in {ChannelId}",
+                    command.Kind, user.Username, command.ChannelId);
+
+                return new FailureResponse("I don't have permission to change this channel.");
+            }
+
+            inForce.Lifted = true;
+            inForce.Updated = timeProvider.GetUtcNow().UtcDateTime;
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            return RestrictionEnvelope.FromEntity(inForce);
         }
-
-        if (await discord.GetChannelAsync(command.ChannelId) is not IGuildChannel channel)
-        {
-            return new FailureResponse("That channel is gone.");
-        }
-
-        var user = await discord.GetUserAsync(command.UserId);
-
-        if (user is null)
-        {
-            return new FailureResponse("I cannot find that user any more.");
-        }
-
-        try
-        {
-            await AllowInDiscordAsync(channel, user, command.Kind);
-        }
-        catch (Exception exception) when (exception is HttpException or HttpRequestException)
-        {
-            // Unlifted on purpose, so the sweeper keeps trying rather than losing the row.
-            logger.LogWarning(exception, "Could not lift {Kind} for {User} in {ChannelId}",
-                command.Kind, user.Username, command.ChannelId);
-
-            return new FailureResponse("I don't have permission to change this channel.");
-        }
-
-        inForce.Lifted = true;
-        inForce.Updated = timeProvider.GetUtcNow().UtcDateTime;
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return RestrictionEnvelope.FromEntity(inForce);
     }
 
     private static async Task AllowInDiscordAsync(IGuildChannel channel, IUser user, RestrictionKind kind)

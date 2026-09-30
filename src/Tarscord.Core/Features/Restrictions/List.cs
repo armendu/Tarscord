@@ -8,31 +8,26 @@ public static class List
 {
     public sealed record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
 
-    public delegate Task<ListResponse> Handle(CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
-        services.AddScoped<Handle>(provider =>
-        {
-            var context = provider.GetRequiredService<TarscordContext>();
-            var timeProvider = provider.GetRequiredService<TimeProvider>();
+        services.AddScoped<Handler>();
 
-            return cancellationToken => HandleAsync(context, timeProvider, cancellationToken);
-        });
-
-    public static async Task<ListResponse> HandleAsync(
+    public sealed class Handler(
         TarscordContext context,
-        TimeProvider timeProvider,
-        CancellationToken cancellationToken)
+        TimeProvider timeProvider)
     {
-        var now = timeProvider.GetUtcNow().UtcDateTime;
+        public async Task<ListResponse> HandleAsync(
+            CancellationToken cancellationToken)
+        {
+            var now = timeProvider.GetUtcNow().UtcDateTime;
 
-        var expired = await context.Restrictions
-            .Where(restriction => !restriction.Lifted
-                                  && restriction.ExpiresAt != null
-                                  && restriction.ExpiresAt <= now)
-            .OrderBy(restriction => restriction.ExpiresAt)
-            .ToListAsync(cancellationToken);
+            var expired = await context.Restrictions
+                .Where(restriction => !restriction.Lifted
+                                      && restriction.ExpiresAt != null
+                                      && restriction.ExpiresAt <= now)
+                .OrderBy(restriction => restriction.ExpiresAt)
+                .ToListAsync(cancellationToken);
 
-        return new ListResponse(expired.ConvertAll(RestrictionEnvelope.FromEntity));
+            return new ListResponse(expired.ConvertAll(RestrictionEnvelope.FromEntity));
+        }
     }
 }

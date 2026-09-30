@@ -9,7 +9,7 @@ namespace Tarscord.Core.Modules;
 
 [Name("Commands to interact with the bot")]
 public class InteractionModule(
-    Generate.Handle generate,
+    Generate.Handler generate,
     IConfigurationRoot config,
     GenerationCooldown cooldown) : ModuleBase<SocketCommandContext>
 {
@@ -34,7 +34,7 @@ public class InteractionModule(
         {
             using var typingState = Context.Channel.EnterTypingState();
 
-            var response = await generate(
+            var response = await generate.HandleAsync(
                 new Generate.Command(
                     Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
                             "Address them directly.",

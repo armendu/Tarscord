@@ -39,58 +39,48 @@ public static class Create
         }
     }
 
-    public delegate Task<OneOf<ReminderEnvelope, FailureResponse>> Handle(
-        Command command,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<IValidator<Command>, CommandValidator>()
-            .AddScoped<Handle>(provider =>
-            {
-                var context = provider.GetRequiredService<TarscordContext>();
-                var timeProvider = provider.GetRequiredService<TimeProvider>();
-                var validator = provider.GetRequiredService<IValidator<Command>>();
-                var logger = provider.GetRequiredService<ILogger<Command>>();
+            .AddScoped<Handler>();
 
-                return (command, cancellationToken) =>
-                    HandleAsync(command, context, timeProvider, validator, logger, cancellationToken);
-            });
-
-    public static async Task<OneOf<ReminderEnvelope, FailureResponse>> HandleAsync(
-        Command command,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
-        IValidator<Command> validator,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IValidator<Command> validator)
     {
-        logger.LogInformation("Command {Command} executed by {PerformedByUser}",
-            nameof(Create), command.PerformedByUser);
-
-        var validation = await validator.ValidateAsync(command, cancellationToken);
-
-        if (!validation.IsValid)
+        public async Task<OneOf<ReminderEnvelope, FailureResponse>> HandleAsync(
+            Command command,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse(
-                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            logger.LogInformation("Command {Command} executed by {PerformedByUser}",
+                nameof(Create), command.PerformedByUser);
+
+            var validation = await validator.ValidateAsync(command, cancellationToken);
+
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            var now = timeProvider.GetUtcNow().UtcDateTime;
+
+            var reminder = new Reminder
+            {
+                UserId = command.UserId,
+                ChannelId = command.ChannelId,
+                Username = command.Username,
+                Message = command.Message,
+                RemindAt = now.AddMinutes(command.Minutes),
+                Sent = false,
+                Created = now
+            };
+
+            context.Reminders.Add(reminder);
+            await context.SaveChangesAsync(cancellationToken);
+
+            return ReminderEnvelope.FromEntity(reminder);
         }
-
-        var now = timeProvider.GetUtcNow().UtcDateTime;
-
-        var reminder = new Reminder
-        {
-            UserId = command.UserId,
-            ChannelId = command.ChannelId,
-            Username = command.Username,
-            Message = command.Message,
-            RemindAt = now.AddMinutes(command.Minutes),
-            Sent = false,
-            Created = now
-        };
-
-        context.Reminders.Add(reminder);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return ReminderEnvelope.FromEntity(reminder);
     }
 }

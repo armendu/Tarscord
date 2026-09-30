@@ -9,11 +9,11 @@ namespace Tarscord.Core.Modules;
 [Group("loan")]
 public class LoanModule : ModuleBase<SocketCommandContext>
 {
-    private readonly List.Handle _list;
-    private readonly Create.Handle _create;
-    private readonly Update.Handle _update;
+    private readonly List.Handler _list;
+    private readonly Create.Handler _create;
+    private readonly Update.Handler _update;
 
-    public LoanModule(List.Handle list, Create.Handle create, Update.Handle update)
+    public LoanModule(List.Handler list, Create.Handler create, Update.Handler update)
     {
         _list = list;
         _create = create;
@@ -27,7 +27,7 @@ public class LoanModule : ModuleBase<SocketCommandContext>
     [Alias("show")]
     public async Task ShowLoans()
     {
-        var loanList = await _list(
+        var loanList = await _list.HandleAsync(
             new List.Query(Context.User.Id, Context.User.Username),
             CancellationToken.None);
 
@@ -53,7 +53,7 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var response = await _create(
+        var response = await _create.HandleAsync(
             new Create.Command
             {
                 Amount = amount,
@@ -89,7 +89,7 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             return;
         }
 
-        var response = await _update(
+        var response = await _update.HandleAsync(
             new Update.Command
             {
                 Amount = amountBeingPayedBack,

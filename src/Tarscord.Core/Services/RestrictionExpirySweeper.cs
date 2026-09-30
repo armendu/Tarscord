@@ -28,10 +28,10 @@ public sealed class RestrictionExpirySweeper(
         try
         {
             using var scope = scopeFactory.CreateScope();
-            var listExpired = scope.ServiceProvider.GetRequiredService<List.Handle>();
-            var lift = scope.ServiceProvider.GetRequiredService<Lift.Handle>();
+            var listExpired = scope.ServiceProvider.GetRequiredService<List.Handler>();
+            var lift = scope.ServiceProvider.GetRequiredService<Lift.Handler>();
 
-            var expired = await listExpired(cancellationToken);
+            var expired = await listExpired.HandleAsync(cancellationToken);
 
             foreach (var restriction in expired.Restrictions)
             {
@@ -49,13 +49,13 @@ public sealed class RestrictionExpirySweeper(
     }
 
     private async Task TryLiftAsync(
-        Lift.Handle lift,
+        Lift.Handler lift,
         RestrictionEnvelope restriction,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await lift(
+            var result = await lift.HandleAsync(
                 new Lift.Command(restriction.UserId, restriction.ChannelId, restriction.Kind,
                     nameof(RestrictionExpirySweeper)),
                 cancellationToken);

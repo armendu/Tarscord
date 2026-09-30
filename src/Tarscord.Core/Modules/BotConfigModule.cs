@@ -6,7 +6,7 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Configuration commands")]
-public class BotConfigModule(SetLevels.Handle setLevels) : ModuleBase<SocketCommandContext>
+public class BotConfigModule(SetLevels.Handler setLevels) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: sarcasm-level {level}
@@ -29,7 +29,7 @@ public class BotConfigModule(SetLevels.Handle setLevels) : ModuleBase<SocketComm
 
     private async Task SetAsync(SetLevels.Trait which, int level)
     {
-        var response = await setLevels(
+        var response = await setLevels.HandleAsync(
             new SetLevels.Command(which, level, Context.User.Username),
             CancellationToken.None);
 

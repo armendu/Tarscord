@@ -7,12 +7,12 @@ namespace Tarscord.Core.Services;
 
 public class LoggingService
 {
-    private readonly ProcessLog.Handle _processLog;
+    private readonly ProcessLog.Handler _processLog;
 
     public LoggingService(
         DiscordSocketClient discord,
         CommandService commands,
-        ProcessLog.Handle processLog)
+        ProcessLog.Handler processLog)
     {
         _processLog = processLog;
 
@@ -22,6 +22,6 @@ public class LoggingService
 
     private Task OnLogAsync(LogMessage msg)
     {
-        return _processLog(msg);
+        return _processLog.HandleAsync(msg);
     }
 }

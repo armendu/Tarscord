@@ -25,7 +25,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewCreateHandler(context).Invoke(NewCommand(30), CancellationToken.None);
+        var response = await NewCreateHandler(context).HandleAsync(NewCommand(30), CancellationToken.None);
 
         // Assert
         response.AsT0.RemindAt.Should().Be(Now.UtcDateTime.AddMinutes(30));
@@ -48,7 +48,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewCreateHandler(context).Invoke(
+        var response = await NewCreateHandler(context).HandleAsync(
             NewCommand(minutes), CancellationToken.None);
 
         // Assert
@@ -63,7 +63,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewCreateHandler(context).Invoke(
+        var response = await NewCreateHandler(context).HandleAsync(
             NewCommand(double.MaxValue), CancellationToken.None);
 
         // Assert
@@ -78,7 +78,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewCreateHandler(context).Invoke(
+        var response = await NewCreateHandler(context).HandleAsync(
             NewCommand(30, message: "  "), CancellationToken.None);
 
         // Assert
@@ -94,7 +94,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Invoke(CancellationToken.None);
+        var response = await NewListHandler(context).HandleAsync(CancellationToken.None);
 
         // Assert
         response.Reminders.Should().BeEmpty();
@@ -109,7 +109,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Invoke(CancellationToken.None);
+        var response = await NewListHandler(context).HandleAsync(CancellationToken.None);
 
         // Assert
         response.Reminders.Should().ContainSingle()
@@ -125,7 +125,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewListHandler(context).Invoke(CancellationToken.None);
+        var response = await NewListHandler(context).HandleAsync(CancellationToken.None);
 
         // Assert
         response.Reminders.Should().BeEmpty();
@@ -140,7 +140,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        bool completed = await NewCompleteHandler(context).Invoke(
+        bool completed = await NewCompleteHandler(context).HandleAsync(
             reminderId, CancellationToken.None);
 
         // Assert
@@ -161,7 +161,7 @@ public class RemindersTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        bool completed = await NewCompleteHandler(context).Invoke(
+        bool completed = await NewCompleteHandler(context).HandleAsync(
             4242, CancellationToken.None);
 
         // Assert
@@ -192,14 +192,13 @@ public class RemindersTests(PostgresFixture fixture)
     private static Create.Command NewCommand(double minutes, string message = "stand up") =>
         new(UserId, ChannelId, "alice", message, minutes, "alice");
 
-    private static Create.Handle NewCreateHandler(TarscordContext context) =>
-        (command, cancellationToken) => Create.HandleAsync(command, context, new FakeTimeProvider(Now),
-            new Create.CommandValidator(), NullLogger.Instance, cancellationToken);
+    private static Create.Handler NewCreateHandler(TarscordContext context) =>
+        new(NullLogger<Create.Handler>.Instance, context, new FakeTimeProvider(Now),
+            new Create.CommandValidator());
 
-    private static List.Handle NewListHandler(TarscordContext context) =>
-        cancellationToken => List.HandleAsync(context, new FakeTimeProvider(Now), cancellationToken);
+    private static List.Handler NewListHandler(TarscordContext context) =>
+        new(context, new FakeTimeProvider(Now));
 
-    private static Complete.Handle NewCompleteHandler(TarscordContext context) =>
-        (reminderId, cancellationToken) =>
-            Complete.HandleAsync(reminderId, context, new FakeTimeProvider(Now), cancellationToken);
+    private static Complete.Handler NewCompleteHandler(TarscordContext context) =>
+        new(context, new FakeTimeProvider(Now));
 }

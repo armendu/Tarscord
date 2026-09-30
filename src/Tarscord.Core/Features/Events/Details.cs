@@ -22,48 +22,39 @@ public static class Details
         }
     }
 
-    public delegate Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
-        Query query,
-        CancellationToken cancellationToken);
-
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<IValidator<Query>, QueryValidator>()
-            .AddScoped<Handle>(provider =>
-            {
-                var context = provider.GetRequiredService<TarscordContext>();
-                var validator = provider.GetRequiredService<IValidator<Query>>();
-                var logger = provider.GetRequiredService<ILogger<Query>>();
+            .AddScoped<Handler>();
 
-                return (query, cancellationToken) =>
-                    HandleAsync(query, context, validator, logger, cancellationToken);
-            });
-
-    public static async Task<OneOf<EventInfoEnvelope, FailureResponse>> HandleAsync(
-        Query query,
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
-        IValidator<Query> validator,
-        ILogger logger,
-        CancellationToken cancellationToken)
+        IValidator<Query> validator)
     {
-        logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-            nameof(Details), query.PerformedByUser);
-
-        var validation = await validator.ValidateAsync(query, cancellationToken);
-
-        // An unusable id used to report the same thing as a missing event.
-        if (!validation.IsValid)
+        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> HandleAsync(
+            Query query,
+            CancellationToken cancellationToken)
         {
-            return new FailureResponse(
-                string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            logger.LogInformation("Query {Query} executed by {PerformedByUser}",
+                nameof(Details), query.PerformedByUser);
+
+            var validation = await validator.ValidateAsync(query, cancellationToken);
+
+            // An unusable id used to report the same thing as a missing event.
+            if (!validation.IsValid)
+            {
+                return new FailureResponse(
+                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+            }
+
+            var eventInfo = await context.EventInfos
+                .FirstOrDefaultAsync(candidate => candidate.Id == query.EventId, cancellationToken);
+
+            return eventInfo switch
+            {
+                null => new FailureResponse($"There is no event with id {query.EventId}"),
+                _ => EventInfoEnvelope.FromEntity(eventInfo)
+            };
         }
-
-        var eventInfo = await context.EventInfos
-            .FirstOrDefaultAsync(candidate => candidate.Id == query.EventId, cancellationToken);
-
-        return eventInfo switch
-        {
-            null => new FailureResponse($"There is no event with id {query.EventId}"),
-            _ => EventInfoEnvelope.FromEntity(eventInfo)
-        };
     }
 }
