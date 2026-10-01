@@ -555,6 +555,12 @@ command does today before assuming the bug is the one described.
 backlog to work through. Fixing an unrelated one in the same change makes the diff unreviewable —
 mention it instead.
 
+**Don't open an issue for what an open pull request turns up.** A problem found while a pull
+request is unmerged, by review or while working on it, is fixed on that pull request. That is not
+the known-problems list above: it is the change's own unfinished business, and an issue filed for it
+is a promise that gets dropped once the pull request merges. #30 was opened during #29 and folded
+back into it for this reason.
+
 **Prefer the existing pattern.** Feature file, envelope, `OneOf`, thin module. If a change seems
 to need a new architectural concept, say so and ask rather than introducing a second way of doing
 things alongside the first. Three things were added on one branch and removed on review for exactly
