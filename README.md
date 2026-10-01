@@ -27,6 +27,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?event confirmed <name or id>` | Who has confirmed for an event |
 | `?loan list` (`show`) | Loans you're on either side of |
 | `?loan to <@user> <amount> <why>` | Record that you lent someone money |
+| `?loan confirm <@user>` | Confirm the loan `<@user>` recorded lending you |
 | `?loan payback <@user> <amount>` (`return`, `payloan`, …) | Pay back money you owe |
 | `?remindme <minutes> <message>` | Reminds you in the channel you asked in |
 

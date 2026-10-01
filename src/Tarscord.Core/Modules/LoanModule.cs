@@ -12,12 +12,18 @@ public class LoanModule : ModuleBase<SocketCommandContext>
     private readonly List.Handler _list;
     private readonly Create.Handler _create;
     private readonly Update.Handler _update;
+    private readonly Confirm.Handler _confirm;
 
-    public LoanModule(List.Handler list, Create.Handler create, Update.Handler update)
+    public LoanModule(
+        List.Handler list,
+        Create.Handler create,
+        Update.Handler update,
+        Confirm.Handler confirm)
     {
         _list = list;
         _create = create;
         _update = update;
+        _confirm = confirm;
     }
 
     /// <summary>
@@ -104,6 +110,32 @@ public class LoanModule : ModuleBase<SocketCommandContext>
         var embeddedMessage = response.ToEmbeddedMessage();
 
         await ReplyAsync(embed: embeddedMessage);
+    }
+
+    /// <summary>
+    /// Usage: loan confirm {user}
+    /// </summary>
+    [Command("confirm"), Summary("Confirms that you owe someone the money they recorded lending you")]
+    public async Task ConfirmLoan(
+        [Summary("The user who lent you the money")] string user)
+    {
+        var guildUser = await GetMentionedUser(user);
+
+        if (guildUser is null)
+        {
+            await ReplyAsync(embed: "Invalid user mention. Please mention a user like @username".EmbedMessage());
+            return;
+        }
+
+        var response = await _confirm.HandleAsync(
+            new Confirm.Command(
+                BorrowerId: Context.User.Id,
+                LenderId: guildUser.Id,
+                LenderUsername: guildUser.Username,
+                PerformedByUser: Context.User.Username),
+            CancellationToken.None);
+
+        await ReplyAsync(embed: response.ToEmbeddedMessage());
     }
 
     /// <summary>The mentioned guild member, or null when there isn't one to find.</summary>

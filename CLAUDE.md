@@ -377,10 +377,9 @@ substitute first, then pass it.
 **`?loan payback` picks the most recent open loan.** Not the oldest. That is what the original
 `LastOrDefault` was reaching for, and it is a behaviour choice, not an accident.
 
-**The `confirmed` column on `loans` is written once, as false, and never read.** Its intended meaning
-is unclear — probably "the borrower acknowledged the loan", for which there is no command. Whether a
-loan is settled is `amount_payed < amount_loaned`. Don't repurpose `confirmed` without deciding what
-it means.
+**`confirmed` on `loans` means the borrower acknowledged it, not that it is settled.** Anyone can
+record that someone owes them money; only that borrower can `?loan confirm` it. Whether a loan is
+settled is `amount_payed < amount_loaned`.
 
 ## Code quality
 

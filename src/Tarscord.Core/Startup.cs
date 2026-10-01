@@ -105,6 +105,7 @@ public class Startup
         Features.EventAttendees.Confirm.AddSlice(services);
         Features.EventAttendees.List.AddSlice(services);
 
+        Features.Loans.Confirm.AddSlice(services);
         Features.Loans.Create.AddSlice(services);
         Features.Loans.List.AddSlice(services);
         Features.Loans.Update.AddSlice(services);
