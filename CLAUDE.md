@@ -315,9 +315,10 @@ gateway, not the model: `DefaultRunMode` is `Sync` and `CommandHandler` returns 
 the command body runs on the gateway callback and a slow model delays every other event. `Generate`
 owns both, and spends the cooldown only once it is about to call the model, so an unconfigured bot
 never uses it up; on cooldown it returns the caller's fallback. A mention wants silence instead, so
-`ProcessMessage` peeks with `GenerationCooldown.IsCoolingDown` first and never spends it itself. Measured
-on this machine, a warm `llama3.1` answers one of these prompts in about half a second and a cold load
-took 4.5 seconds, so the first call after Ollama idles can lose the race and fall back.
+`ProcessMessage` peeks with `GenerationCooldown.IsCoolingDown` first and never spends it itself;
+unconfigured, then, every mention gets the canned line, which is cheap and stalls nothing. Measured
+on this machine, a warm `llama3.1` answers one of these prompts in about half a second and a cold
+load took 4.5 seconds, so the first call after Ollama idles can lose the race and fall back.
 
 **Ollama is optional at runtime and must stay that way.** `Features/Personality/Generate.cs` has no
 `FailureResponse` arm: on any transport failure it logs a warning and returns the caller's fixed

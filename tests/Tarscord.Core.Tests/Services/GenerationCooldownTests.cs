@@ -83,7 +83,7 @@ public class GenerationCooldownTests
     }
 
     [Fact]
-    public void IsCoolingDown_BeforeAnyReply_DoesNotStartTheCooldown()
+    public void TryGenerate_AfterOnlyAPeek_Allows()
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
