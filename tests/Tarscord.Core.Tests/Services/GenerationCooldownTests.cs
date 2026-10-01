@@ -67,4 +67,32 @@ public class GenerationCooldownTests
         // Assert
         allowed.Should().BeTrue();
     }
+
+    [Fact]
+    public void IsCoolingDown_AfterAReply_IsTrue()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        cooldown.TryGenerate(Alice);
+
+        // Act
+        bool coolingDown = cooldown.IsCoolingDown(Alice);
+
+        // Assert
+        coolingDown.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TryGenerate_AfterOnlyAPeek_Allows()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        cooldown.IsCoolingDown(Alice);
+
+        // Act
+        bool allowed = cooldown.TryGenerate(Alice);
+
+        // Assert
+        allowed.Should().BeTrue();
+    }
 }

@@ -158,9 +158,11 @@ ollama pull llama3.1
 ollama serve
 ```
 
-One generated reply per person every 20 seconds, and generation gets 5 seconds before the fixed line
-wins. Both limits exist because commands run on the gateway callback, so a slow model holds up every
-other event; `?random` twice in a row gives you the plain number the second time.
+One generated reply per person every 20 seconds, shared across `?random`, `?dare`, `?event list` and
+mentions, so a voiced `?event list` costs you the voice on your next `?dare`. Only an actual call to
+the model counts, and generation gets 5 seconds before the fixed line wins. Both limits exist
+because commands run on the gateway callback, so a slow model holds up every other event; `?random`
+twice in a row gives you the plain number the second time.
 
 It is optional. If nothing answers on `ollama.url`, the bot logs a warning and replies with a fixed
 line instead, so no command breaks because the model is down, and a blank `ollama.url` or

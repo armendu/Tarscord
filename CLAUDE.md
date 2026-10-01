@@ -313,10 +313,14 @@ the example with a placeholder or nothing will read it. Both are copied to the o
 **A generated reply is on a 5 second timeout and a 20 second per-user cooldown.** Both are about the
 gateway, not the model: `DefaultRunMode` is `Sync` and `CommandHandler` returns the task it gets, so
 the command body runs on the gateway callback and a slow model delays every other event. `Generate`
-owns the timeout; `GenerationCooldown.TryGenerate` is checked by each caller that can generate, and a
-caller on cooldown skips the model and replies with the same fallback it would have passed. Measured
-on this machine, a warm `llama3.1` answers one of these prompts in about half a second and a cold load
-took 4.5 seconds, so the first call after Ollama idles can lose the race and fall back.
+owns both, and spends the cooldown only once it is about to call the model, so an unconfigured bot
+never uses it up; on cooldown it returns the caller's fallback. It enters the typing state at that
+same point, in the channel the caller passes, so a fallback never shows typing for nothing. Callers
+don't enter it themselves. A mention wants silence on cooldown instead, so
+`ProcessMessage` peeks with `GenerationCooldown.IsCoolingDown` first and never spends it itself;
+unconfigured, then, every mention gets the canned line, which is cheap and stalls nothing. Measured
+on this machine, a warm `llama3.1` answers one of these prompts in about half a second and a cold
+load took 4.5 seconds, so the first call after Ollama idles can lose the race and fall back.
 
 **Ollama is optional at runtime and must stay that way.** `Features/Personality/Generate.cs` has no
 `FailureResponse` arm: on any transport failure it logs a warning and returns the caller's fixed
@@ -550,6 +554,12 @@ command does today before assuming the bug is the one described.
 **Stay inside the task.** This file lists a lot of known problems. They are context, not a
 backlog to work through. Fixing an unrelated one in the same change makes the diff unreviewable —
 mention it instead.
+
+**Don't open an issue for what an open pull request turns up.** A problem found while a pull
+request is unmerged, by review or while working on it, is fixed on that pull request. That is not
+the known-problems list above: it is the change's own unfinished business, and an issue filed for it
+is a promise that gets dropped once the pull request merges. #30 was opened during #29 and folded
+back into it for this reason.
 
 **Prefer the existing pattern.** Feature file, envelope, `OneOf`, thin module. If a change seems
 to need a new architectural concept, say so and ask rather than introducing a second way of doing

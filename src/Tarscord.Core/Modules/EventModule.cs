@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Features.Personality;
-using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Modules;
 
@@ -18,7 +17,6 @@ public class EventModule : ModuleBase<SocketCommandContext>
     private readonly Delete.Handler _delete;
     private readonly Generate.Handler _generate;
     private readonly IConfigurationRoot _config;
-    private readonly GenerationCooldown _cooldown;
 
     public EventModule(
         List.Handler list,
@@ -26,8 +24,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
         Create.Handler create,
         Delete.Handler delete,
         Generate.Handler generate,
-        IConfigurationRoot config,
-        GenerationCooldown cooldown)
+        IConfigurationRoot config)
     {
         _list = list;
         _details = details;
@@ -35,7 +32,6 @@ public class EventModule : ModuleBase<SocketCommandContext>
         _delete = delete;
         _generate = generate;
         _config = config;
-        _cooldown = cooldown;
     }
 
     /// <summary>
@@ -46,10 +42,8 @@ public class EventModule : ModuleBase<SocketCommandContext>
     {
         var events = await _list.HandleAsync(new List.Query(Context.User.Username), CancellationToken.None);
 
-        if (events.EventInfos.Count > 0 && _cooldown.TryGenerate(Context.User.Id))
+        if (events.EventInfos.Count > 0)
         {
-            using var typingState = Context.Channel.EnterTypingState();
-
             // Only the heading is voiced; the list itself stays deterministic.
             var heading = await _generate.HandleAsync(
                 new Generate.Command(
@@ -57,6 +51,8 @@ public class EventModule : ModuleBase<SocketCommandContext>
                             "upcoming events. The events are listed under it, so name none of them and " +
                             "invent nothing. Reply with that one line only, at most twelve words.",
                     Fallback: List.DefaultHeading,
+                    UserId: Context.User.Id,
+                    Channel: Context.Channel,
                     PerformedByUser: Context.User.Username),
                 CancellationToken.None);
 
