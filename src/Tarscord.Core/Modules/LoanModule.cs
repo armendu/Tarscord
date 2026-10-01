@@ -128,7 +128,11 @@ public class LoanModule : ModuleBase<SocketCommandContext>
         }
 
         var response = await _confirm.HandleAsync(
-            new Confirm.Command(guildUser.Id, Context.User.Id, guildUser.Username, Context.User.Username),
+            new Confirm.Command(
+                BorrowerId: Context.User.Id,
+                LenderId: guildUser.Id,
+                LenderUsername: guildUser.Username,
+                PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
         await ReplyAsync(embed: response.ToEmbeddedMessage());

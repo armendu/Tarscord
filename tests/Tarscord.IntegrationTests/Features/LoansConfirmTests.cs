@@ -14,6 +14,7 @@ public class LoansConfirmTests(PostgresFixture fixture)
 {
     private const ulong AliceId = 111111111111111111;
     private const ulong BobId = 222222222222222222;
+    private const ulong CarolId = 333333333333333333;
 
     private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
@@ -60,6 +61,25 @@ public class LoansConfirmTests(PostgresFixture fixture)
 
         // Act
         var response = await NewHandler(context).HandleAsync(aliceConfirmsHerOwnLoan, CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("no unconfirmed loan");
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Loans.SingleAsync()).Confirmed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_BySomeoneOutsideTheLoan_ReturnsFailureAndChangesNothing()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenALoan(AliceId, BobId);
+        await using var context = fixture.CreateContext();
+        var carolConfirmsAlicesLoan = new Confirm.Command(CarolId, AliceId, "alice", "carol");
+
+        // Act
+        var response = await NewHandler(context).HandleAsync(carolConfirmsAlicesLoan, CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("no unconfirmed loan");
