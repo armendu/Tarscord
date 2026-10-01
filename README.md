@@ -167,8 +167,9 @@ twice in a row gives you the number with a fixed line the second time.
 It is optional. If nothing answers on `ollama.url`, the bot logs a warning and replies with a fixed
 line instead, so no command breaks because the model is down, and a blank `ollama.url` or
 `ollama.model` skips the call altogether. The model only writes the wrapper: `?random` still draws
-its number with `Random.Shared` and shows it as the reply's title, and `?event list` still lists the same events. Every other reply — loans, events,
-help — is deterministic and never goes near the model.
+its number with `Random.Shared` and shows it as the reply's title without ever telling the model,
+and `?event list` still lists the same events. Every other reply — loans, events, help — is
+deterministic and never goes near the model.
 
 `?sarcasm-level 8` and `?humor-level 3` change the voice while the bot is running. They are held in
 memory, so a restart goes back to the values in `config.yml`.

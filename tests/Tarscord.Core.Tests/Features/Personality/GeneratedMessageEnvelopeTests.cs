@@ -9,17 +9,17 @@ public class GeneratedMessageEnvelopeTests
     private const string Heading = "Three things you will find an excuse to miss:";
 
     [Fact]
-    public void ToEmbeddedMessage_WithATitle_KeepsItVerbatim()
+    public void ToEmbeddedMessage_WithATitle_UsesTheCallersTitle()
     {
         // Arrange
-        const string drawnNumber = "42";
-        var envelope = new GeneratedMessageEnvelope("The number of the day is forty-three.", FromModel: true);
+        const string title = "42";
+        var envelope = new GeneratedMessageEnvelope("Not a lucky one.", FromModel: true);
 
         // Act
-        var embed = envelope.ToEmbeddedMessage(drawnNumber);
+        var embed = envelope.ToEmbeddedMessage(title);
 
         // Assert
-        embed.Title.Should().Be(drawnNumber);
+        embed.Title.Should().Be(title);
     }
 
     [Fact]

@@ -28,11 +28,11 @@ public class RandomNumberModule(
 
         int generatedNumber = (int)Random.Shared.NextInt64(min, (long)max + 1);
 
-        // The model only announces the number; the title carries it, so a paraphrase cannot change it.
+        // The model is never told the number, so its line cannot contradict the title that shows it.
         var response = await generate.HandleAsync(
             new Generate.Command(
-                Prompt: $"Announce that the random number drawn between {min} and {max} is " +
-                        $"{generatedNumber}. Quote that number exactly and do not offer a different one.",
+                Prompt: $"Write one short line to go under a number just drawn at random between {min} " +
+                        $"and {max}. The number is shown above your line, so do not state or guess it.",
                 Fallback: $"Drawn between {min} and {max}.",
                 UserId: Context.User.Id,
                 Channel: Context.Channel,
