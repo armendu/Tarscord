@@ -1,6 +1,6 @@
+using AwesomeAssertions;
 using Discord.Commands;
 using Discord.WebSocket;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core;

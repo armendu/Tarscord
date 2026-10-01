@@ -220,7 +220,7 @@ future major does not, which makes a bump deliberate rather than silent.
 | Microsoft.Extensions.AI.Abstractions | 10.10.1 | `IChatClient`, the seam the LLM sits behind |
 | OllamaSharp | 5.3.1 | `IChatClient` over a local Ollama — pinned, see below |
 | dbup-postgresql | 7.0.1 | Migrations, in `Tarscord.DbMigrator` only |
-| xunit / FluentAssertions | 2.9.3 / 8.11.0 | Tests |
+| xunit / AwesomeAssertions | 2.9.3 / 9.6.0 | Tests; the Apache-2.0 fork, as FluentAssertions 8 is not open source |
 | NSubstitute | 6.2.0 | Faking Discord.Net interfaces and `IChatClient` |
 | Microsoft.Extensions.TimeProvider.Testing | 10.10.0 | `FakeTimeProvider` |
 | Testcontainers.PostgreSql | 4.15.0 | The integration suite's own database |
@@ -245,6 +245,12 @@ hold is gone — those commands are fixed and have tests. What is left is what s
 `GatewayIntents.MessageContent` because text commands cannot work without it. If it isn't enabled in
 the Developer Portal the bot connects, logs nothing unusual, and ignores every command. A "the bot
 does nothing" report is this until proven otherwise.
+
+**So is the Server Members intent, and it has to be on.** `Startup` requests
+`GatewayIntents.GuildMembers` with `AlwaysDownloadUsers`, because Discord.Net's `IUser` type reader
+only looks in the member cache: without a full cache, `?dare @someone` answers "User not found." for
+anyone the bot has not seen yet. Discord refuses the connection outright (close code 4014) if the
+intent is requested but not enabled in the Developer Portal.
 
 **A command runs in its own DI scope, and that is load-bearing.** `TarscordContext` is scoped, and
 `ProcessMessage` creates a scope per message and hands it to `commands.ExecuteAsync`. Resolve

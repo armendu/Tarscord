@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Tarscord.Core.Features.Events;
 using Xunit;
 

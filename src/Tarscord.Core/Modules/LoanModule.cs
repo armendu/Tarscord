@@ -110,8 +110,7 @@ public class LoanModule : ModuleBase<SocketCommandContext>
     /// <remarks>Context.Guild is null in a direct message, which used to be an unhandled NRE.</remarks>
     private async Task<IGuildUser?> GetMentionedUser(string userMention)
     {
-        // Through IGuild, so a member missing from the cache is fetched over REST; the
-        // GuildMembers intent is not requested.
+        // Through IGuild, so a member missing from the cache is still fetched over REST.
         if (Context.Guild is not IGuild guild)
         {
             return null;

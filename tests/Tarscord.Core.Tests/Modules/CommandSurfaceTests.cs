@@ -1,5 +1,5 @@
+using AwesomeAssertions;
 using Discord.Commands;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core;

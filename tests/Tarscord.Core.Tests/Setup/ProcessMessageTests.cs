@@ -1,5 +1,5 @@
+using AwesomeAssertions;
 using Discord;
-using FluentAssertions;
 using NSubstitute;
 using Tarscord.Core.Setup;
 using Xunit;

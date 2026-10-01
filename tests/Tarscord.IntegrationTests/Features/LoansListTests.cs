@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Tarscord.Core.Features.Loans;
 using Tarscord.Core.Persistence;

@@ -71,7 +71,14 @@ public class Startup
                 {
                     LogLevel = LogSeverity.Verbose,
                     MessageCacheSize = 1000,
-                    GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+                    // Scheduled events and invites have no handler, and Discord.Net warns about both.
+                    GatewayIntents = (GatewayIntents.AllUnprivileged
+                                      & ~GatewayIntents.GuildScheduledEvents
+                                      & ~GatewayIntents.GuildInvites)
+                                     | GatewayIntents.MessageContent
+                                     | GatewayIntents.GuildMembers,
+                    // The IUser type reader only looks in the cache, so the cache has to hold everyone.
+                    AlwaysDownloadUsers = true
                 }))
             .AddSingleton(new CommandService(new CommandServiceConfig
             {
