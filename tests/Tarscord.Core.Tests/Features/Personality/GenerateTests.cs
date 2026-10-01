@@ -1,3 +1,4 @@
+using Discord;
 using FluentAssertions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -210,14 +211,103 @@ public class GenerateTests
         cooldown.IsCoolingDown(Alice).Should().BeTrue();
     }
 
-    private static Generate.Command NewCommand() =>
-        new("Dare bob to say it out loud.", Fallback, Alice, "alice");
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Handle_WithNoOllamaModel_ReturnsTheCannedLineWithoutAsking(string? ollamaModel)
+    {
+        // Arrange
+        var chatClient = Substitute.For<IChatClient>();
+        var handler = NewHandler(chatClient, ollamaModel: ollamaModel);
+
+        // Act
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
+
+        // Assert
+        response.Message.Should().Be(Fallback);
+        await chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default!, default, default);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTheModelAnswers_SpendsTheCooldown()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        var handler = NewHandler(AnsweringChatClient(), cooldown: cooldown);
+
+        // Act
+        await handler.HandleAsync(NewCommand(), CancellationToken.None);
+
+        // Assert
+        cooldown.IsCoolingDown(Alice).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_WhenTheModelIsAsked_ShowsTyping()
+    {
+        // Arrange
+        var channel = Substitute.For<IMessageChannel>();
+        var handler = NewHandler(AnsweringChatClient());
+
+        // Act
+        await handler.HandleAsync(NewCommand(channel), CancellationToken.None);
+
+        // Assert
+        channel.Received(1).EnterTypingState(Arg.Any<RequestOptions>());
+    }
+
+    [Fact]
+    public async Task Handle_WithNoOllamaConfigured_DoesNotShowTyping()
+    {
+        // Arrange
+        var channel = Substitute.For<IMessageChannel>();
+        var handler = NewHandler(Substitute.For<IChatClient>(), ollamaUrl: null);
+
+        // Act
+        await handler.HandleAsync(NewCommand(channel), CancellationToken.None);
+
+        // Assert
+        channel.DidNotReceiveWithAnyArgs().EnterTypingState(default);
+    }
+
+    [Fact]
+    public async Task Handle_OnCooldown_DoesNotShowTyping()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        cooldown.TryGenerate(Alice);
+
+        var channel = Substitute.For<IMessageChannel>();
+        var handler = NewHandler(AnsweringChatClient(), cooldown: cooldown);
+
+        // Act
+        await handler.HandleAsync(NewCommand(channel), CancellationToken.None);
+
+        // Assert
+        channel.DidNotReceiveWithAnyArgs().EnterTypingState(default);
+    }
+
+    private static IChatClient AnsweringChatClient()
+    {
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Go on then."))));
+
+        return chatClient;
+    }
+
+    private static Generate.Command NewCommand(IMessageChannel? channel = null) =>
+        new("Dare bob to say it out loud.", Fallback, Alice, channel ?? Substitute.For<IMessageChannel>(), "alice");
 
     private static Generate.Handler NewHandler(
         IChatClient chatClient,
         string sarcasmLevel = "5",
         string? ollamaUrl = "http://localhost:11434",
-        GenerationCooldown? cooldown = null)
+        GenerationCooldown? cooldown = null,
+        string? ollamaModel = "llama3.1")
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -225,7 +315,7 @@ public class GenerateTests
                 ["sarcasm-level"] = sarcasmLevel,
                 ["humor-level"] = "5",
                 ["ollama:url"] = ollamaUrl,
-                ["ollama:model"] = "llama3.1"
+                ["ollama:model"] = ollamaModel
             })
             .Build();
 

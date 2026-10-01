@@ -44,8 +44,6 @@ public class EventModule : ModuleBase<SocketCommandContext>
 
         if (events.EventInfos.Count > 0)
         {
-            using var typingState = Context.Channel.EnterTypingState();
-
             // Only the heading is voiced; the list itself stays deterministic.
             var heading = await _generate.HandleAsync(
                 new Generate.Command(
@@ -54,6 +52,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
                             "invent nothing. Reply with that one line only, at most twelve words.",
                     Fallback: List.DefaultHeading,
                     UserId: Context.User.Id,
+                    Channel: Context.Channel,
                     PerformedByUser: Context.User.Username),
                 CancellationToken.None);
 

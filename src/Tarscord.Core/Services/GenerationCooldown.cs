@@ -7,13 +7,13 @@ public sealed class GenerationCooldown(TimeProvider timeProvider)
 {
     private static readonly TimeSpan PerUser = TimeSpan.FromSeconds(20);
 
-    private readonly ConcurrentDictionary<ulong, DateTimeOffset> _lastReply = new();
+    private readonly ConcurrentDictionary<ulong, DateTimeOffset> _lastCall = new();
 
-    /// <summary>True when this user had a generated reply too recently; starts nothing.</summary>
+    /// <summary>True when this user asked the model too recently; starts nothing.</summary>
     public bool IsCoolingDown(ulong userId) =>
         IsCoolingDown(userId, timeProvider.GetUtcNow());
 
-    /// <summary>True when this user is due a generated reply, which starts their next cooldown.</summary>
+    /// <summary>True when this user may ask the model now, which starts their next cooldown.</summary>
     public bool TryGenerate(ulong userId)
     {
         var now = timeProvider.GetUtcNow();
@@ -23,11 +23,11 @@ public sealed class GenerationCooldown(TimeProvider timeProvider)
             return false;
         }
 
-        _lastReply[userId] = now;
+        _lastCall[userId] = now;
 
         return true;
     }
 
     private bool IsCoolingDown(ulong userId, DateTimeOffset now) =>
-        _lastReply.TryGetValue(userId, out var last) && now - last < PerUser;
+        _lastCall.TryGetValue(userId, out var last) && now - last < PerUser;
 }

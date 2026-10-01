@@ -84,7 +84,11 @@ public static class ProcessMessage
             {
                 if (wasMentioned)
                 {
-                    await AnswerMentionAsync(scope, context, argPos);
+                    await AnswerMentionAsync(
+                        scope.ServiceProvider.GetRequiredService<Generate.Handler>(),
+                        context.Channel,
+                        context.User,
+                        context.Message.Content[argPos..]);
                 }
 
                 return;
@@ -96,12 +100,13 @@ public static class ProcessMessage
             await context.Channel.SendMessageAsync(embed: result.ErrorReason.EmbedMessage());
         }
 
-        private async Task AnswerMentionAsync(
-            IServiceScope scope,
-            SocketCommandContext context,
-            int argPos)
+        internal async Task AnswerMentionAsync(
+            Generate.Handler generate,
+            IMessageChannel channel,
+            IUser user,
+            string text)
         {
-            string said = context.Message.Content[argPos..].Trim();
+            string said = text.Trim();
 
             if (said.Length == 0)
             {
@@ -109,28 +114,24 @@ public static class ProcessMessage
             }
 
             // Only peeks: a mention on cooldown stays silent, where Generate would hand back the fallback.
-            if (cooldown.IsCoolingDown(context.User.Id))
+            if (cooldown.IsCoolingDown(user.Id))
             {
-                logger.LogInformation("Mention from {User} ignored, still on cooldown",
-                    context.User.Username);
+                logger.LogInformation("Mention from {User} ignored, still on cooldown", user.Username);
 
                 return;
             }
 
-            var generate = scope.ServiceProvider.GetRequiredService<Generate.Handler>();
-
-            using var typingState = context.Channel.EnterTypingState();
-
             var response = await generate.HandleAsync(
                 new Generate.Command(
-                    Prompt: $"{context.User.Username} said to you: {said}",
+                    Prompt: $"{user.Username} said to you: {said}",
                     Fallback: "I have nothing useful to add.",
-                    UserId: context.User.Id,
-                    PerformedByUser: context.User.Username),
+                    UserId: user.Id,
+                    Channel: channel,
+                    PerformedByUser: user.Username),
                 CancellationToken.None);
 
             // Unset, Discord expands every mention in the content, pinging on the bot's behalf.
-            await context.Channel.SendMessageAsync(
+            await channel.SendMessageAsync(
                 response.ToReplyText(),
                 allowedMentions: AllowedMentions.None);
         }

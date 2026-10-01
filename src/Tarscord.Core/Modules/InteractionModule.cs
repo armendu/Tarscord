@@ -26,14 +26,13 @@ public class InteractionModule(
             return;
         }
 
-        using var typingState = Context.Channel.EnterTypingState();
-
         var response = await generate.HandleAsync(
             new Generate.Command(
                 Prompt: $"Dare {user.Username} to say out loud whatever they are currently typing. " +
                         "Address them directly.",
                 Fallback: $"I dare you to write that message, {user.Username}.",
                 UserId: Context.User.Id,
+                Channel: Context.Channel,
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);
 

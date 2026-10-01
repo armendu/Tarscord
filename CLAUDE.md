@@ -314,7 +314,9 @@ the example with a placeholder or nothing will read it. Both are copied to the o
 gateway, not the model: `DefaultRunMode` is `Sync` and `CommandHandler` returns the task it gets, so
 the command body runs on the gateway callback and a slow model delays every other event. `Generate`
 owns both, and spends the cooldown only once it is about to call the model, so an unconfigured bot
-never uses it up; on cooldown it returns the caller's fallback. A mention wants silence instead, so
+never uses it up; on cooldown it returns the caller's fallback. It enters the typing state at that
+same point, in the channel the caller passes, so a fallback never shows typing for nothing. Callers
+don't enter it themselves. A mention wants silence on cooldown instead, so
 `ProcessMessage` peeks with `GenerationCooldown.IsCoolingDown` first and never spends it itself;
 unconfigured, then, every mention gets the canned line, which is cheap and stalls nothing. Measured
 on this machine, a warm `llama3.1` answers one of these prompts in about half a second and a cold

@@ -29,8 +29,6 @@ public class RandomNumberModule(
 
         int generatedNumber = (int)Random.Shared.NextInt64(min, (long)max + 1);
 
-        using var typingState = Context.Channel.EnterTypingState();
-
         // The model only announces the number, it never draws it.
         var response = await generate.HandleAsync(
             new Generate.Command(
@@ -38,6 +36,7 @@ public class RandomNumberModule(
                         $"{generatedNumber}. Quote that number exactly and do not offer a different one.",
                 Fallback: generatedNumber.ToString(),
                 UserId: Context.User.Id,
+                Channel: Context.Channel,
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
