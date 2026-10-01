@@ -33,6 +33,19 @@ public class LoanEnvelopeTests
     }
 
     [Fact]
+    public void ToEmbeddedMessage_ForALoanTheBorrowerHasNotConfirmed_SaysSo()
+    {
+        // Arrange
+        var envelope = Envelope(amount: 20m, paid: 0m, confirmed: false);
+
+        // Act
+        var embed = envelope.ToEmbeddedMessage();
+
+        // Assert
+        embed.Title.Should().Be("bob owes alice 20.00\u20AC for lunch, not confirmed yet");
+    }
+
+    [Fact]
     public void Outstanding_ForAPartlyPaidLoan_IsWhatIsLeft()
     {
         // Arrange
@@ -45,11 +58,12 @@ public class LoanEnvelopeTests
         outstanding.Should().Be(9.25m);
     }
 
-    private static LoanEnvelope Envelope(decimal amount, decimal paid) =>
+    private static LoanEnvelope Envelope(decimal amount, decimal paid, bool confirmed = true) =>
         new()
         {
             Amount = amount,
             AmountPaid = paid,
+            Confirmed = confirmed,
             LoanedFrom = "alice",
             LoanedFromId = 111111111111111111,
             LoanedTo = "bob",

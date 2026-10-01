@@ -19,6 +19,8 @@ public sealed class LoanEnvelope : IEmbeddedMessage
 
     public decimal AmountPaid { get; init; }
 
+    public bool Confirmed { get; init; }
+
     public decimal Outstanding => Amount - AmountPaid;
 
     public static LoanEnvelope FromEntity(Loan loan)
@@ -31,7 +33,8 @@ public sealed class LoanEnvelope : IEmbeddedMessage
             LoanedTo = loan.LoanedTo,
             LoanedToId = loan.LoanedToId,
             Description = loan.Description,
-            AmountPaid = loan.AmountPayed
+            AmountPaid = loan.AmountPayed,
+            Confirmed = loan.Confirmed
         };
     }
 
@@ -51,6 +54,11 @@ public sealed class LoanEnvelope : IEmbeddedMessage
         if (!string.IsNullOrWhiteSpace(Description))
         {
             summary.Append(" for ").Append(Description);
+        }
+
+        if (!Confirmed)
+        {
+            summary.Append(", not confirmed yet");
         }
 
         return summary.ToString();
