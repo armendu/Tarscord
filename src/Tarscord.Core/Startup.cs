@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OllamaSharp;
 using Tarscord.Core.Extensions;
@@ -47,10 +48,26 @@ public class Startup
         // Start the startup service
         await provider.GetRequiredService<StartupService>().StartAsync();
 
-        await provider.GetRequiredService<ReminderDispatcher>().StartAsync(CancellationToken.None);
-        await provider.GetRequiredService<RestrictionExpirySweeper>().StartAsync(CancellationToken.None);
+        var logger = provider.GetRequiredService<ILogger<Startup>>();
+        _ = StartLoopAsync(provider.GetRequiredService<ReminderDispatcher>(), logger);
+        _ = StartLoopAsync(provider.GetRequiredService<RestrictionExpirySweeper>(), logger);
 
         await Task.Delay(-1);
+    }
+
+    internal static async Task StartLoopAsync(BackgroundService loop, ILogger<Startup> logger)
+    {
+        try
+        {
+            await loop.StartAsync(CancellationToken.None);
+            await loop.ExecuteTask!;
+        }
+        catch (Exception exception)
+        {
+            // Nothing else awaits the loop, so without this a loop that dies would die silently.
+            logger.LogError(exception, "{Loop} stopped and will not run again until the bot restarts",
+                loop.GetType().Name);
+        }
     }
 
     private static IChatClient CreateChatClient(IConfiguration configuration)
