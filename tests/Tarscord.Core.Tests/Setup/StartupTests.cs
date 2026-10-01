@@ -1,7 +1,6 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using FluentAssertions;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core;
@@ -47,7 +46,6 @@ public class StartupTests
     [InlineData(typeof(CommandHandler))]
     [InlineData(typeof(LoggingService))]
     [InlineData(typeof(StartupService))]
-    [InlineData(typeof(IMediator))]
     [InlineData(typeof(TimeProvider))]
     public void ConfigureServices_ForAGatewayService_ResolvesIt(Type serviceType)
     {
@@ -89,36 +87,61 @@ public class StartupTests
     }
 
     [Theory]
-    [MemberData(nameof(RequestHandlers))]
-    public void ConfigureServices_ForAMediatRHandler_ResolvesItWithAllItsDependencies(Type handlerService)
+    [MemberData(nameof(Slices))]
+    public void ConfigureServices_ForASlice_ResolvesItWithAllItsDependencies(Type slice)
     {
         // Arrange
         using var provider = BuildProvider();
         using var scope = provider.CreateScope();
 
         // Act
-        object? handler = scope.ServiceProvider.GetService(handlerService);
+        object? handler = scope.ServiceProvider.GetService(slice);
 
         // Assert
         handler.Should().NotBeNull();
     }
 
-    public static TheoryData<Type> RequestHandlers()
+    public static TheoryData<Type> Slices()
     {
-        Type[] handlerInterfaces = [typeof(IRequestHandler<,>), typeof(IRequestHandler<>)];
-
-        var services = typeof(Startup).Assembly.GetTypes()
-            .Where(type => type is { IsAbstract: false, IsInterface: false })
-            .SelectMany(type => type.GetInterfaces())
-            .Where(contract => contract.IsGenericType
-                               && handlerInterfaces.Contains(contract.GetGenericTypeDefinition()))
-            .Distinct();
+        var slices = typeof(Startup).Assembly.GetTypes()
+            .Where(type => type.IsNested && type.Name == "Handler");
 
         var data = new TheoryData<Type>();
 
-        foreach (var service in services)
+        foreach (var slice in slices)
         {
-            data.Add(service);
+            data.Add(slice);
+        }
+
+        return data;
+    }
+
+    // Modules are not registered in DI; each command builds one from its scope, as this does.
+    [Theory]
+    [MemberData(nameof(Modules))]
+    public void ConfigureServices_ForAModule_BuildsItWithAllItsDependencies(Type module)
+    {
+        // Arrange
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+
+        // Act
+        object instance = ActivatorUtilities.CreateInstance(scope.ServiceProvider, module);
+
+        // Assert
+        instance.Should().NotBeNull();
+    }
+
+    public static TheoryData<Type> Modules()
+    {
+        var modules = typeof(Startup).Assembly.GetTypes()
+            .Where(type => typeof(IModuleBase).IsAssignableFrom(type) && !type.IsAbstract);
+
+        var data = new TheoryData<Type>();
+
+        foreach (var module in modules)
+        {
+            data.Add(module);
         }
 
         return data;

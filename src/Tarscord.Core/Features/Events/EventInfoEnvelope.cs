@@ -6,7 +6,7 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Events;
 
-internal record EventInfoEnvelope(
+public sealed record EventInfoEnvelope(
     int EventId,
     string EventOrganizer,
     ulong EventOrganizerId,

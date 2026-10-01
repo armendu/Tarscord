@@ -1,17 +1,25 @@
-using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MediatR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tarscord.Core.Setup;
 
 public static class InitializeBot
 {
-    public record Command : IRequest<Unit>;
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddSingleton<Handler>();
 
-    public class Handler : IRequestHandler<Command, Unit>
+    internal static async Task AddModulesAsync(CommandService commands, IServiceProvider provider)
+    {
+        // Discord.Net builds every module once here, and modules take scoped slices.
+        using var scope = provider.CreateScope();
+
+        await commands.AddModulesAsync(typeof(InitializeBot).Assembly, scope.ServiceProvider);
+    }
+
+    public sealed class Handler
     {
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _discord;
@@ -30,7 +38,7 @@ public static class InitializeBot
             _config = config;
         }
 
-        public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+        public async Task HandleAsync()
         {
             string? discordToken = _config["tokens:discord"];
 
@@ -43,9 +51,7 @@ public static class InitializeBot
 
             await _discord.LoginAsync(TokenType.Bot, discordToken);
             await _discord.StartAsync();
-            await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
-
-            return Unit.Value;
+            await AddModulesAsync(_commands, _provider);
         }
     }
 }

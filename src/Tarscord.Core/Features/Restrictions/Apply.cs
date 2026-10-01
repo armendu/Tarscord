@@ -1,8 +1,8 @@
 using Discord;
 using Discord.Net;
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -11,16 +11,16 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-internal static class Apply
+public static class Apply
 {
-    public record Command(
+    public sealed record Command(
         IMessageChannel ContextChannel,
         IUser User,
         RestrictionKind Kind,
         int Minutes,
-        string PerformedByUser) : IRequest<OneOf<RestrictionEnvelope, FailureResponse>>, IPerformedByUser;
+        string PerformedByUser) : IPerformedByUser;
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         private const int MaximumMinutes = 365 * 24 * 60;
 
@@ -34,14 +34,17 @@ internal static class Apply
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<RestrictionEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<RestrictionEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<RestrictionEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {
@@ -114,21 +117,21 @@ internal static class Apply
 
             return RestrictionEnvelope.FromEntity(inForce);
         }
+    }
 
-        private static async Task DenyInDiscordAsync(IGuildChannel channel, IUser user, RestrictionKind kind)
+    private static async Task DenyInDiscordAsync(IGuildChannel channel, IUser user, RestrictionKind kind)
+    {
+        var current = channel.GetPermissionOverwrite(user);
+
+        var denied = kind switch
         {
-            var current = channel.GetPermissionOverwrite(user);
+            RestrictionKind.Mute => current?.Modify(sendMessages: PermValue.Deny)
+                                    ?? new OverwritePermissions(sendMessages: PermValue.Deny),
+            RestrictionKind.DenyReacting => current?.Modify(addReactions: PermValue.Deny)
+                                            ?? new OverwritePermissions(addReactions: PermValue.Deny),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown restriction kind")
+        };
 
-            var denied = kind switch
-            {
-                RestrictionKind.Mute => current?.Modify(sendMessages: PermValue.Deny)
-                                        ?? new OverwritePermissions(sendMessages: PermValue.Deny),
-                RestrictionKind.DenyReacting => current?.Modify(addReactions: PermValue.Deny)
-                                                ?? new OverwritePermissions(addReactions: PermValue.Deny),
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown restriction kind")
-            };
-
-            await channel.AddPermissionOverwriteAsync(user, denied);
-        }
+        await channel.AddPermissionOverwriteAsync(user, denied);
     }
 }

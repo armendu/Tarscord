@@ -1,5 +1,5 @@
 using FluentValidation;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -8,17 +8,17 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Reminders;
 
-internal static class Create
+public static class Create
 {
-    public record Command(
+    public sealed record Command(
         ulong UserId,
         ulong ChannelId,
         string Username,
         string Message,
         double Minutes,
-        string PerformedByUser) : IRequest<OneOf<ReminderEnvelope, FailureResponse>>, IPerformedByUser;
+        string PerformedByUser) : IPerformedByUser;
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         // A year is arbitrary but finite: DateTime arithmetic on an unbounded double throws.
         private const double MaximumMinutes = 365 * 24 * 60;
@@ -39,14 +39,17 @@ internal static class Create
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<ReminderEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<ReminderEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<ReminderEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {

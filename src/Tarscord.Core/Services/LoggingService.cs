@@ -1,21 +1,20 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MediatR;
 using Tarscord.Core.Features.Logging;
 
 namespace Tarscord.Core.Services;
 
 public class LoggingService
 {
-    private readonly IMediator _mediator;
+    private readonly ProcessLog.Handler _processLog;
 
     public LoggingService(
         DiscordSocketClient discord,
         CommandService commands,
-        IMediator mediator)
+        ProcessLog.Handler processLog)
     {
-        _mediator = mediator;
+        _processLog = processLog;
 
         discord.Log += OnLogAsync;
         commands.Log += OnLogAsync;
@@ -23,6 +22,6 @@ public class LoggingService
 
     private Task OnLogAsync(LogMessage msg)
     {
-        return _mediator.Send(new ProcessLog.Command { LogMessage = msg });
+        return _processLog.HandleAsync(msg);
     }
 }

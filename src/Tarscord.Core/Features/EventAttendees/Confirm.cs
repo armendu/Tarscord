@@ -1,7 +1,7 @@
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Extensions;
@@ -12,14 +12,16 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.EventAttendees;
 
-internal static class Confirm
+public static class Confirm
 {
-    public record Attendee(ulong AttendeeId, string AttendeeName);
+    public sealed record Attendee(ulong AttendeeId, string AttendeeName);
 
-    public record Command(string Event, IReadOnlyList<Attendee> Attendees, string PerformedByUser)
-        : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
+    public sealed record Command(
+        string Event,
+        IReadOnlyList<Attendee> Attendees,
+        string PerformedByUser) : IPerformedByUser;
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
@@ -33,15 +35,18 @@ internal static class Confirm
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IConfigurationRoot configuration,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<AttendeeListEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<AttendeeListEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<AttendeeListEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {

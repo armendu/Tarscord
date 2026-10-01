@@ -1,8 +1,8 @@
 using System.Text;
 using Discord;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -10,13 +10,13 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
-internal static class List
+public static class List
 {
     public const string DefaultHeading = "Here are all the events:";
 
-    public record Query(string PerformedByUser) : IRequest<ListResponse>, IPerformedByUser;
+    public sealed record Query(string PerformedByUser) : IPerformedByUser;
 
-    public record ListResponse(
+    public sealed record ListResponse(
         IReadOnlyList<EventInfoEnvelope> EventInfos,
         bool More,
         string Heading = DefaultHeading) : IEmbeddedMessage
@@ -44,15 +44,20 @@ internal static class List
         }
     }
 
-    public class QueryHandler(
-        ILogger<QueryHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
-        IConfigurationRoot configuration) : IRequestHandler<Query, ListResponse>
+        IConfigurationRoot configuration)
     {
-        public async Task<ListResponse> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<ListResponse> HandleAsync(
+            Query query,
+            CancellationToken cancellationToken)
         {
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
-                nameof(List), request.PerformedByUser);
+                nameof(List), query.PerformedByUser);
 
             var (eventInfos, more) = await context.EventInfos
                 .Where(eventInfo => eventInfo.IsActive)

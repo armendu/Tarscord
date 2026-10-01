@@ -1,6 +1,5 @@
 using Discord;
 using Discord.Commands;
-using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.EventAttendees;
 
@@ -10,11 +9,15 @@ namespace Tarscord.Core.Modules;
 [Group("event")]
 public class EventAttendanceModule : ModuleBase<SocketCommandContext>
 {
-    private readonly IMediator _mediator;
+    private readonly Confirm.Handler _confirm;
+    private readonly Cancel.Handler _cancel;
+    private readonly List.Handler _list;
 
-    public EventAttendanceModule(IMediator mediator)
+    public EventAttendanceModule(Confirm.Handler confirm, Cancel.Handler cancel, List.Handler list)
     {
-        _mediator = mediator;
+        _confirm = confirm;
+        _cancel = cancel;
+        _list = list;
     }
 
     /// <summary>
@@ -30,8 +33,9 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             .Select(user => new Confirm.Attendee(user.Id, user.Username))
             .ToList();
 
-        var response = await _mediator.Send(
-            new Confirm.Command(eventNameOrId, attendees, Context.User.Username));
+        var response = await _confirm.HandleAsync(
+            new Confirm.Command(eventNameOrId, attendees, Context.User.Username),
+            CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 
@@ -52,8 +56,9 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             .Select(user => user.Id)
             .ToList();
 
-        var response = await _mediator.Send(
-            new Cancel.Command(eventNameOrId, attendeeIds, Context.User.Id, Context.User.Username));
+        var response = await _cancel.HandleAsync(
+            new Cancel.Command(eventNameOrId, attendeeIds, Context.User.Id, Context.User.Username),
+            CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 
@@ -67,8 +72,9 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
     public async Task ShowConfirmed(
         [Summary("The event name, or its id")][Remainder] string eventNameOrId)
     {
-        var response = await _mediator.Send(
-            new List.Query(eventNameOrId, Context.User.Username));
+        var response = await _list.HandleAsync(
+            new List.Query(eventNameOrId, Context.User.Username),
+            CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 

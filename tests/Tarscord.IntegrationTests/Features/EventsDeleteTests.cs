@@ -27,7 +27,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command(eventId.ToString(), OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
@@ -49,7 +49,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command(eventId.ToString(), SomeoneElseId, "bob"), CancellationToken.None);
 
         // Assert
@@ -70,7 +70,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command(eventId.ToString(), OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
@@ -85,7 +85,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command("4242", OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
@@ -101,7 +101,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command("Release party", OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
@@ -118,7 +118,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command("Release party", OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
@@ -133,7 +133,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new Delete.Command("  ", OrganizerId, Organizer), CancellationToken.None);
 
         // Assert
@@ -161,7 +161,7 @@ public class EventsDeleteTests(PostgresFixture fixture)
         return eventInfo.Id;
     }
 
-    private static Delete.CommandHandler NewHandler(TarscordContext context) =>
-        new(NullLogger<Delete.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
+    private static Delete.Handler NewHandler(TarscordContext context) =>
+        new(NullLogger<Delete.Handler>.Instance, context, new FakeTimeProvider(Now),
             new Delete.CommandValidator());
 }

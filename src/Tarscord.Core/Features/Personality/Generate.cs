@@ -1,6 +1,6 @@
-using MediatR;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -8,28 +8,30 @@ using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Features.Personality;
 
-internal static class Generate
+public static class Generate
 {
-    public record Command(string Prompt, string Fallback, string PerformedByUser)
-        : IRequest<GeneratedMessageEnvelope>, IPerformedByUser;
+    // The gateway callback waits on this, so it is a stall budget rather than a model budget.
+    private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(5);
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public sealed record Command(string Prompt, string Fallback, string PerformedByUser) : IPerformedByUser;
+
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         IChatClient chatClient,
         IConfigurationRoot configuration,
-        BotPersonality personality) : IRequestHandler<Command, GeneratedMessageEnvelope>
+        BotPersonality personality)
     {
-        // The gateway callback waits on this, so it is a stall budget rather than a model budget.
-        private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(5);
-
-        public async Task<GeneratedMessageEnvelope> Handle(
+        public async Task<GeneratedMessageEnvelope> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
                 nameof(Generate), command.PerformedByUser);
 
-            if (!IsConfigured())
+            if (!IsConfigured(configuration))
             {
                 return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
             }
@@ -70,8 +72,8 @@ internal static class Generate
 
             return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
         }
-
-        private bool IsConfigured() =>
-            configuration.OllamaUrl() is not null && configuration.OllamaModel() is not null;
     }
+
+    private static bool IsConfigured(IConfiguration configuration) =>
+        configuration.OllamaUrl() is not null && configuration.OllamaModel() is not null;
 }

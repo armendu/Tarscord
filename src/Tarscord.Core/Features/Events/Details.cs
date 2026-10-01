@@ -1,6 +1,6 @@
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -8,12 +8,11 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
-internal static class Details
+public static class Details
 {
-    public record Query(int EventId, string PerformedByUser)
-        : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>, IPerformedByUser;
+    public sealed record Query(int EventId, string PerformedByUser) : IPerformedByUser;
 
-    public class QueryValidator : AbstractValidator<Query>
+    public sealed class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
@@ -23,13 +22,16 @@ internal static class Details
         }
     }
 
-    public class QueryHandler(
-        ILogger<QueryHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Query>, QueryValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         IValidator<Query> validator)
-        : IRequestHandler<Query, OneOf<EventInfoEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> HandleAsync(
             Query query,
             CancellationToken cancellationToken)
         {

@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using FluentValidation;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,18 +90,34 @@ public class Startup
             .AddLogging(builder => builder.AddSimpleConsole(options => options.TimestampFormat = "HH:mm:ss "))
             .AddSingleton(configuration)
             .AddDatabase(configuration)
-            .AddSingleton(TimeProvider.System)
-            .AddScoped<IValidator<Features.Events.Create.Command>, Features.Events.Create.CommandValidator>()
-            .AddScoped<IValidator<Features.Events.Details.Query>, Features.Events.Details.QueryValidator>()
-            .AddScoped<IValidator<Features.Events.Delete.Command>, Features.Events.Delete.CommandValidator>()
-            .AddScoped<IValidator<Features.EventAttendees.Confirm.Command>, Features.EventAttendees.Confirm.CommandValidator>()
-            .AddScoped<IValidator<Features.EventAttendees.Cancel.Command>, Features.EventAttendees.Cancel.CommandValidator>()
-            .AddScoped<IValidator<Features.EventAttendees.List.Query>, Features.EventAttendees.List.QueryValidator>()
-            .AddScoped<IValidator<Features.Loans.Create.Command>, Features.Loans.Create.CommandValidator>()
-            .AddScoped<IValidator<Features.Loans.Update.Command>, Features.Loans.Update.CommandValidator>()
-            .AddScoped<IValidator<Features.Reminders.Create.Command>, Features.Reminders.Create.CommandValidator>()
-            .AddScoped<IValidator<Features.Restrictions.Apply.Command>, Features.Restrictions.Apply.CommandValidator>()
-            .AddScoped<IValidator<Features.Personality.SetLevels.Command>, Features.Personality.SetLevels.CommandValidator>()
-            .AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
+            .AddSingleton(TimeProvider.System);
+
+        Setup.InitializeBot.AddSlice(services);
+        Setup.ProcessMessage.AddSlice(services);
+        Features.Logging.ProcessLog.AddSlice(services);
+
+        Features.Events.Create.AddSlice(services);
+        Features.Events.Delete.AddSlice(services);
+        Features.Events.Details.AddSlice(services);
+        Features.Events.List.AddSlice(services);
+
+        Features.EventAttendees.Cancel.AddSlice(services);
+        Features.EventAttendees.Confirm.AddSlice(services);
+        Features.EventAttendees.List.AddSlice(services);
+
+        Features.Loans.Create.AddSlice(services);
+        Features.Loans.List.AddSlice(services);
+        Features.Loans.Update.AddSlice(services);
+
+        Features.Personality.Generate.AddSlice(services);
+        Features.Personality.SetLevels.AddSlice(services);
+
+        Features.Reminders.Complete.AddSlice(services);
+        Features.Reminders.Create.AddSlice(services);
+        Features.Reminders.List.AddSlice(services);
+
+        Features.Restrictions.Apply.AddSlice(services);
+        Features.Restrictions.Lift.AddSlice(services);
+        Features.Restrictions.List.AddSlice(services);
     }
 }

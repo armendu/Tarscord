@@ -1,5 +1,4 @@
 using Discord.Commands;
-using MediatR;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Personality;
 
@@ -7,7 +6,7 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Configuration commands")]
-public class BotConfigModule(IMediator mediator) : ModuleBase<SocketCommandContext>
+public class BotConfigModule(SetLevels.Handler setLevels) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: sarcasm-level {level}
@@ -30,8 +29,9 @@ public class BotConfigModule(IMediator mediator) : ModuleBase<SocketCommandConte
 
     private async Task SetAsync(SetLevels.Trait which, int level)
     {
-        var response = await mediator.Send(
-            new SetLevels.Command(which, level, Context.User.Username));
+        var response = await setLevels.HandleAsync(
+            new SetLevels.Command(which, level, Context.User.Username),
+            CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();
 

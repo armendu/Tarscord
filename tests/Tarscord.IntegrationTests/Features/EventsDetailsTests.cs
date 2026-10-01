@@ -24,7 +24,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
         var handler = NewHandler(context);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.HandleAsync(
             new Details.Query(eventId, PerformedByUser), CancellationToken.None);
 
         // Assert
@@ -40,7 +40,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
         var handler = NewHandler(context);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.HandleAsync(
             new Details.Query(4242, PerformedByUser), CancellationToken.None);
 
         // Assert
@@ -58,7 +58,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
         var handler = NewHandler(context);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.HandleAsync(
             new Details.Query(eventId, PerformedByUser), CancellationToken.None);
 
         // Assert
@@ -87,6 +87,6 @@ public class EventsDetailsTests(PostgresFixture fixture)
         return eventInfo.Id;
     }
 
-    private static Details.QueryHandler NewHandler(TarscordContext context) =>
-        new(NullLogger<Details.QueryHandler>.Instance, context, new Details.QueryValidator());
+    private static Details.Handler NewHandler(TarscordContext context) =>
+        new(NullLogger<Details.Handler>.Instance, context, new Details.QueryValidator());
 }

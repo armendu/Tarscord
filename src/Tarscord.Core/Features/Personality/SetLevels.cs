@@ -1,5 +1,5 @@
 using FluentValidation;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -7,7 +7,7 @@ using Tarscord.Core.Services;
 
 namespace Tarscord.Core.Features.Personality;
 
-internal static class SetLevels
+public static class SetLevels
 {
     public enum Trait
     {
@@ -15,10 +15,9 @@ internal static class SetLevels
         Humor
     }
 
-    public record Command(Trait Which, int Level, string PerformedByUser)
-        : IRequest<OneOf<LevelsEnvelope, FailureResponse>>, IPerformedByUser;
+    public sealed record Command(Trait Which, int Level, string PerformedByUser) : IPerformedByUser;
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
@@ -29,13 +28,16 @@ internal static class SetLevels
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         BotPersonality personality,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<LevelsEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<LevelsEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<LevelsEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {

@@ -26,7 +26,7 @@ public class LoansListTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new List.Query(AliceId, "alice_new_name"), CancellationToken.None);
 
         // Assert
@@ -46,7 +46,7 @@ public class LoansListTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new List.Query(AliceId, "alice"), CancellationToken.None);
 
         // Assert
@@ -66,7 +66,7 @@ public class LoansListTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new List.Query(AliceId, "alice"), CancellationToken.None);
 
         // Assert
@@ -85,7 +85,7 @@ public class LoansListTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new List.Query(AliceId, "alice"), CancellationToken.None);
 
         // Assert
@@ -105,7 +105,7 @@ public class LoansListTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(
+        var response = await NewHandler(context).HandleAsync(
             new List.Query(AliceId, "alice"), CancellationToken.None);
 
         // Assert
@@ -127,6 +127,6 @@ public class LoansListTests(PostgresFixture fixture)
             Created = DateTime.UtcNow
         };
 
-    private static List.QueryHandler NewHandler(TarscordContext context, string maxListed = "10") =>
-        new(NullLogger<List.QueryHandler>.Instance, context, TestConfiguration.WithMaxListed(maxListed));
+    private static List.Handler NewHandler(TarscordContext context, string maxListed = "10") =>
+        new(NullLogger<List.Handler>.Instance, context, TestConfiguration.WithMaxListed(maxListed));
 }

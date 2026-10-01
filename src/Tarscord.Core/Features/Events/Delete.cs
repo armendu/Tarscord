@@ -1,6 +1,6 @@
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -8,13 +8,13 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Events;
 
-internal static class Delete
+public static class Delete
 {
     /// <summary><paramref name="Event"/> is an id when it parses as one, otherwise a name.</summary>
-    public record Command(string Event, ulong RequestedById, string PerformedByUser)
-        : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>, IPerformedByUser;
+    public sealed record Command(string Event, ulong RequestedById, string PerformedByUser)
+        : IPerformedByUser;
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
@@ -24,14 +24,17 @@ internal static class Delete
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {

@@ -17,7 +17,7 @@ public class SetLevelsTests
         var handler = NewHandler(personality);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.HandleAsync(
             new SetLevels.Command(SetLevels.Trait.Sarcasm, 8, "alice"), CancellationToken.None);
 
         // Assert
@@ -33,7 +33,7 @@ public class SetLevelsTests
         var handler = NewHandler(personality);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.HandleAsync(
             new SetLevels.Command(SetLevels.Trait.Humor, 3, "alice"), CancellationToken.None);
 
         // Assert
@@ -50,7 +50,7 @@ public class SetLevelsTests
         var handler = NewHandler(personality);
 
         // Act
-        var response = await handler.Handle(
+        var response = await handler.HandleAsync(
             new SetLevels.Command(SetLevels.Trait.Sarcasm, level, "alice"), CancellationToken.None);
 
         // Assert
@@ -67,6 +67,6 @@ public class SetLevelsTests
             })
             .Build());
 
-    private static SetLevels.CommandHandler NewHandler(BotPersonality personality) =>
-        new(NullLogger<SetLevels.CommandHandler>.Instance, personality, new SetLevels.CommandValidator());
+    private static SetLevels.Handler NewHandler(BotPersonality personality) =>
+        new(NullLogger<SetLevels.Handler>.Instance, personality, new SetLevels.CommandValidator());
 }

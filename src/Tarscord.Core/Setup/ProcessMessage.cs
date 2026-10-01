@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,25 +12,22 @@ namespace Tarscord.Core.Setup;
 
 public static class ProcessMessage
 {
-    public record Command : IRequest<bool>
-    {
-        public required SocketMessage Message { get; init; }
-    }
-
     internal static bool IsFromPerson(IUser author) => !author.IsBot && !author.IsWebhook;
 
-    public class Handler(
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddSingleton<Handler>();
+
+    public sealed class Handler(
         DiscordSocketClient discord,
         CommandService commands,
         IConfigurationRoot config,
         IServiceProvider provider,
         GenerationCooldown cooldown,
         ILogger<Handler> logger)
-        : IRequestHandler<Command, bool>
     {
-        public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<bool> HandleAsync(SocketMessage socketMessage)
         {
-            if (request.Message is not SocketUserMessage message)
+            if (socketMessage is not SocketUserMessage message)
             {
                 return false;
             }
@@ -120,14 +116,16 @@ public static class ProcessMessage
                 return;
             }
 
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var generate = scope.ServiceProvider.GetRequiredService<Generate.Handler>();
 
             using var typingState = context.Channel.EnterTypingState();
 
-            var response = await mediator.Send(new Generate.Command(
-                Prompt: $"{context.User.Username} said to you: {said}",
-                Fallback: "I have nothing useful to add.",
-                PerformedByUser: context.User.Username));
+            var response = await generate.HandleAsync(
+                new Generate.Command(
+                    Prompt: $"{context.User.Username} said to you: {said}",
+                    Fallback: "I have nothing useful to add.",
+                    PerformedByUser: context.User.Username),
+                CancellationToken.None);
 
             // Unset, Discord expands every mention in the content, pinging on the bot's behalf.
             await context.Channel.SendMessageAsync(

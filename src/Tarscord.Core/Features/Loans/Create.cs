@@ -1,5 +1,5 @@
 using FluentValidation;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -8,9 +8,9 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Loans;
 
-internal static class Create
+public static class Create
 {
-    public class Command : IRequest<OneOf<LoanEnvelope, FailureResponse>>, IPerformedByUser
+    public sealed class Command : IPerformedByUser
     {
         public decimal Amount { get; set; }
         public ulong LoanedFromId { get; set; }
@@ -22,7 +22,7 @@ internal static class Create
         public required string PerformedByUser { get; set; }
     }
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
@@ -40,14 +40,18 @@ internal static class Create
         }
     }
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<LoanEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<LoanEnvelope, FailureResponse>> Handle(Command command,
+        public async Task<OneOf<LoanEnvelope, FailureResponse>> HandleAsync(
+            Command command,
             CancellationToken cancellationToken)
         {
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",

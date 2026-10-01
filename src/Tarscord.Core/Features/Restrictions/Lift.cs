@@ -1,7 +1,7 @@
 using Discord;
 using Discord.Net;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Features.Common;
@@ -10,22 +10,24 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-internal static class Lift
+public static class Lift
 {
-    public record Command(
+    public sealed record Command(
         ulong UserId,
         ulong ChannelId,
         RestrictionKind Kind,
-        string PerformedByUser) : IRequest<OneOf<RestrictionEnvelope, FailureResponse>>, IPerformedByUser;
+        string PerformedByUser) : IPerformedByUser;
 
-    public class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IDiscordClient discord)
-        : IRequestHandler<Command, OneOf<RestrictionEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<RestrictionEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<RestrictionEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {
@@ -77,24 +79,24 @@ internal static class Lift
 
             return RestrictionEnvelope.FromEntity(inForce);
         }
+    }
 
-        private static async Task AllowInDiscordAsync(IGuildChannel channel, IUser user, RestrictionKind kind)
+    private static async Task AllowInDiscordAsync(IGuildChannel channel, IUser user, RestrictionKind kind)
+    {
+        var current = channel.GetPermissionOverwrite(user);
+
+        if (current is not OverwritePermissions permissions)
         {
-            var current = channel.GetPermissionOverwrite(user);
-
-            if (current is not OverwritePermissions permissions)
-            {
-                return;
-            }
-
-            var restored = kind switch
-            {
-                RestrictionKind.Mute => permissions.Modify(sendMessages: PermValue.Inherit),
-                RestrictionKind.DenyReacting => permissions.Modify(addReactions: PermValue.Inherit),
-                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown restriction kind")
-            };
-
-            await channel.AddPermissionOverwriteAsync(user, restored);
+            return;
         }
+
+        var restored = kind switch
+        {
+            RestrictionKind.Mute => permissions.Modify(sendMessages: PermValue.Inherit),
+            RestrictionKind.DenyReacting => permissions.Modify(addReactions: PermValue.Inherit),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown restriction kind")
+        };
+
+        await channel.AddPermissionOverwriteAsync(user, restored);
     }
 }

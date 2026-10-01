@@ -27,7 +27,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient);
 
         // Act
-        var response = await handler.Handle(NewCommand(), CancellationToken.None);
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
         response.Message.Should().Be("Go on then.");
@@ -47,7 +47,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient);
 
         // Act
-        var response = await handler.Handle(NewCommand(), CancellationToken.None);
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
         response.Message.Should().Be(Fallback);
@@ -67,7 +67,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient);
 
         // Act
-        var response = await handler.Handle(NewCommand(), CancellationToken.None);
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
         response.Message.Should().Be(Fallback);
@@ -86,7 +86,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient);
 
         // Act
-        var response = await handler.Handle(NewCommand(), CancellationToken.None);
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
         response.Message.Should().Be(Fallback);
@@ -105,7 +105,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient, sarcasmLevel: "9");
 
         // Act
-        await handler.Handle(NewCommand(), CancellationToken.None);
+        await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
         await chatClient.Received(1).GetResponseAsync(
@@ -131,7 +131,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient);
 
         // Act
-        Func<Task> act = () => handler.Handle(NewCommand(), cancellation.Token);
+        Func<Task> act = () => handler.HandleAsync(NewCommand(), cancellation.Token);
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -149,7 +149,7 @@ public class GenerateTests
         var handler = NewHandler(chatClient, ollamaUrl: ollamaUrl);
 
         // Act
-        var response = await handler.Handle(NewCommand(), CancellationToken.None);
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
         response.Message.Should().Be(Fallback);
@@ -159,7 +159,7 @@ public class GenerateTests
     private static Generate.Command NewCommand() =>
         new("Dare bob to say it out loud.", Fallback, "alice");
 
-    private static Generate.CommandHandler NewHandler(
+    private static Generate.Handler NewHandler(
         IChatClient chatClient, string sarcasmLevel = "5", string? ollamaUrl = "http://localhost:11434")
     {
         var configuration = new ConfigurationBuilder()
@@ -172,8 +172,8 @@ public class GenerateTests
             })
             .Build();
 
-        return new Generate.CommandHandler(
-            NullLogger<Generate.CommandHandler>.Instance, chatClient, configuration,
+        return new Generate.Handler(
+            NullLogger<Generate.Handler>.Instance, chatClient, configuration,
             new BotPersonality(configuration));
     }
 }

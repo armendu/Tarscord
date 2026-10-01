@@ -1,21 +1,19 @@
 using Discord;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Tarscord.Core.Features.Logging;
 
 public static class ProcessLog
 {
-    public record Command : IRequest<Unit>
-    {
-        public LogMessage LogMessage { get; init; }
-    }
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddSingleton<Handler>();
 
-    public class Handler : IRequestHandler<Command, Unit>
+    public sealed class Handler
     {
         private string LogDirectory => Path.Combine(AppContext.BaseDirectory, "logs");
         private string LogFile => Path.Combine(LogDirectory, $"{DateTime.UtcNow:yyyy-MM-dd}.txt");
 
-        public Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+        public Task HandleAsync(LogMessage logMessage)
         {
             // Create the log directory if it doesn't exist
             if (!Directory.Exists(LogDirectory))
@@ -29,8 +27,8 @@ public static class ProcessLog
                 File.Create(LogFile).Dispose();
             }
 
-            string logText = $"{DateTime.UtcNow:HH:mm:ss} [{request.LogMessage.Severity}] {request.LogMessage.Source}: " +
-                           $"{request.LogMessage.Exception?.ToString() ?? request.LogMessage.Message}";
+            string logText = $"{DateTime.UtcNow:HH:mm:ss} [{logMessage.Severity}] {logMessage.Source}: " +
+                             $"{logMessage.Exception?.ToString() ?? logMessage.Message}";
 
             // Write the log text to a file
             File.AppendAllText(LogFile, logText + "\n");
@@ -38,7 +36,7 @@ public static class ProcessLog
             // Write the log text to the console
             Console.WriteLine(logText);
 
-            return Task.FromResult(Unit.Value);
+            return Task.CompletedTask;
         }
     }
 }

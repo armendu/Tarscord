@@ -1,6 +1,5 @@
 using Discord;
 using Discord.Commands;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Restrictions;
@@ -10,7 +9,8 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Admin commands")]
-public class AdminModule(IMediator mediator, IConfigurationRoot config) : ModuleBase<SocketCommandContext>
+public class AdminModule(Apply.Handler apply, Lift.Handler lift, IConfigurationRoot config)
+    : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: mute {user} {minutes}?
@@ -66,8 +66,9 @@ public class AdminModule(IMediator mediator, IConfigurationRoot config) : Module
 
         using var typingState = Context.Channel.EnterTypingState();
 
-        var response = await mediator.Send(
-            new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username));
+        var response = await apply.HandleAsync(
+            new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username),
+            CancellationToken.None);
 
         await ReplyAsync(embed: response.ToEmbeddedMessage());
     }
@@ -82,8 +83,9 @@ public class AdminModule(IMediator mediator, IConfigurationRoot config) : Module
 
         using var typingState = Context.Channel.EnterTypingState();
 
-        var response = await mediator.Send(
-            new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username));
+        var response = await lift.HandleAsync(
+            new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username),
+            CancellationToken.None);
 
         await ReplyAsync(embed: response.ToEmbeddedMessage());
     }

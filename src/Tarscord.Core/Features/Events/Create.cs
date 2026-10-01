@@ -1,5 +1,5 @@
 using FluentValidation;
-using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Extensions;
@@ -9,20 +9,20 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Events;
 
-internal static class Create
+public static class Create
 {
-    public record Command(
+    public sealed record Command(
         string EventOrganizer,
         ulong EventOrganizerId,
         string EventName,
         string EventDate,
         string EventDescription
-    ) : IRequest<OneOf<EventInfoEnvelope, FailureResponse>>, IPerformedByUser
+    ) : IPerformedByUser
     {
         public string PerformedByUser => EventOrganizer;
     }
 
-    public class CommandValidator : AbstractValidator<Command>
+    public sealed class CommandValidator : AbstractValidator<Command>
     {
         public CommandValidator()
         {
@@ -40,14 +40,17 @@ internal static class Create
         }
     }
 
-    internal sealed class CommandHandler(
-        ILogger<CommandHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Command>, CommandValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         TimeProvider timeProvider,
         IValidator<Command> validator)
-        : IRequestHandler<Command, OneOf<EventInfoEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<EventInfoEnvelope, FailureResponse>> HandleAsync(
             Command command,
             CancellationToken cancellationToken)
         {

@@ -24,7 +24,7 @@ public class LoansCreateTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(12.50m), CancellationToken.None);
+        var response = await NewHandler(context).HandleAsync(NewCommand(12.50m), CancellationToken.None);
 
         // Assert
         response.AsT0.Amount.Should().Be(12.50m);
@@ -43,7 +43,7 @@ public class LoansCreateTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        var response = await NewHandler(context).Handle(NewCommand(amount), CancellationToken.None);
+        var response = await NewHandler(context).HandleAsync(NewCommand(amount), CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("more than nothing");
@@ -63,7 +63,7 @@ public class LoansCreateTests(PostgresFixture fixture)
         command.LoanedToId = AliceId;
 
         // Act
-        var response = await NewHandler(context).Handle(command, CancellationToken.None);
+        var response = await NewHandler(context).HandleAsync(command, CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("yourself");
@@ -77,7 +77,7 @@ public class LoansCreateTests(PostgresFixture fixture)
         await using var context = fixture.CreateContext();
 
         // Act
-        await NewHandler(context).Handle(NewCommand(20m), CancellationToken.None);
+        await NewHandler(context).HandleAsync(NewCommand(20m), CancellationToken.None);
 
         // Assert
         await using var verification = fixture.CreateContext();
@@ -100,7 +100,7 @@ public class LoansCreateTests(PostgresFixture fixture)
             PerformedByUser = "alice"
         };
 
-    private static Create.CommandHandler NewHandler(TarscordContext context) =>
-        new(NullLogger<Create.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
+    private static Create.Handler NewHandler(TarscordContext context) =>
+        new(NullLogger<Create.Handler>.Instance, context, new FakeTimeProvider(Now),
             new Create.CommandValidator());
 }

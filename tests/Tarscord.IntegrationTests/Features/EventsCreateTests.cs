@@ -25,7 +25,7 @@ public class EventsCreateTests(PostgresFixture fixture)
         var command = new Create.Command(Organizer, OrganizerId, "Release party", "tomorrow", "upstairs");
 
         // Act
-        var response = await handler.Handle(command, CancellationToken.None);
+        var response = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
         await using var verification = fixture.CreateContext();
@@ -47,7 +47,7 @@ public class EventsCreateTests(PostgresFixture fixture)
         var command = new Create.Command(Organizer, OrganizerId, "Standup", "in 2 hours", "");
 
         // Act
-        await handler.Handle(command, CancellationToken.None);
+        await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
         await using var verification = fixture.CreateContext();
@@ -66,7 +66,7 @@ public class EventsCreateTests(PostgresFixture fixture)
         var command = new Create.Command(Organizer, OrganizerId, "Standup", "whenever", "");
 
         // Act
-        var response = await handler.Handle(command, CancellationToken.None);
+        var response = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
         response.IsT1.Should().BeTrue();
@@ -85,13 +85,13 @@ public class EventsCreateTests(PostgresFixture fixture)
         var command = new Create.Command(Organizer, OrganizerId, "  ", "tomorrow", "");
 
         // Act
-        var response = await handler.Handle(command, CancellationToken.None);
+        var response = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
         response.IsT1.Should().BeTrue();
     }
 
-    private static Create.CommandHandler NewHandler(Tarscord.Core.Persistence.TarscordContext context) =>
-        new(NullLogger<Create.CommandHandler>.Instance, context, new FakeTimeProvider(Now),
+    private static Create.Handler NewHandler(Tarscord.Core.Persistence.TarscordContext context) =>
+        new(NullLogger<Create.Handler>.Instance, context, new FakeTimeProvider(Now),
             new Create.CommandValidator());
 }

@@ -1,19 +1,22 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Restrictions;
 
-internal static class List
+public static class List
 {
-    public record Query : IRequest<ListResponse>;
+    public sealed record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
 
-    public record ListResponse(IReadOnlyList<RestrictionEnvelope> Restrictions);
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handler>();
 
-    public class QueryHandler(TarscordContext context, TimeProvider timeProvider)
-        : IRequestHandler<Query, ListResponse>
+    public sealed class Handler(
+        TarscordContext context,
+        TimeProvider timeProvider)
     {
-        public async Task<ListResponse> Handle(Query query, CancellationToken cancellationToken)
+        public async Task<ListResponse> HandleAsync(
+            CancellationToken cancellationToken)
         {
             var now = timeProvider.GetUtcNow().UtcDateTime;
 

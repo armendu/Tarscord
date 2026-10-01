@@ -1,20 +1,24 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.Reminders;
 
-internal static class Complete
+public static class Complete
 {
-    public record Command(int ReminderId) : IRequest<bool>;
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<Handler>();
 
-    public class CommandHandler(TarscordContext context, TimeProvider timeProvider)
-        : IRequestHandler<Command, bool>
+    public sealed class Handler(
+        TarscordContext context,
+        TimeProvider timeProvider)
     {
-        public async Task<bool> Handle(Command command, CancellationToken cancellationToken)
+        public async Task<bool> HandleAsync(
+            int reminderId,
+            CancellationToken cancellationToken)
         {
             var reminder = await context.Reminders
-                .FirstOrDefaultAsync(candidate => candidate.Id == command.ReminderId, cancellationToken);
+                .FirstOrDefaultAsync(candidate => candidate.Id == reminderId, cancellationToken);
 
             if (reminder is null)
             {

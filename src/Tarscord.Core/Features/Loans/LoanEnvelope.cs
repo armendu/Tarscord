@@ -6,7 +6,7 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Loans;
 
-public class LoanEnvelope : IEmbeddedMessage
+public sealed class LoanEnvelope : IEmbeddedMessage
 {
     private const string CurrencySymbol = "\u20AC";
 

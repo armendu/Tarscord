@@ -1,5 +1,4 @@
 using Discord;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -38,13 +37,14 @@ public sealed class ReminderDispatcher(
         try
         {
             using var scope = scopeFactory.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var listDue = scope.ServiceProvider.GetRequiredService<List.Handler>();
+            var complete = scope.ServiceProvider.GetRequiredService<Complete.Handler>();
 
-            var due = await mediator.Send(new List.Query(), cancellationToken);
+            var due = await listDue.HandleAsync(cancellationToken);
 
             foreach (var reminder in due.Reminders)
             {
-                await TryDeliverAsync(mediator, reminder, cancellationToken);
+                await TryDeliverAsync(complete, reminder, cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -58,13 +58,13 @@ public sealed class ReminderDispatcher(
     }
 
     private async Task TryDeliverAsync(
-        IMediator mediator,
+        Complete.Handler complete,
         ReminderEnvelope reminder,
         CancellationToken cancellationToken)
     {
         try
         {
-            await DeliverAsync(mediator, reminder, cancellationToken);
+            await DeliverAsync(complete, reminder, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -76,12 +76,12 @@ public sealed class ReminderDispatcher(
                 reminder.ReminderId);
 
             // Marked done, or it heads the queue again on every tick.
-            await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
+            await complete.HandleAsync(reminder.ReminderId, cancellationToken);
         }
     }
 
     private async Task DeliverAsync(
-        IMediator mediator,
+        Complete.Handler complete,
         ReminderEnvelope reminder,
         CancellationToken cancellationToken)
     {
@@ -90,7 +90,7 @@ public sealed class ReminderDispatcher(
             logger.LogWarning("Reminder {ReminderId} is for channel {ChannelId}, which is gone",
                 reminder.ReminderId, reminder.ChannelId);
 
-            await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
+            await complete.HandleAsync(reminder.ReminderId, cancellationToken);
 
             return;
         }
@@ -101,6 +101,6 @@ public sealed class ReminderDispatcher(
             embed: "Reminder".EmbedMessage(reminder.Message),
             allowedMentions: new AllowedMentions { UserIds = [reminder.UserId] });
 
-        await mediator.Send(new Complete.Command(reminder.ReminderId), cancellationToken);
+        await complete.HandleAsync(reminder.ReminderId, cancellationToken);
     }
 }

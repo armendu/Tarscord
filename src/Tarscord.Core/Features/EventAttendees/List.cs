@@ -1,7 +1,7 @@
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
 using Tarscord.Core.Extensions;
@@ -11,12 +11,11 @@ using Tarscord.Core.Persistence;
 
 namespace Tarscord.Core.Features.EventAttendees;
 
-internal static class List
+public static class List
 {
-    public record Query(string Event, string PerformedByUser)
-        : IRequest<OneOf<AttendeeListEnvelope, FailureResponse>>, IPerformedByUser;
+    public sealed record Query(string Event, string PerformedByUser) : IPerformedByUser;
 
-    public class QueryValidator : AbstractValidator<Query>
+    public sealed class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
@@ -26,14 +25,17 @@ internal static class List
         }
     }
 
-    public class QueryHandler(
-        ILogger<QueryHandler> logger,
+    public static void AddSlice(IServiceCollection services) =>
+        services.AddScoped<IValidator<Query>, QueryValidator>()
+            .AddScoped<Handler>();
+
+    public sealed class Handler(
+        ILogger<Handler> logger,
         TarscordContext context,
         IConfigurationRoot configuration,
         IValidator<Query> validator)
-        : IRequestHandler<Query, OneOf<AttendeeListEnvelope, FailureResponse>>
     {
-        public async Task<OneOf<AttendeeListEnvelope, FailureResponse>> Handle(
+        public async Task<OneOf<AttendeeListEnvelope, FailureResponse>> HandleAsync(
             Query query,
             CancellationToken cancellationToken)
         {
