@@ -1,4 +1,3 @@
-using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
@@ -29,17 +28,17 @@ public class RandomNumberModule(
 
         int generatedNumber = (int)Random.Shared.NextInt64(min, (long)max + 1);
 
-        // The model only announces the number, it never draws it.
+        // The model only announces the number; the title carries it, so a paraphrase cannot change it.
         var response = await generate.HandleAsync(
             new Generate.Command(
                 Prompt: $"Announce that the random number drawn between {min} and {max} is " +
                         $"{generatedNumber}. Quote that number exactly and do not offer a different one.",
-                Fallback: generatedNumber.ToString(),
+                Fallback: $"Drawn between {min} and {max}.",
                 UserId: Context.User.Id,
                 Channel: Context.Channel,
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
-        await ReplyAsync(response.ToReplyText(), allowedMentions: AllowedMentions.None);
+        await ReplyAsync(embed: response.ToEmbeddedMessage(generatedNumber.ToString()));
     }
 }

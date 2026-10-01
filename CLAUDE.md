@@ -181,7 +181,8 @@ interpolated.
 `FromTextToDate()` in `Extensions/DateTimeExtensions.cs` parses whatever a person typed as a date.
 An envelope implements `IEmbeddedMessage` and a module renders a whole result with
 `response.ToEmbeddedMessage()` from `Extensions/ResponseExtensions.cs`, rather than repeating the
-same two-arm `Match`. Don't hand-roll an `EmbedBuilder` in a module. `HelpModule` is the one
+same two-arm `Match`. Don't hand-roll an `EmbedBuilder` in a module. Every reply is an embed, generated
+ones included; the reminder's ping is the only plain text, because an embed cannot mention anyone. `HelpModule` is the one
 exception: it enumerates `CommandService` rather than rendering a feature, so it builds its own.
 
 **Take time from `TimeProvider`.** It's registered in `Startup` and injected into every handler

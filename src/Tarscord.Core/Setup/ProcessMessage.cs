@@ -130,10 +130,7 @@ public static class ProcessMessage
                     PerformedByUser: user.Username),
                 CancellationToken.None);
 
-            // Unset, Discord expands every mention in the content, pinging on the bot's behalf.
-            await channel.SendMessageAsync(
-                response.ToReplyText(),
-                allowedMentions: AllowedMentions.None);
+            await channel.SendMessageAsync(embed: response.ToEmbeddedMessage(user.Username));
         }
     }
 }

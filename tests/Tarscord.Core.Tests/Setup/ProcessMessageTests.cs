@@ -18,6 +18,8 @@ public class ProcessMessageTests
 {
     private const ulong Alice = 111111111111111111;
     private const string Said = "what do you think?";
+    private const string Generated = "Go on then.";
+
     [Fact]
     public void IsFromPerson_ForAPerson_IsTrue()
     {
@@ -68,7 +70,7 @@ public class ProcessMessageTests
     }
 
     [Fact]
-    public async Task AnswerMention_OffCooldown_Replies()
+    public async Task AnswerMention_OffCooldown_RepliesWithAnEmbed()
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
@@ -83,7 +85,7 @@ public class ProcessMessageTests
         await handler.AnswerMentionAsync(NewGenerate(configuration, cooldown), channel, NewUser(), Said);
 
         // Assert
-        await channel.ReceivedWithAnyArgs(1).SendMessageAsync();
+        await channel.Received(1).SendMessageAsync(embed: Arg.Is<Embed>(embed => embed.Description == Generated));
     }
 
     private static IConfigurationRoot NewConfiguration() =>
@@ -111,7 +113,7 @@ public class ProcessMessageTests
         chatClient
             .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(),
                 Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, "Go on then."))));
+            .Returns(Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, Generated))));
 
         return new Generate.Handler(
             NullLogger<Generate.Handler>.Instance, chatClient, configuration,
