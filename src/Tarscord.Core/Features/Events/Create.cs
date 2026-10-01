@@ -32,7 +32,7 @@ public static class Create
                 .MaximumLength(TextLengths.Name)
                 .WithMessage($"Keep the name under {TextLengths.Name} characters.");
 
-            RuleFor(command => command.EventOrganizer).MaximumLength(TextLengths.Name);
+            RuleFor(command => command.EventOrganizer).MaximumLength(TextLengths.Organizer);
 
             RuleFor(command => command.EventDescription)
                 .MaximumLength(TextLengths.FreeText)
