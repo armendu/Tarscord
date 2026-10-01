@@ -108,7 +108,8 @@ public static class ProcessMessage
                 return;
             }
 
-            if (!cooldown.TryGenerate(context.User.Id))
+            // Only peeks: a mention on cooldown stays silent, where Generate would hand back the fallback.
+            if (cooldown.IsCoolingDown(context.User.Id))
             {
                 logger.LogInformation("Mention from {User} ignored, still on cooldown",
                     context.User.Username);
@@ -124,6 +125,7 @@ public static class ProcessMessage
                 new Generate.Command(
                     Prompt: $"{context.User.Username} said to you: {said}",
                     Fallback: "I have nothing useful to add.",
+                    UserId: context.User.Id,
                     PerformedByUser: context.User.Username),
                 CancellationToken.None);
 

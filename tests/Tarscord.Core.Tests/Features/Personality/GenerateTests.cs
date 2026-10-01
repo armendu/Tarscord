@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Tarscord.Core.Features.Personality;
@@ -13,6 +14,7 @@ namespace Tarscord.Core.Tests.Features.Personality;
 public class GenerateTests
 {
     private const string Fallback = "I dare you to write that message, bob.";
+    private const ulong Alice = 111111111111111111;
 
     [Fact]
     public async Task Handle_WhenTheModelAnswers_ReturnsWhatItSaid()
@@ -156,11 +158,66 @@ public class GenerateTests
         await chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default!, default, default);
     }
 
+    [Fact]
+    public async Task Handle_WithNoOllamaConfigured_LeavesTheCooldownUnspent()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        var handler = NewHandler(Substitute.For<IChatClient>(), ollamaUrl: null, cooldown: cooldown);
+
+        // Act
+        await handler.HandleAsync(NewCommand(), CancellationToken.None);
+
+        // Assert
+        cooldown.IsCoolingDown(Alice).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_OnCooldown_ReturnsTheCannedLineWithoutAsking()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        cooldown.TryGenerate(Alice);
+
+        var chatClient = Substitute.For<IChatClient>();
+        var handler = NewHandler(chatClient, cooldown: cooldown);
+
+        // Act
+        var response = await handler.HandleAsync(NewCommand(), CancellationToken.None);
+
+        // Assert
+        response.Message.Should().Be(Fallback);
+        await chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default!, default, default);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTheModelFails_StillSpendsTheCooldown()
+    {
+        // Arrange
+        var chatClient = Substitute.For<IChatClient>();
+        chatClient
+            .GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Connection refused"));
+
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        var handler = NewHandler(chatClient, cooldown: cooldown);
+
+        // Act
+        await handler.HandleAsync(NewCommand(), CancellationToken.None);
+
+        // Assert
+        cooldown.IsCoolingDown(Alice).Should().BeTrue();
+    }
+
     private static Generate.Command NewCommand() =>
-        new("Dare bob to say it out loud.", Fallback, "alice");
+        new("Dare bob to say it out loud.", Fallback, Alice, "alice");
 
     private static Generate.Handler NewHandler(
-        IChatClient chatClient, string sarcasmLevel = "5", string? ollamaUrl = "http://localhost:11434")
+        IChatClient chatClient,
+        string sarcasmLevel = "5",
+        string? ollamaUrl = "http://localhost:11434",
+        GenerationCooldown? cooldown = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -174,6 +231,6 @@ public class GenerateTests
 
         return new Generate.Handler(
             NullLogger<Generate.Handler>.Instance, chatClient, configuration,
-            new BotPersonality(configuration));
+            new BotPersonality(configuration), cooldown ?? new GenerationCooldown(new FakeTimeProvider()));
     }
 }

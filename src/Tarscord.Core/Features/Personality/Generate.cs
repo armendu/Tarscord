@@ -13,7 +13,8 @@ public static class Generate
     // The gateway callback waits on this, so it is a stall budget rather than a model budget.
     private static readonly TimeSpan GenerationTimeout = TimeSpan.FromSeconds(5);
 
-    public sealed record Command(string Prompt, string Fallback, string PerformedByUser) : IPerformedByUser;
+    public sealed record Command(string Prompt, string Fallback, ulong UserId, string PerformedByUser)
+        : IPerformedByUser;
 
     public static void AddSlice(IServiceCollection services) =>
         services.AddScoped<Handler>();
@@ -22,7 +23,8 @@ public static class Generate
         ILogger<Handler> logger,
         IChatClient chatClient,
         IConfigurationRoot configuration,
-        BotPersonality personality)
+        BotPersonality personality,
+        GenerationCooldown cooldown)
     {
         public async Task<GeneratedMessageEnvelope> HandleAsync(
             Command command,
@@ -33,6 +35,15 @@ public static class Generate
 
             if (!IsConfigured(configuration))
             {
+                return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
+            }
+
+            // Spent only here, after the configured check, so a call that never happens costs nothing.
+            if (!cooldown.TryGenerate(command.UserId))
+            {
+                logger.LogInformation("{PerformedByUser} is on cooldown; using a canned reply instead",
+                    command.PerformedByUser);
+
                 return new GeneratedMessageEnvelope(command.Fallback, FromModel: false);
             }
 
