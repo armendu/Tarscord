@@ -184,6 +184,9 @@ An envelope implements `IEmbeddedMessage` and a module renders a whole result wi
 same two-arm `Match`. Don't hand-roll an `EmbedBuilder` in a module. `HelpModule` is the one
 exception: it enumerates `CommandService` rather than rendering a feature, so it builds its own.
 
+**Every reply is an embed**, generated ones included, so the bot never answers in two styles. The
+reminder's ping is the only plain text, because an embed cannot mention anyone.
+
 **Take time from `TimeProvider`.** It's registered in `Startup` and injected into every handler
 and extension that needs a clock, which is what makes them testable with `FakeTimeProvider`. Never
 `DateTime.Now` anywhere but a test. `Features/Logging/ProcessLog.cs` is the one place still reading

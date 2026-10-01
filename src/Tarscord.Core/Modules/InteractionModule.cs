@@ -36,6 +36,6 @@ public class InteractionModule(
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
-        await ReplyAsync(response.ToReplyText(), allowedMentions: AllowedMentions.None);
+        await ReplyAsync(embed: response.ToEmbeddedMessage($"A dare for {user.Username}"));
     }
 }

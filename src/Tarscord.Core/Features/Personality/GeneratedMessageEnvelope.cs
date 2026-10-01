@@ -1,10 +1,13 @@
+using Discord;
+using Tarscord.Core.Extensions;
+
 namespace Tarscord.Core.Features.Personality;
 
 public sealed record GeneratedMessageEnvelope(string Message, bool FromModel)
 {
-    private const int DiscordMessageLimit = 2000;
+    /// <summary>The title is the caller's, so anything deterministic in it never passes through the model.</summary>
+    public Embed ToEmbeddedMessage(string title) => title.EmbedMessage(Message);
 
-    /// <summary>Plain text, not an embed: banter is a remark, not a report.</summary>
-    public string ToReplyText() =>
-        Message.Length <= DiscordMessageLimit ? Message : Message[..DiscordMessageLimit];
+    // The model sometimes quotes the line or tacks a list of its own under it.
+    public string ToHeading() => Message.Split('\n')[0].Trim().Trim('"');
 }

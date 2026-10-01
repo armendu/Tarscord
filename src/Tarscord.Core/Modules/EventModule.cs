@@ -56,8 +56,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
                     PerformedByUser: Context.User.Username),
                 CancellationToken.None);
 
-            // The model sometimes quotes the line or tacks a list of its own under it.
-            events = events with { Heading = heading.Message.Split('\n')[0].Trim().Trim('"') };
+            events = events with { Heading = heading.ToHeading() };
         }
 
         await ReplyAsync(embed: events.ToEmbeddedMessage());
