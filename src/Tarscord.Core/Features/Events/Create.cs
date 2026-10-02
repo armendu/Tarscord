@@ -57,12 +57,9 @@ public static class Create
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
                 nameof(Create), command.PerformedByUser);
 
-            var validation = await validator.ValidateAsync(command, cancellationToken);
-
-            if (!validation.IsValid)
+            if (await validator.FailureAsync(command, cancellationToken) is { } failure)
             {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+                return failure;
             }
 
             var dateOfEvent = command.EventDate.FromTextToDate(timeProvider);

@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Services;
 
@@ -44,12 +45,9 @@ public static class SetLevels
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
                 nameof(SetLevels), command.PerformedByUser);
 
-            var validation = await validator.ValidateAsync(command, cancellationToken);
-
-            if (!validation.IsValid)
+            if (await validator.FailureAsync(command, cancellationToken) is { } failure)
             {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+                return failure;
             }
 
             switch (command.Which)

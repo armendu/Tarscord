@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence;
 
@@ -38,13 +39,10 @@ public static class Details
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(Details), query.PerformedByUser);
 
-            var validation = await validator.ValidateAsync(query, cancellationToken);
-
             // An unusable id used to report the same thing as a missing event.
-            if (!validation.IsValid)
+            if (await validator.FailureAsync(query, cancellationToken) is { } failure)
             {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+                return failure;
             }
 
             var eventInfo = await context.EventInfos

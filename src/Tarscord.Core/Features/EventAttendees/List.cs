@@ -42,12 +42,9 @@ public static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), query.PerformedByUser);
 
-            var validation = await validator.ValidateAsync(query, cancellationToken);
-
-            if (!validation.IsValid)
+            if (await validator.FailureAsync(query, cancellationToken) is { } failure)
             {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+                return failure;
             }
 
             var eventInfo = await context.EventInfos.MatchAsync(query.Event, cancellationToken);
