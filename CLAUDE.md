@@ -286,12 +286,13 @@ unusable value and caps the rest at 100, because `TakeListedAsync` reads one row
 more than an embed description can show. The two `List` slices the background services use are deliberately
 uncapped: they are work queues, and a cap would mean the eleventh due reminder never fires.
 
-**Text limits come from Discord, not from taste.** `Persistence/TextLengths.cs` holds the two that
-matter - `Name` is 256 because that is all an embed title shows, `FreeText` is 2000 because that is
-all Discord lets someone type - and the validators and the `VARCHAR` widths follow them everywhere
-but `event_infos.event_organizer`, which `v1.00` made `VARCHAR(200)` and no migration has widened. A
+**Text limits come from Discord, not from taste.** `Persistence/TextLengths.cs` holds them - `Name` is
+256 because that is all an embed title shows, `FreeText` is 2000 because that is all Discord lets
+someone type, and `Organizer` is the 200 that `event_organizer` already had - and the validators and
+the `VARCHAR` widths follow them. A
 validator that disagrees with its column turns a readable reply into an unhandled Postgres error, so
-change the migration and the constant together.
+change the migration and the constant together; `MigrationsTests` fails if a validated column's width
+drifts from its constant.
 
 **Nothing is scoped to a guild, so the bot is single-guild by assumption.** No table has a
 `guild_id` column and no query filters on one, and `event_infos.id` is `SERIAL`. In a second guild,
