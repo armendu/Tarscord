@@ -1,6 +1,7 @@
 using Discord;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
@@ -293,6 +294,35 @@ public class RestrictionsTests(PostgresFixture fixture)
 
         await using var verification = fixture.CreateContext();
         (await verification.Restrictions.SingleAsync()).Lifted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Apply_WhenAnotherApplyInsertsFirst_ReturnsFailureInsteadOfThrowing()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext(
+            new BeforeSaving(() => GivenARestriction(expiresInMinutes: null)));
+
+        // Act
+        var response = await NewApplyHandler(context).HandleAsync(
+            NewApplyCommand(minutes: 10), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("at the same time");
+    }
+
+    private sealed class BeforeSaving(Func<Task> competingWrite) : SaveChangesInterceptor
+    {
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData,
+            InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            await competingWrite();
+
+            return result;
+        }
     }
 
     private async Task GivenARestriction(double? expiresInMinutes)

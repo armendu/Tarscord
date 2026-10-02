@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Tarscord.Core.Persistence;
 using Tarscord.DbMigrator;
@@ -84,10 +85,11 @@ public sealed class PostgresFixture : IAsyncLifetime
             "public.reminders, public.restrictions RESTART IDENTITY CASCADE");
     }
 
-    public TarscordContext CreateContext()
+    public TarscordContext CreateContext(params IInterceptor[] interceptors)
     {
         var options = new DbContextOptionsBuilder<TarscordContext>()
             .UseNpgsql(ConnectionString)
+            .AddInterceptors(interceptors)
             .Options;
 
         return new TarscordContext(options);
