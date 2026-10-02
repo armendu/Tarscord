@@ -21,20 +21,19 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
     }
 
     /// <summary>
-    /// Usage: event confirm {Event name or Id} {Users?}
+    /// Usage: event confirm {Event name or Id}
     /// </summary>
-    [Command("confirm"), Summary("Confirm attendance, yours or someone else's")]
+    [Command("confirm"), Summary("Confirm you are attending an event")]
     public async Task ConfirmAttendance(
-        [Summary("The event name in quotes, or its id")] string eventNameOrId,
-        [Summary("The (optional) users to confirm for")]
-        params IUser[] users)
+        [Summary("The event name, or its id")][Remainder] string eventNameOrId)
     {
-        var attendees = (users.Length == 0 ? [Context.User] : users)
-            .Select(user => new Confirm.Attendee(user.Id, user.Username))
-            .ToList();
-
+        // Always the caller: nobody can sign anyone else up, not even the organizer.
         var response = await _confirm.HandleAsync(
-            new Confirm.Command(eventNameOrId, attendees, Context.User.Username),
+            new Confirm.Command(
+                Event: eventNameOrId,
+                AttendeeId: Context.User.Id,
+                AttendeeName: Context.User.Username,
+                PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
         var embedMessage = response.ToEmbeddedMessage();

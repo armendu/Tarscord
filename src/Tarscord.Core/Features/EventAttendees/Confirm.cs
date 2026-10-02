@@ -14,11 +14,10 @@ namespace Tarscord.Core.Features.EventAttendees;
 
 public static class Confirm
 {
-    public sealed record Attendee(ulong AttendeeId, string AttendeeName);
-
     public sealed record Command(
         string Event,
-        IReadOnlyList<Attendee> Attendees,
+        ulong AttendeeId,
+        string AttendeeName,
         string PerformedByUser) : IPerformedByUser;
 
     public sealed class CommandValidator : AbstractValidator<Command>
@@ -28,10 +27,6 @@ public static class Confirm
             RuleFor(command => command.Event)
                 .NotEmpty()
                 .WithMessage("Name the event, or give the id that 'event list' shows.");
-
-            RuleFor(command => command.Attendees)
-                .NotEmpty()
-                .WithMessage("There is nobody to confirm.");
         }
     }
 
@@ -70,39 +65,29 @@ public static class Confirm
                 return new FailureResponse($"'{eventInfo.EventName}' has been cancelled.");
             }
 
-            // Mentioning the same person twice is one confirmation, not two rows the unique index
-            // would reject.
-            var attendees = command.Attendees.DistinctBy(attendee => attendee.AttendeeId).ToList();
-
-            var attendeeIds = attendees.Select(attendee => attendee.AttendeeId).ToList();
-
-            var existing = await context.EventAttendees
-                .Where(attendee => attendee.EventInfoId == eventInfo.Id
-                                   && attendeeIds.Contains(attendee.AttendeeId))
-                .ToListAsync(cancellationToken);
+            var row = await context.EventAttendees
+                .FirstOrDefaultAsync(
+                    attendee => attendee.EventInfoId == eventInfo.Id
+                                && attendee.AttendeeId == command.AttendeeId,
+                    cancellationToken);
 
             var now = timeProvider.GetUtcNow().UtcDateTime;
 
-            foreach (var attendee in attendees)
+            // An update, not a second row: (event_info_id, attendee_id) is unique.
+            if (row is null)
             {
-                var row = existing.Find(candidate => candidate.AttendeeId == attendee.AttendeeId);
-
-                // An update, not a second row: (event_info_id, attendee_id) is unique.
-                if (row is null)
+                context.EventAttendees.Add(new EventAttendee
                 {
-                    context.EventAttendees.Add(new EventAttendee
-                    {
-                        EventInfoId = eventInfo.Id,
-                        AttendeeId = attendee.AttendeeId,
-                        AttendeeName = attendee.AttendeeName,
-                        Created = now
-                    });
-                }
-                else
-                {
-                    row.AttendeeName = attendee.AttendeeName;
-                    row.Updated = now;
-                }
+                    EventInfoId = eventInfo.Id,
+                    AttendeeId = command.AttendeeId,
+                    AttendeeName = command.AttendeeName,
+                    Created = now
+                });
+            }
+            else
+            {
+                row.AttendeeName = command.AttendeeName;
+                row.Updated = now;
             }
 
             await context.SaveChangesAsync(cancellationToken);

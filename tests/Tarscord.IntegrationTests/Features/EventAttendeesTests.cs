@@ -30,7 +30,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), BobId, "bob", PerformedByUser),
             CancellationToken.None);
 
         // Assert
@@ -47,60 +47,19 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), BobId, "bob", PerformedByUser),
             CancellationToken.None);
 
         await using var context = fixture.CreateContext();
 
         // Act
         var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob_renamed")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), BobId, "bob_renamed", PerformedByUser),
             CancellationToken.None);
 
         // Assert
         response.AsT0.Attendees.Should().ContainSingle()
             .Which.AttendeeName.Should().Be("bob_renamed");
-    }
-
-    [Fact]
-    public async Task Confirm_ForSeveralAttendees_AddsEveryOne()
-    {
-        // Arrange
-        await fixture.ResetAsync();
-        int eventId = await GivenAnEvent();
-        await using var context = fixture.CreateContext();
-
-        // Act
-        var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command(
-                eventId.ToString(),
-                [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(CarolId, "carol")],
-                PerformedByUser),
-            CancellationToken.None);
-
-        // Assert
-        response.AsT0.Attendees.Select(attendee => attendee.AttendeeName)
-            .Should().ContainInOrder("bob", "carol");
-    }
-
-    [Fact]
-    public async Task Confirm_ForTheSamePersonNamedTwice_AddsThemOnce()
-    {
-        // Arrange
-        await fixture.ResetAsync();
-        int eventId = await GivenAnEvent();
-        await using var context = fixture.CreateContext();
-
-        // Act
-        var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command(
-                eventId.ToString(),
-                [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(BobId, "bob")],
-                PerformedByUser),
-            CancellationToken.None);
-
-        // Assert
-        response.AsT0.Attendees.Should().ContainSingle();
     }
 
     [Fact]
@@ -113,7 +72,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), BobId, "bob", PerformedByUser),
             CancellationToken.None);
 
         // Assert
@@ -129,27 +88,11 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         // Act
         var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command("4242", [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command("4242", BobId, "bob", PerformedByUser),
             CancellationToken.None);
 
         // Assert
         response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
-    }
-
-    [Fact]
-    public async Task Confirm_WithNobodyToConfirm_ReturnsFailure()
-    {
-        // Arrange
-        await fixture.ResetAsync();
-        int eventId = await GivenAnEvent();
-        await using var context = fixture.CreateContext();
-
-        // Act
-        var response = await NewConfirmHandler(context).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [], PerformedByUser), CancellationToken.None);
-
-        // Assert
-        response.AsT1.ErrorMessage.Should().Contain("nobody to confirm");
     }
 
     [Fact]
@@ -159,13 +102,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
         await fixture.ResetAsync();
         int eventId = await GivenAnEvent();
 
-        await using var firstContext = fixture.CreateContext();
-        await NewConfirmHandler(firstContext).HandleAsync(
-            new Confirm.Command(
-                eventId.ToString(),
-                [new Confirm.Attendee(BobId, "bob"), new Confirm.Attendee(CarolId, "carol")],
-                PerformedByUser),
-            CancellationToken.None);
+        await GivenConfirmed(eventId, (BobId, "bob"), (CarolId, "carol"));
 
         await using var context = fixture.CreateContext();
 
@@ -187,7 +124,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), BobId, "bob", PerformedByUser),
             CancellationToken.None);
 
         await using var context = fixture.CreateContext();
@@ -212,7 +149,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
 
         await using var firstContext = fixture.CreateContext();
         await NewConfirmHandler(firstContext).HandleAsync(
-            new Confirm.Command(eventId.ToString(), [new Confirm.Attendee(BobId, "bob")], PerformedByUser),
+            new Confirm.Command(eventId.ToString(), BobId, "bob", PerformedByUser),
             CancellationToken.None);
 
         await using var context = fixture.CreateContext();
@@ -315,16 +252,7 @@ public class EventAttendeesTests(PostgresFixture fixture)
         await fixture.ResetAsync();
         int eventId = await GivenAnEvent();
 
-        await using var arrangeContext = fixture.CreateContext();
-        await NewConfirmHandler(arrangeContext).HandleAsync(
-            new Confirm.Command(eventId.ToString(),
-                [
-                    new Confirm.Attendee(BobId, "bob"),
-                    new Confirm.Attendee(CarolId, "carol"),
-                    new Confirm.Attendee(DaveId, "dave")
-                ],
-                PerformedByUser),
-            CancellationToken.None);
+        await GivenConfirmed(eventId, (BobId, "bob"), (CarolId, "carol"), (DaveId, "dave"));
 
         await using var context = fixture.CreateContext();
 
@@ -335,6 +263,21 @@ public class EventAttendeesTests(PostgresFixture fixture)
         // Assert
         response.AsT0.Attendees.Should().HaveCount(2);
         response.AsT0.More.Should().BeTrue();
+    }
+
+    private async Task GivenConfirmed(int eventId, params (ulong Id, string Name)[] attendees)
+    {
+        await using var context = fixture.CreateContext();
+
+        context.EventAttendees.AddRange(attendees.Select(attendee => new EventAttendee
+        {
+            EventInfoId = eventId,
+            AttendeeId = attendee.Id,
+            AttendeeName = attendee.Name,
+            Created = Now.UtcDateTime
+        }));
+
+        await context.SaveChangesAsync();
     }
 
     private static Confirm.Handler NewConfirmHandler(TarscordContext context) =>
