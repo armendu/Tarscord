@@ -31,7 +31,6 @@ public class Startup
 
     private async Task RunBotAsync()
     {
-        // Create a new instance of a service collection
         var services = new ServiceCollection();
         ConfigureServices(services, Configuration);
 
@@ -41,11 +40,10 @@ public class Startup
             ValidateOnBuild = true
         });
 
-        // Start the logging service, and the command handler service
+        // Resolved only for their constructors, which subscribe to the gateway's events.
         provider.GetRequiredService<LoggingService>();
         provider.GetRequiredService<CommandHandler>();
 
-        // Start the startup service
         await provider.GetRequiredService<StartupService>().StartAsync();
 
         var logger = provider.GetRequiredService<ILogger<Startup>>();

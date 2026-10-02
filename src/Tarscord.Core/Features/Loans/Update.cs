@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,9 +77,8 @@ public static class Update
 
             if (command.Amount > remainingBalance)
             {
-                return new FailureResponse(
-                    $"Paying {command.Amount:0.00} would be more than the " +
-                    $"{remainingBalance:0.00} still owed.");
+                return new FailureResponse(string.Create(CultureInfo.InvariantCulture,
+                    $"Paying {command.Amount:0.00} would be more than the {remainingBalance:0.00} still owed."));
             }
 
             loan.AmountPayed += command.Amount;

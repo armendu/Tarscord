@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Discord;
 using Tarscord.Core.Extensions;
@@ -6,7 +7,7 @@ using Tarscord.Core.Persistence.Entities;
 
 namespace Tarscord.Core.Features.Loans;
 
-public sealed class LoanEnvelope : IEmbeddedMessage
+public sealed record LoanEnvelope : IEmbeddedMessage
 {
     private const string CurrencySymbol = "\u20AC";
 
@@ -66,5 +67,6 @@ public sealed class LoanEnvelope : IEmbeddedMessage
 
     public Embed ToEmbeddedMessage() => ToSummary().EmbedMessage();
 
-    private static string Money(decimal amount) => $"{amount:0.00}{CurrencySymbol}";
+    private static string Money(decimal amount) =>
+        string.Create(CultureInfo.InvariantCulture, $"{amount:0.00}{CurrencySymbol}");
 }

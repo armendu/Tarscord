@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Discord;
 using Tarscord.Core.Extensions;
@@ -36,7 +37,7 @@ public sealed record EventInfoEnvelope(
 
         if (EventDate.HasValue)
         {
-            summary.Append(" on ").Append(EventDate.Value.ToString("f")).Append(" UTC");
+            summary.Append(" on ").Append(EventDate.Value.ToString("f", CultureInfo.InvariantCulture)).Append(" UTC");
         }
 
         return summary.ToString();
@@ -51,7 +52,7 @@ public sealed record EventInfoEnvelope(
 
         if (EventDate.HasValue)
         {
-            details.Append("When: ").Append(EventDate.Value.ToString("f")).Append(" UTC").Append('\n');
+            details.Append("When: ").Append(EventDate.Value.ToString("f", CultureInfo.InvariantCulture)).Append(" UTC").Append('\n');
         }
 
         if (!string.IsNullOrWhiteSpace(EventDescription))

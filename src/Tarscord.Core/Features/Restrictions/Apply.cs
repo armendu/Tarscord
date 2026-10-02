@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using OneOf;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -98,7 +99,18 @@ public static class Apply
             }
 
             // Stored first, or a failed save leaves someone muted with no row to expire.
-            await context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception)
+                when (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+                // Two restrictions read "none in force" together; the other one's row stands.
+                return new FailureResponse(
+                    $"{command.User.Username} was restricted here by another command at the same time. " +
+                    "Run it again to change how long it lasts.");
+            }
 
             try
             {
