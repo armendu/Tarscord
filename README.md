@@ -38,9 +38,10 @@ usually several words:
 ?event create Release party, next friday, in the usual place
 ```
 
-`remove`, `confirm`, `cancel` and `confirmed` take an event's name instead of its id, and the latest
-active event with that name is used; `show` takes the id only. `confirm` and `cancel` take mentions after it, so a multi-word name needs quotes
-there: `?event confirm "Release party" @bob`.
+`show`, `remove`, `confirm`, `cancel` and `confirmed` take an event's name or its id. By name, the
+latest active event with that name is used, so a cancelled event can only be reached by id.
+`confirm` and `cancel` take mentions after it, so a multi-word name needs quotes there:
+`?event confirm "Release party" @bob`.
 
 The description is optional. Dates can be written the way you'd say them — `today`, `tomorrow`,
 `in 3 days`, `in 2 weeks`, `next friday` — or given outright as `2026-05-01 18:30`.
