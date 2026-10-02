@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
+using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
@@ -51,12 +52,9 @@ public static class Apply
             logger.LogInformation("Command {Command} executed by {PerformedByUser}",
                 nameof(Apply), command.PerformedByUser);
 
-            var validation = await validator.ValidateAsync(command, cancellationToken);
-
-            if (!validation.IsValid)
+            if (await validator.FailureAsync(command, cancellationToken) is { } failure)
             {
-                return new FailureResponse(
-                    string.Join(" ", validation.Errors.Select(error => error.ErrorMessage)));
+                return failure;
             }
 
             // Overwrites only exist on guild channels.

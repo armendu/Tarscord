@@ -196,6 +196,8 @@ it.
 **Validators are wired one at a time.** There is no validation pipeline. A validator runs only if
 its `Handler` takes an `IValidator<T>` *and* calls it; the slice's own `AddSlice` registers it
 beside the handler that needs it, so a validator nobody registered fails `ValidateOnBuild`. What nothing catches is a validator that is registered and passed in but never called.
+Call it with `validator.FailureAsync(request, cancellationToken)` from `Extensions/ValidatorExtensions.cs`,
+which returns the `FailureResponse` to hand back, or null when the request is valid.
 
 **Background work is a `BackgroundService` with a scope per tick.** `ReminderDispatcher` and
 `RestrictionExpirySweeper` are the two. `TarscordContext` is scoped, so each tick opens an
