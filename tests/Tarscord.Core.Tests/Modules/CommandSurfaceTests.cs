@@ -10,6 +10,8 @@ namespace Tarscord.Core.Tests.Modules;
 
 public class CommandSurfaceTests
 {
+    private const int CommandCount = 22;
+
     [Fact]
     public async Task ModuleDiscovery_FindsTheWholeCommandSurface()
     {
@@ -20,7 +22,7 @@ public class CommandSurfaceTests
         int commandCount = commands.Commands.Count();
 
         // Assert
-        commandCount.Should().BeGreaterThan(15);
+        commandCount.Should().Be(CommandCount);
     }
 
     [Fact]
