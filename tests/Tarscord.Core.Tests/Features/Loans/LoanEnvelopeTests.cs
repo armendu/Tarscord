@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentAssertions;
 using Tarscord.Core.Features.Loans;
 using Xunit;
@@ -43,6 +44,29 @@ public class LoanEnvelopeTests
 
         // Assert
         embed.Title.Should().Be("bob owes alice 20.00\u20AC for lunch, not confirmed yet");
+    }
+
+    [Fact]
+    public void ToEmbeddedMessage_UnderACommaDecimalCulture_StillWritesAPoint()
+    {
+        // Arrange
+        var envelope = Envelope(amount: 20m, paid: 0m);
+        var original = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+
+        // Act
+        Discord.Embed embed;
+        try
+        {
+            embed = envelope.ToEmbeddedMessage();
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+
+        // Assert
+        embed.Title.Should().Contain("20.00\u20AC");
     }
 
     [Fact]

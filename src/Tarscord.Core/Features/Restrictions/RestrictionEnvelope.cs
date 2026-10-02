@@ -1,3 +1,4 @@
+using System.Globalization;
 using Discord;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -29,7 +30,9 @@ public sealed record RestrictionEnvelope(
 
         string denied = Kind == RestrictionKind.Mute ? "muted" : "stopped from reacting";
 
-        string when = ExpiresAt.HasValue ? $"until {ExpiresAt.Value:f} UTC" : "until someone lifts it";
+        string when = ExpiresAt.HasValue
+            ? string.Create(CultureInfo.InvariantCulture, $"until {ExpiresAt.Value:f} UTC")
+            : "until someone lifts it";
 
         return $"{Username} was {denied} {when}.".EmbedMessage();
     }

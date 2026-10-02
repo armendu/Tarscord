@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentAssertions;
 using Tarscord.Core.Features.Events;
 using Xunit;
@@ -95,6 +96,29 @@ public class ListTests
 
         // Assert
         embed.Title.Should().Be(GeneratedHeading);
+    }
+
+    [Fact]
+    public void ToEmbeddedMessage_UnderAnotherCulture_StillWritesTheDateInEnglish()
+    {
+        // Arrange
+        var response = new List.ListResponse([Envelope(1, "Release party")], false);
+        var original = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+
+        // Act
+        Discord.Embed embed;
+        try
+        {
+            embed = response.ToEmbeddedMessage();
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+
+        // Assert
+        embed.Description.Should().Contain("Friday, 01 May 2026 18:30 UTC");
     }
 
     private static EventInfoEnvelope Envelope(int eventId, string eventName) =>

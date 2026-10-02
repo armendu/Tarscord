@@ -1,3 +1,4 @@
+using System.Globalization;
 using Discord;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Common;
@@ -18,5 +19,5 @@ public sealed record ReminderEnvelope(
             reminder.RemindAt);
 
     public Embed ToEmbeddedMessage() =>
-        $"Reminder set for {RemindAt:f} UTC".EmbedMessage(Message);
+        string.Create(CultureInfo.InvariantCulture, $"Reminder set for {RemindAt:f} UTC").EmbedMessage(Message);
 }
