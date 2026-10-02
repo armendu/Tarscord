@@ -42,15 +42,32 @@ public class GeneratedMessageEnvelopeTests
     [InlineData("  " + Heading + "  ")]
     [InlineData(Heading + "\n1. Release party\n2. Standup")]
     [InlineData("\"" + Heading + "\"\n- Retro")]
+    [InlineData("\" " + Heading + " \"")]
     public void ToHeading_ForWhatTheModelSaid_KeepsOnlyTheFirstLineUnquoted(string generated)
     {
         // Arrange
         var envelope = new GeneratedMessageEnvelope(generated, FromModel: true);
 
         // Act
-        string heading = envelope.ToHeading();
+        string? heading = envelope.ToHeading();
 
         // Assert
         heading.Should().Be(Heading);
+    }
+
+    [Theory]
+    [InlineData("\"")]
+    [InlineData("\"\"")]
+    [InlineData(" \" \" \n1. Release party")]
+    public void ToHeading_WhenNothingIsLeft_ReturnsNull(string generated)
+    {
+        // Arrange
+        var envelope = new GeneratedMessageEnvelope(generated, FromModel: true);
+
+        // Act
+        string? heading = envelope.ToHeading();
+
+        // Assert
+        heading.Should().BeNull();
     }
 }

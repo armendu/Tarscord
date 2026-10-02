@@ -9,5 +9,6 @@ public sealed record GeneratedMessageEnvelope(string Message, bool FromModel)
     public Embed ToEmbeddedMessage(string title) => title.EmbedMessage(Message);
 
     // The model sometimes quotes the line or tacks a list of its own under it.
-    public string ToHeading() => Message.Split('\n')[0].Trim().Trim('"');
+    public string? ToHeading() =>
+        Message.Split('\n')[0].Trim().Trim('"').Trim() is { Length: > 0 } line ? line : null;
 }

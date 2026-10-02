@@ -56,7 +56,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
                     PerformedByUser: Context.User.Username),
                 CancellationToken.None);
 
-            events = events with { Heading = heading.ToHeading() };
+            events = events with { Heading = heading.ToHeading() ?? List.DefaultHeading };
         }
 
         await ReplyAsync(embed: events.ToEmbeddedMessage());
