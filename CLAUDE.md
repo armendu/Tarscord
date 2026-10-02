@@ -201,6 +201,8 @@ beside the handler that needs it, so a validator nobody registered fails `Valida
 `RestrictionExpirySweeper` are the two. `TarscordContext` is scoped, so each tick opens an
 `IServiceScope` and resolves the handlers it needs from it. Both catch and log rather
 than letting an exception escape, because a loop that dies takes its whole feature with it silently.
+There is no host: `Startup.StartLoopAsync` starts each one and logs if it ever stops, and nothing
+ever cancels them, so the bot keeps answering commands with that loop gone until it is restarted.
 
 **Depend on `IDiscordClient`, not `DiscordSocketClient`, in a handler.** The concrete client's
 members are not virtual, so a handler that takes it cannot be tested at all. Both are registered.
@@ -418,10 +420,10 @@ that's what `OneOf<TEnvelope, FailureResponse>` is for here. Never throw bare
 > read, except the token check, which is a configuration failure and throws
 > `InvalidOperationException`. In a module, a `FailureResponse` is almost always what you want.
 >
-> Three places catch `Exception`, which the rule above forbids, and all three are deliberate and
+> Four places catch `Exception`, which the rule above forbids, and all four are deliberate and
 > commented. The two `BackgroundService` loops do it because a loop that lets an exception escape
 > stops running and the feature goes silent with nothing in the log; both rethrow
-> `OperationCanceledException`. `Features/Personality/Generate.cs` does it because the model is
+> `OperationCanceledException`. `Startup.StartLoopAsync` does it to log whatever still escapes them. `Features/Personality/Generate.cs` does it because the model is
 > optional and a closed list of transport exceptions kept missing cases.
 
 **Async** — [Asynchronous programming scenarios](https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios).

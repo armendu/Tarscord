@@ -3,6 +3,9 @@ using Discord.WebSocket;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Tarscord.Core;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
@@ -145,6 +148,30 @@ public class StartupTests
         }
 
         return data;
+    }
+
+    [Fact]
+    public async Task StartLoopAsync_WhenTheLoopFails_LogsIt()
+    {
+        // Arrange
+        var logger = Substitute.For<ILogger<Startup>>();
+
+        // Act
+        await Startup.StartLoopAsync(new FailingLoop(), logger);
+
+        // Assert
+        logger.Received(1).Log(
+            LogLevel.Error,
+            Arg.Any<EventId>(),
+            Arg.Any<Arg.AnyType>(),
+            Arg.Any<InvalidOperationException>(),
+            Arg.Any<Func<Arg.AnyType, Exception?, string>>());
+    }
+
+    private sealed class FailingLoop : BackgroundService
+    {
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) =>
+            throw new InvalidOperationException("The loop broke");
     }
 
     private static ServiceProvider BuildProvider()
