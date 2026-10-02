@@ -63,15 +63,15 @@ public class EventModule : ModuleBase<SocketCommandContext>
     }
 
     /// <summary>
-    /// Usage: event display {Event Id}
+    /// Usage: event display {Event name or Id}
     /// </summary>
-    [Command("show"), Summary("Show information about an event")]
+    [Command("show"), Summary("Show information about an event, by name or id")]
     [Alias("info", "get", "display", "details")]
     public async Task ShowEventInformation(
-        [Summary("The event Id")] int eventId)
+        [Summary("The event name, or its id")][Remainder] string eventNameOrId)
     {
         var response = await _details.HandleAsync(
-            new Details.Query(eventId, Context.User.Username),
+            new Details.Query(eventNameOrId, Context.User.Username),
             CancellationToken.None);
 
         var embeddedMessage = response.ToEmbeddedMessage();

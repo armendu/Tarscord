@@ -19,7 +19,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?dare <@user>` | Dares someone, in the bot's current voice |
 | `@Tarscord <anything>` | Mention it with no command and it answers, once every 20s per person |
 | `?event list` | The active events, soonest first |
-| `?event show <id>` (`info`, `get`, `display`, `details`) | One event in full |
+| `?event show <name or id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
 | `?event remove <name or id>` (`delete`) | Cancel an event you organized |
 | `?event confirm <name or id> [@users]` | Confirm attendance, yours or someone else's |

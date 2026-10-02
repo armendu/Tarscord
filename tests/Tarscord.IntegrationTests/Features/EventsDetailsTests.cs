@@ -12,9 +12,10 @@ namespace Tarscord.IntegrationTests.Features;
 public class EventsDetailsTests(PostgresFixture fixture)
 {
     private const string PerformedByUser = "alice";
+    private const string EventName = "Release party";
 
     [Fact]
-    public async Task Handle_ForAnExistingEvent_ReturnsIt()
+    public async Task Handle_ForAnExistingEventById_ReturnsIt()
     {
         // Arrange
         await fixture.ResetAsync();
@@ -25,10 +26,28 @@ public class EventsDetailsTests(PostgresFixture fixture)
 
         // Act
         var response = await handler.HandleAsync(
-            new Details.Query(eventId, PerformedByUser), CancellationToken.None);
+            new Details.Query(eventId.ToString(), PerformedByUser), CancellationToken.None);
 
         // Assert
-        response.AsT0.EventName.Should().Be("Release party");
+        response.AsT0.EventName.Should().Be(EventName);
+    }
+
+    [Fact]
+    public async Task Handle_ForAnExistingEventByName_ReturnsIt()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent();
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(
+            new Details.Query("release PARTY", PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.AsT0.EventId.Should().Be(eventId);
     }
 
     [Fact]
@@ -41,29 +60,10 @@ public class EventsDetailsTests(PostgresFixture fixture)
 
         // Act
         var response = await handler.HandleAsync(
-            new Details.Query(4242, PerformedByUser), CancellationToken.None);
+            new Details.Query("4242", PerformedByUser), CancellationToken.None);
 
         // Assert
-        response.AsT1.ErrorMessage.Should().Contain("no event with id 4242");
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public async Task Handle_ForAnIdThatCannotExist_SaysTheIdIsWrongRatherThanTheEventIsMissing(int eventId)
-    {
-        // Arrange
-        await fixture.ResetAsync();
-        await using var context = fixture.CreateContext();
-        var handler = NewHandler(context);
-
-        // Act
-        var response = await handler.HandleAsync(
-            new Details.Query(eventId, PerformedByUser), CancellationToken.None);
-
-        // Assert
-        response.AsT1.ErrorMessage.Should().Contain("positive number")
-            .And.NotContain("no event with id");
+        response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
     }
 
     private async Task<int> GivenAnEvent()
@@ -74,7 +74,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
         {
             EventOrganizer = PerformedByUser,
             EventOrganizerId = 123456789012345678,
-            EventName = "Release party",
+            EventName = EventName,
             EventDate = DateTime.UtcNow.AddDays(1),
             EventDescription = "upstairs",
             IsActive = true,

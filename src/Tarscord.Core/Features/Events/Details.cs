@@ -1,5 +1,4 @@
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneOf;
@@ -11,15 +10,15 @@ namespace Tarscord.Core.Features.Events;
 
 public static class Details
 {
-    public sealed record Query(int EventId, string PerformedByUser) : IPerformedByUser;
+    public sealed record Query(string Event, string PerformedByUser) : IPerformedByUser;
 
     public sealed class QueryValidator : AbstractValidator<Query>
     {
         public QueryValidator()
         {
-            RuleFor(query => query.EventId)
-                .GreaterThan(0)
-                .WithMessage("An event id is a positive number. 'event list' shows them.");
+            RuleFor(query => query.Event)
+                .NotEmpty()
+                .WithMessage("Name the event, or give the id that 'event list' shows.");
         }
     }
 
@@ -39,18 +38,16 @@ public static class Details
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(Details), query.PerformedByUser);
 
-            // An unusable id used to report the same thing as a missing event.
             if (await validator.FailureAsync(query, cancellationToken) is { } failure)
             {
                 return failure;
             }
 
-            var eventInfo = await context.EventInfos
-                .FirstOrDefaultAsync(candidate => candidate.Id == query.EventId, cancellationToken);
+            var eventInfo = await context.EventInfos.MatchAsync(query.Event, cancellationToken);
 
             return eventInfo switch
             {
-                null => new FailureResponse($"There is no event with id {query.EventId}"),
+                null => new FailureResponse($"There is no event called '{query.Event}'."),
                 _ => EventInfoEnvelope.FromEntity(eventInfo)
             };
         }
