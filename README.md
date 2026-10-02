@@ -22,7 +22,7 @@ Built on [Discord.Net](https://discordnet.dev) 3.20, .NET 10 and PostgreSQL.
 | `?event show <name or id>` (`info`, `get`, `display`, `details`) | One event in full |
 | `?event create <name>, <when>, <description>` (`add`, `make`, `generate`) | Add an event |
 | `?event remove <name or id>` (`delete`) | Cancel an event you organized |
-| `?event confirm <name or id> [@users]` | Confirm attendance, yours or someone else's |
+| `?event confirm <name or id>` | Confirm you're attending |
 | `?event cancel <name or id> [@users]` (`unattend`) | Withdraw attendance; someone else's is the organizer's to do |
 | `?event confirmed <name or id>` | Who has confirmed for an event |
 | `?loan list` (`show`) | Loans you're on either side of |
@@ -40,8 +40,8 @@ usually several words:
 
 `show`, `remove`, `confirm`, `cancel` and `confirmed` take an event's name or its id. By name, the
 latest active event with that name is used, so a cancelled event can only be reached by id.
-`confirm` and `cancel` take mentions after it, so a multi-word name needs quotes there:
-`?event confirm "Release party" @bob`.
+`cancel` takes mentions after it, so a multi-word name needs quotes there:
+`?event cancel "Release party" @bob`. You can only confirm yourself, so `confirm` takes no mentions.
 
 The description is optional. Dates can be written the way you'd say them — `today`, `tomorrow`,
 `in 3 days`, `in 2 weeks`, `next friday` — or given outright as `2026-05-01 18:30`.
