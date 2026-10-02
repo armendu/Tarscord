@@ -309,6 +309,10 @@ column and a predicate is the fix and it is its own change.
 it parses as one, otherwise as a name, and by name it takes the latest **active** event. So by id you
 can still reach a cancelled event and be told it is cancelled; by name you cannot see it at all.
 
+**`?event confirm` only ever adds the caller; `?event cancel` lets the organizer remove anyone.** The
+asymmetry is deliberate: removing someone is moderation, signing someone up is not. Don't make them
+match.
+
 **The connection string is the one key with no default.** Every other key falls back to
 `config.example.yml`, so forgetting one is silent; `tarscord-context:connection-string` is empty
 there and `AddDatabase` throws, because the alternative is a deployment quietly running against
