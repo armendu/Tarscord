@@ -312,6 +312,22 @@ public class RestrictionsTests(PostgresFixture fixture)
         response.AsT1.ErrorMessage.Should().Contain("at the same time");
     }
 
+    [Fact]
+    public async Task Apply_WhenAnotherApplyInsertsFirst_LeavesOnlyTheirRow()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext(
+            new BeforeSaving(() => GivenARestriction(expiresInMinutes: null)));
+
+        // Act
+        await NewApplyHandler(context).HandleAsync(NewApplyCommand(minutes: 10), CancellationToken.None);
+
+        // Assert
+        await using var verification = fixture.CreateContext();
+        (await verification.Restrictions.SingleAsync()).ExpiresAt.Should().BeNull();
+    }
+
     private sealed class BeforeSaving(Func<Task> competingWrite) : SaveChangesInterceptor
     {
         public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(

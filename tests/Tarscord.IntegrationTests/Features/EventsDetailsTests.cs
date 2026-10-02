@@ -66,7 +66,43 @@ public class EventsDetailsTests(PostgresFixture fixture)
         response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
     }
 
-    private async Task<int> GivenAnEvent()
+    [Fact]
+    public async Task Handle_ForACancelledEventById_ShowsItAsCancelled()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent(isActive: false);
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(
+            new Details.Query(eventId.ToString(), PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.AsT0.ToEmbeddedMessage().Title.Should().Be($"{EventName} (cancelled)");
+    }
+
+    [Fact]
+    public async Task Handle_ForACancelledEventByName_SaysThereIsNoSuchEvent()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenAnEvent(isActive: false);
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(
+            new Details.Query(EventName, PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("no event called");
+    }
+
+    private async Task<int> GivenAnEvent(bool isActive = true)
     {
         await using var context = fixture.CreateContext();
 
@@ -77,7 +113,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
             EventName = EventName,
             EventDate = DateTime.UtcNow.AddDays(1),
             EventDescription = "upstairs",
-            IsActive = true,
+            IsActive = isActive,
             Created = DateTime.UtcNow
         };
 
