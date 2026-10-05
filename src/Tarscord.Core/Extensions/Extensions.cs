@@ -17,6 +17,18 @@ public static class Extensions
         }.Build();
     }
 
+    public static Embed UnderHeading(this Embed embed, string heading)
+    {
+        var builder = embed.ToEmbedBuilder();
+        string below = string.Join('\n',
+            new[] { embed.Title, embed.Description }.Where(text => !string.IsNullOrEmpty(text)));
+
+        builder.Title = Clamp(heading, TitleLimit);
+        builder.Description = Clamp(below, DescriptionLimit);
+
+        return builder.Build();
+    }
+
     private static string Clamp(string text, int limit) =>
         text.Length <= limit ? text : string.Concat(text.AsSpan(0, limit - 1), "\u2026");
 }

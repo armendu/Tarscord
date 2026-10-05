@@ -3,6 +3,7 @@ using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Modules;
 
@@ -12,11 +13,13 @@ public class HelpModule : ModuleBase<SocketCommandContext>
     private const string ModuleName = "Help";
 
     private readonly CommandService _service;
+    private readonly Voice.Handler _voice;
     private readonly IConfigurationRoot _config;
 
-    public HelpModule(CommandService service, IConfigurationRoot config)
+    public HelpModule(CommandService service, Voice.Handler voice, IConfigurationRoot config)
     {
         _service = service;
+        _voice = voice;
         _config = config;
     }
 
@@ -66,7 +69,7 @@ public class HelpModule : ModuleBase<SocketCommandContext>
             builder.AddField(name, commands.ToString());
         }
 
-        await ReplyAsync(embed: builder.Build());
+        await ReplyVoicedAsync(builder.Build(), "Someone asked what commands the bot has.");
     }
 
     [Command("help"), Summary("Explains one command")]
@@ -76,8 +79,9 @@ public class HelpModule : ModuleBase<SocketCommandContext>
 
         if (!result.IsSuccess)
         {
-            await ReplyAsync(embed:
-                "No such command".EmbedMessage($"Sorry, I couldn't find a command like **{command}**."));
+            await ReplyVoicedAsync(
+                "No such command".EmbedMessage($"Sorry, I couldn't find a command like **{command}**."),
+                "Someone asked about a command that does not exist.");
 
             return;
         }
@@ -101,6 +105,10 @@ public class HelpModule : ModuleBase<SocketCommandContext>
             });
         }
 
-        await ReplyAsync(embed: builder.Build());
+        await ReplyVoicedAsync(builder.Build(), "Someone asked how a command works.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string prompt) =>
+        await ReplyAsync(embed: await _voice.HandleAsync(
+            new Voice.Command(reply, prompt, "help", Context), CancellationToken.None));
 }

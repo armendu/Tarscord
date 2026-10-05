@@ -2,6 +2,7 @@ using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
 using Tarscord.Core.Features.Restrictions;
 using Tarscord.Core.Persistence.Entities;
 
@@ -9,7 +10,7 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Admin commands")]
-public class AdminModule(Apply.Handler apply, Lift.Handler lift, IConfigurationRoot config)
+public class AdminModule(Apply.Handler apply, Lift.Handler lift, Voice.Handler voice, IConfigurationRoot config)
     : ModuleBase<SocketCommandContext>
 {
     /// <summary>
@@ -60,7 +61,8 @@ public class AdminModule(Apply.Handler apply, Lift.Handler lift, IConfigurationR
         // Guarding here is what lets Apply.Command keep a non-nullable IUser.
         if (user is null)
         {
-            await ReplyAsync(embed: MentionSomeone(command).EmbedMessage());
+            await ReplyVoicedAsync(MentionSomeone(command).EmbedMessage(), command,
+                "A moderator forgot to mention who the command is for.");
             return;
         }
 
@@ -70,14 +72,17 @@ public class AdminModule(Apply.Handler apply, Lift.Handler lift, IConfigurationR
             new Apply.Command(Context.Channel, user, kind, minutes, Context.User.Username),
             CancellationToken.None);
 
-        await ReplyAsync(embed: response.ToEmbeddedMessage());
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), command, response.IsT0
+            ? "A moderator just restricted someone in this channel."
+            : "A moderator tried to restrict someone and it was refused for the reason shown.");
     }
 
     private async Task LiftAsync(string command, IUser? user, RestrictionKind kind)
     {
         if (user is null)
         {
-            await ReplyAsync(embed: MentionSomeone(command).EmbedMessage());
+            await ReplyVoicedAsync(MentionSomeone(command).EmbedMessage(), command,
+                "A moderator forgot to mention who the command is for.");
             return;
         }
 
@@ -87,8 +92,14 @@ public class AdminModule(Apply.Handler apply, Lift.Handler lift, IConfigurationR
             new Lift.Command(user.Id, Context.Channel.Id, kind, Context.User.Username),
             CancellationToken.None);
 
-        await ReplyAsync(embed: response.ToEmbeddedMessage());
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), command, response.IsT0
+            ? "A moderator just lifted a restriction in this channel."
+            : "A moderator tried to lift a restriction and it was refused for the reason shown.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 
     /// <summary>Names the command that was typed, at the configured prefix.</summary>
     private string MentionSomeone(string command) =>

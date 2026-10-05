@@ -54,7 +54,7 @@ public class ProcessMessageTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, ProcessMessage.MentionCommand);
 
         var configuration = NewConfiguration();
         using var discord = new DiscordSocketClient();

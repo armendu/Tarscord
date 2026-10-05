@@ -2,6 +2,7 @@ using Discord;
 using Discord.Commands;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.EventAttendees;
+using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Modules;
 
@@ -12,12 +13,18 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
     private readonly Confirm.Handler _confirm;
     private readonly Cancel.Handler _cancel;
     private readonly List.Handler _list;
+    private readonly Voice.Handler _voice;
 
-    public EventAttendanceModule(Confirm.Handler confirm, Cancel.Handler cancel, List.Handler list)
+    public EventAttendanceModule(
+        Confirm.Handler confirm,
+        Cancel.Handler cancel,
+        List.Handler list,
+        Voice.Handler voice)
     {
         _confirm = confirm;
         _cancel = cancel;
         _list = list;
+        _voice = voice;
     }
 
     /// <summary>
@@ -36,9 +43,9 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "event confirm", response.IsT0
+            ? "Someone just confirmed they are attending an event."
+            : "Someone tried to confirm they are attending an event and it was refused for the reason shown.");
     }
 
     /// <summary>
@@ -59,9 +66,9 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             new Cancel.Command(eventNameOrId, attendeeIds, Context.User.Id, Context.User.Username),
             CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "event cancel", response.IsT0
+            ? "Someone just withdrew attendance from an event."
+            : "Someone tried to withdraw attendance from an event and it was refused for the reason shown.");
     }
 
     /// <summary>
@@ -75,8 +82,12 @@ public class EventAttendanceModule : ModuleBase<SocketCommandContext>
             new List.Query(eventNameOrId, Context.User.Username),
             CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "event confirmed", response.IsT0
+            ? "Someone asked who is attending an event."
+            : "Someone asked who is attending an event that could not be found.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await _voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 }

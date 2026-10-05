@@ -9,6 +9,8 @@ public class GenerationCooldownTests
 {
     private const ulong Alice = 111111111111111111;
     private const ulong Bob = 222222222222222222;
+    private const string Dare = "dare";
+    private const string Random = "random";
 
     [Fact]
     public void TryGenerate_ForAFirstReply_Allows()
@@ -17,7 +19,7 @@ public class GenerationCooldownTests
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
 
         // Act
-        bool allowed = cooldown.TryGenerate(Alice);
+        bool allowed = cooldown.TryGenerate(Alice, Dare);
 
         // Assert
         allowed.Should().BeTrue();
@@ -28,10 +30,10 @@ public class GenerationCooldownTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, Dare);
 
         // Act
-        bool allowed = cooldown.TryGenerate(Alice);
+        bool allowed = cooldown.TryGenerate(Alice, Dare);
 
         // Assert
         allowed.Should().BeFalse();
@@ -43,12 +45,12 @@ public class GenerationCooldownTests
         // Arrange
         var timeProvider = new FakeTimeProvider();
         var cooldown = new GenerationCooldown(timeProvider);
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, Dare);
 
         timeProvider.Advance(TimeSpan.FromSeconds(21));
 
         // Act
-        bool allowed = cooldown.TryGenerate(Alice);
+        bool allowed = cooldown.TryGenerate(Alice, Dare);
 
         // Assert
         allowed.Should().BeTrue();
@@ -59,10 +61,10 @@ public class GenerationCooldownTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, Dare);
 
         // Act
-        bool allowed = cooldown.TryGenerate(Bob);
+        bool allowed = cooldown.TryGenerate(Bob, Dare);
 
         // Assert
         allowed.Should().BeTrue();
@@ -73,10 +75,10 @@ public class GenerationCooldownTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, Dare);
 
         // Act
-        bool coolingDown = cooldown.IsCoolingDown(Alice);
+        bool coolingDown = cooldown.IsCoolingDown(Alice, Dare);
 
         // Assert
         coolingDown.Should().BeTrue();
@@ -87,10 +89,24 @@ public class GenerationCooldownTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.IsCoolingDown(Alice);
+        cooldown.IsCoolingDown(Alice, Dare);
 
         // Act
-        bool allowed = cooldown.TryGenerate(Alice);
+        bool allowed = cooldown.TryGenerate(Alice, Dare);
+
+        // Assert
+        allowed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TryGenerate_ForADifferentCommand_IsNotAffectedByTheFirst()
+    {
+        // Arrange
+        var cooldown = new GenerationCooldown(new FakeTimeProvider());
+        cooldown.TryGenerate(Alice, Dare);
+
+        // Act
+        bool allowed = cooldown.TryGenerate(Alice, Random);
 
         // Assert
         allowed.Should().BeTrue();

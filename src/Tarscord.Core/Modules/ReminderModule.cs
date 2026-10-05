@@ -1,11 +1,13 @@
+using Discord;
 using Discord.Commands;
 using Tarscord.Core.Extensions;
+using Tarscord.Core.Features.Personality;
 using Tarscord.Core.Features.Reminders;
 
 namespace Tarscord.Core.Modules;
 
 [Name("Commands to create reminders")]
-public class ReminderModule(Create.Handler create) : ModuleBase<SocketCommandContext>
+public class ReminderModule(Create.Handler create, Voice.Handler voice) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: remindme {minutes} {message}
@@ -26,8 +28,12 @@ public class ReminderModule(Create.Handler create) : ModuleBase<SocketCommandCon
                 Context.User.Username),
             CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "remindme", response.IsT0
+            ? "Someone just set a reminder for themselves."
+            : "Someone tried to set a reminder and it was refused for the reason shown.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 }

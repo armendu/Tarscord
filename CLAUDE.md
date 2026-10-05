@@ -322,8 +322,8 @@ there and `AddDatabase` throws, because the alternative is a deployment quietly 
 is loaded with `optional: false`; `config.yml` sits on top with `optional: true`. Add a new key to
 the example with a placeholder or nothing will read it. Both are copied to the output directory.
 
-**A generated reply is on a 5 second timeout and a 20 second per-user cooldown.** Both are about the
-gateway, not the model: `DefaultRunMode` is `Sync` and `CommandHandler` returns the task it gets, so
+**A generated reply is on a 5 second timeout and a 20 second cooldown per person and command.**
+Both are about the gateway, not the model: `DefaultRunMode` is `Sync` and `CommandHandler` returns the task it gets, so
 the command body runs on the gateway callback and a slow model delays every other event. `Generate`
 owns both, and spends the cooldown only once it is about to call the model, so an unconfigured bot
 never uses it up; on cooldown it returns the caller's fallback. It enters the typing state at that
@@ -343,6 +343,12 @@ that talks to the model, it degrades the same way.
 What the model is allowed to touch is the *voice*, never the data: `?dare` and a reply to a mention
 are entirely generated, and `?random` and `?event list` generate only the line around a number and a
 list that were both produced deterministically. Never route the numbers or the rows through it.
+
+**Every reply goes through `Voice`, including failures and validation errors.** A module builds its
+embed exactly as before and hands it to `Features/Personality/Voice.cs` with one prompt for that
+command and outcome. The generated line becomes the title and the old title and description move
+under it; the model is never shown them. When the model is off, slow or cooling down, the embed goes
+out unchanged. `StartupTests` fails for a module that doesn't take `Voice.Handler`.
 
 **`Apply` saves before calling Discord; `Lift` calls Discord before saving.** Opposite orders, for
 the same reason — leave the row as the thing that still needs doing. If `Apply` denied in Discord
