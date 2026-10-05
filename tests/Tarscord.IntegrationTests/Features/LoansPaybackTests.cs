@@ -82,6 +82,24 @@ public class LoansPaybackTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Handle_WithAFractionOfACent_ReturnsFailureAndChangesNothing()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenALoan(amount: 20m, paid: 0m);
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewHandler(context).HandleAsync(NewCommand(0.001m), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("at most two decimals");
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Loans.SingleAsync()).AmountPayed.Should().Be(0m);
+    }
+
+    [Fact]
     public async Task Handle_ForAFractionalBalance_SettlesExactly()
     {
         // Arrange
