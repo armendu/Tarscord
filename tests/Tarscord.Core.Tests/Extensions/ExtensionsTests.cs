@@ -88,4 +88,17 @@ public class ExtensionsTests
         // Assert
         embed.Title.Should().HaveLength(256);
     }
+
+    [Fact]
+    public void EmbedMessage_ForATitleCutInsideAnEmoji_DropsTheWholeEmoji()
+    {
+        // Arrange
+        string title = new string('a', 254) + "\U0001F600 and more";
+
+        // Act
+        var embed = title.EmbedMessage();
+
+        // Assert
+        embed.Title.Should().Be(new string('a', 254) + "\u2026");
+    }
 }

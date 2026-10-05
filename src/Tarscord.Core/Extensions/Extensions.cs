@@ -29,6 +29,21 @@ public static class Extensions
         return builder.Build();
     }
 
-    private static string Clamp(string text, int limit) =>
-        text.Length <= limit ? text : string.Concat(text.AsSpan(0, limit - 1), "\u2026");
+    private static string Clamp(string text, int limit)
+    {
+        if (text.Length <= limit)
+        {
+            return text;
+        }
+
+        int keep = limit - 1;
+
+        // Never half an emoji: a lone surrogate is not valid text to send.
+        if (char.IsHighSurrogate(text[keep - 1]))
+        {
+            keep--;
+        }
+
+        return string.Concat(text.AsSpan(0, keep), "\u2026");
+    }
 }
