@@ -93,14 +93,15 @@ public static class DateTimeExtensions
     private static DateTime? FromAbsoluteDate(string input)
     {
         // Invariant culture, so the same text means the same date wherever the bot runs.
+        // Without an offset the clock the user typed is stored as UTC; with one, it is converted to UTC.
         if (!DateTime.TryParse(input, CultureInfo.InvariantCulture,
-                DateTimeStyles.AllowWhiteSpaces, out var parsed))
+                DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var parsed))
         {
             return null;
         }
 
-        // The clock the user typed is the clock that gets stored and printed back.
-        return DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+        return parsed;
     }
 
     private static DateTime UtcStartOfDay(DateTimeOffset localMoment) =>
