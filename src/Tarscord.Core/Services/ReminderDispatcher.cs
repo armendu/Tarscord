@@ -16,6 +16,9 @@ public sealed class ReminderDispatcher(
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(15);
 
+    // Long enough to ride out a Discord outage, short enough that a reminder is not hours late.
+    private static readonly TimeSpan GiveUpAfter = TimeSpan.FromHours(1);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var timer = new PeriodicTimer(PollInterval, timeProvider);
@@ -72,6 +75,14 @@ public sealed class ReminderDispatcher(
         }
         catch (Exception exception)
         {
+            if (timeProvider.GetUtcNow().UtcDateTime - reminder.RemindAt < GiveUpAfter)
+            {
+                logger.LogWarning(exception, "Reminder {ReminderId} could not be delivered; retrying",
+                    reminder.ReminderId);
+
+                return;
+            }
+
             logger.LogError(exception, "Reminder {ReminderId} could not be delivered; giving up on it",
                 reminder.ReminderId);
 

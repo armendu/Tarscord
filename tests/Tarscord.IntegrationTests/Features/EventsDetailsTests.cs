@@ -66,6 +66,46 @@ public class EventsDetailsTests(PostgresFixture fixture)
         response.AsT1.ErrorMessage.Should().Contain("no event called '4242'");
     }
 
+    [Theory]
+    [InlineData("%")]
+    [InlineData("Release_party")]
+    [InlineData("Release%")]
+    public async Task Handle_ForANameWithPatternCharacters_DoesNotTreatThemAsAPattern(string name)
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenAnEvent();
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(new Details.Query(name, PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("no event called");
+    }
+
+    [Theory]
+    [InlineData("100% fun")]
+    [InlineData("snake_case meetup")]
+    [InlineData(@"back\slash")]
+    public async Task Handle_ForANameContainingPatternCharacters_StillFindsIt(string name)
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        int eventId = await GivenAnEvent(eventName: name);
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(new Details.Query(name, PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.AsT0.EventId.Should().Be(eventId);
+    }
+
     [Fact]
     public async Task Handle_ForACancelledEventById_ShowsItAsCancelled()
     {
@@ -102,7 +142,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
         response.AsT1.ErrorMessage.Should().Contain("no event called");
     }
 
-    private async Task<int> GivenAnEvent(bool isActive = true)
+    private async Task<int> GivenAnEvent(bool isActive = true, string eventName = EventName)
     {
         await using var context = fixture.CreateContext();
 
@@ -110,7 +150,7 @@ public class EventsDetailsTests(PostgresFixture fixture)
         {
             EventOrganizer = PerformedByUser,
             EventOrganizerId = 123456789012345678,
-            EventName = EventName,
+            EventName = eventName,
             EventDate = DateTime.UtcNow.AddDays(1),
             EventDescription = "upstairs",
             IsActive = isActive,
