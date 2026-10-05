@@ -153,26 +153,26 @@ Every key in `src/Tarscord.Core/Resources/config.yml`:
 
 ### The local model
 
-`?dare`, `?random`, the heading of `?event list` and replies to a mention are written by a local LLM
-through [Ollama](https://ollama.com), shaped by `sarcasm-level` and `humor-level`:
+Every reply is worded by a local LLM through [Ollama](https://ollama.com), shaped by
+`sarcasm-level` and `humor-level`. `?dare` and replies to a mention are written outright; every
+other command, including its errors, gets a generated line over the same reply it always sent:
 
 ```sh
 ollama pull llama3.1
 ollama serve
 ```
 
-One generated reply per person every 20 seconds, shared across `?random`, `?dare`, `?event list` and
-mentions, so a voiced `?event list` costs you the voice on your next `?dare`. Only an actual call to
-the model counts, and generation gets 5 seconds before the fixed line wins. Both limits exist
-because commands run on the gateway callback, so a slow model holds up every other event; `?random`
-twice in a row gives you the number with a fixed line the second time.
+One generated reply per person per command every 20 seconds, so `?event create` followed by
+`?event confirm` is voiced twice, but `?random` twice in a row gives you the number with a fixed
+line the second time. Only an actual call to the model counts, and generation gets 5 seconds before
+the fixed reply wins. Both limits exist because commands run on the gateway callback, so a slow
+model holds up every other event.
 
 It is optional. If nothing answers on `ollama.url`, the bot logs a warning and replies with a fixed
 line instead, so no command breaks because the model is down, and a blank `ollama.url` or
-`ollama.model` skips the call altogether. The model only writes the wrapper: `?random` still draws
-its number with `Random.Shared` and shows it as the reply's title without ever telling the model,
-and `?event list` still lists the same events. Every other reply — loans, events, help — is
-deterministic and never goes near the model.
+`ollama.model` skips the call altogether. The model only writes the wrapper: amounts, dates, names
+and lists are built by the bot and shown under the generated line, and the model is never told them.
+`?random` still draws its number with `Random.Shared` and shows it as the reply's title.
 
 `?sarcasm-level 8` and `?humor-level 3` change the voice while the bot is running. They are held in
 memory, so a restart goes back to the values in `config.yml`.
