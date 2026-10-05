@@ -298,12 +298,9 @@ validator that disagrees with its column turns a readable reply into an unhandle
 change the migration and the constant together; `MigrationsTests` fails if a validated column's width
 drifts from its constant.
 
-**Nothing is scoped to a guild, so the bot is single-guild by assumption.** No table has a
-`guild_id` column and no query filters on one, and `event_infos.id` is `SERIAL`. In a second guild,
-`?event list` and `?event confirmed` would show the first guild's events and attendee names, and
-`?event confirm` would write into them. Deleting and cancelling are safe, they check
-`EventOrganizerId`. Loans filter by user id; reminders and restrictions are channel-scoped. Adding a
-column and a predicate is the fix and it is its own change.
+**One instance serves one server, by design.** Everyone runs their own Tarscord with its own
+database, so no table has a `guild_id` column and no query filters on one. Don't add guild scoping
+as a fix; #12 records what it would take if one instance ever has to serve several servers.
 
 **An event can be named instead of numbered.** `EventInfos.MatchAsync` takes the text as an id when
 it parses as one, otherwise as a name, and by name it takes the latest **active** event. So by id you
