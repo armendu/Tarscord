@@ -49,9 +49,10 @@ public static class InitializeBot
                     "Resources/config.yml and put your token in tokens.discord.");
             }
 
+            // Before connecting, or a command that arrives first finds no module and goes unanswered.
+            await AddModulesAsync(_commands, _provider);
             await _discord.LoginAsync(TokenType.Bot, discordToken);
             await _discord.StartAsync();
-            await AddModulesAsync(_commands, _provider);
         }
     }
 }
