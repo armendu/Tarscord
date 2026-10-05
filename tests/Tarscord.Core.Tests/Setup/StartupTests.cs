@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Tarscord.Core;
+using Tarscord.Core.Features.Personality;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Services;
 using Xunit;
@@ -133,6 +134,20 @@ public class StartupTests
 
         // Assert
         instance.Should().NotBeNull();
+    }
+
+    [Theory]
+    [MemberData(nameof(Modules))]
+    public void EveryModule_TakesTheVoice_SoNoReplyIsLeftUnvoiced(Type module)
+    {
+        // Arrange
+        var constructor = module.GetConstructors().Single();
+
+        // Act
+        var parameterTypes = constructor.GetParameters().Select(parameter => parameter.ParameterType);
+
+        // Assert
+        parameterTypes.Should().Contain(typeof(Voice.Handler));
     }
 
     public static TheoryData<Type> Modules()

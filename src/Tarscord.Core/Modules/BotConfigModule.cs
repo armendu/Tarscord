@@ -1,3 +1,4 @@
+using Discord;
 using Discord.Commands;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Personality;
@@ -6,7 +7,7 @@ namespace Tarscord.Core.Modules;
 
 [RequireOwner]
 [Name("Configuration commands")]
-public class BotConfigModule(SetLevels.Handler setLevels) : ModuleBase<SocketCommandContext>
+public class BotConfigModule(SetLevels.Handler setLevels, Voice.Handler voice) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
     /// Usage: sarcasm-level {level}
@@ -33,8 +34,14 @@ public class BotConfigModule(SetLevels.Handler setLevels) : ModuleBase<SocketCom
             new SetLevels.Command(which, level, Context.User.Username),
             CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
+        string command = which == SetLevels.Trait.Sarcasm ? "sarcasm-level" : "humor-level";
 
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), command, response.IsT0
+            ? "The bot's personality was just adjusted."
+            : "Someone tried to set the bot's personality to a level that is out of range.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 }

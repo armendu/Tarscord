@@ -9,6 +9,7 @@ namespace Tarscord.Core.Modules;
 [Name("Commands to interact with the bot")]
 public class InteractionModule(
     Generate.Handler generate,
+    Voice.Handler voice,
     IConfigurationRoot config) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
@@ -21,8 +22,10 @@ public class InteractionModule(
         // A bare Exception here used to be swallowed, so a bare ?dare did nothing.
         if (user is null)
         {
-            await ReplyAsync(embed:
-                $"Mention who you're daring, like `{config.CommandPrefix()}dare @name`.".EmbedMessage());
+            await ReplyVoicedAsync(
+                $"Mention who you're daring, like `{config.CommandPrefix()}dare @name`.".EmbedMessage(),
+                "dare",
+                "Someone tried to dare nobody; they have to mention a person.");
             return;
         }
 
@@ -39,4 +42,8 @@ public class InteractionModule(
 
         await ReplyAsync(embed: response.ToEmbeddedMessage($"A dare for {user.Username}"));
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 }

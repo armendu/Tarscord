@@ -13,6 +13,7 @@ namespace Tarscord.Core.Setup;
 public static class ProcessMessage
 {
     internal const string MentionCommand = "mention";
+    private const string ErrorCommand = "error";
 
     internal static bool IsFromPerson(IUser author) => !author.IsBot && !author.IsWebhook;
 
@@ -76,8 +77,8 @@ public static class ProcessMessage
                 logger.LogError(executeResult.Exception, "Command '{CommandText}' threw",
                     context.Message.Content);
 
-                await context.Channel.SendMessageAsync(
-                    embed: "Something went wrong running that command.".EmbedMessage());
+                await ReplyVoicedAsync(scope, context, "Something went wrong running that command.".EmbedMessage(),
+                    "A command failed with an unexpected error.");
 
                 return;
             }
@@ -99,7 +100,20 @@ public static class ProcessMessage
             logger.LogWarning("Command '{CommandText}' failed with {Error}: {Reason}",
                 context.Message.Content, result.Error, result.ErrorReason);
 
-            await context.Channel.SendMessageAsync(embed: result.ErrorReason.EmbedMessage());
+            await ReplyVoicedAsync(scope, context, result.ErrorReason.EmbedMessage(),
+                "A command could not run because it was typed wrong; the reason is shown.");
+        }
+
+        private static async Task ReplyVoicedAsync(
+            IServiceScope scope,
+            SocketCommandContext context,
+            Embed reply,
+            string prompt)
+        {
+            var voice = scope.ServiceProvider.GetRequiredService<Voice.Handler>();
+
+            await context.Channel.SendMessageAsync(embed: await voice.HandleAsync(
+                new Voice.Command(reply, prompt, ErrorCommand, context), CancellationToken.None));
         }
 
         internal async Task AnswerMentionAsync(

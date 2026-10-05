@@ -2,6 +2,7 @@ using Discord;
 using Discord.Commands;
 using Tarscord.Core.Extensions;
 using Tarscord.Core.Features.Loans;
+using Tarscord.Core.Features.Personality;
 
 namespace Tarscord.Core.Modules;
 
@@ -9,21 +10,29 @@ namespace Tarscord.Core.Modules;
 [Group("loan")]
 public class LoanModule : ModuleBase<SocketCommandContext>
 {
+    private const string LoanList = "loan list";
+    private const string LoanTo = "loan to";
+    private const string LoanPayback = "loan payback";
+    private const string LoanConfirm = "loan confirm";
+
     private readonly List.Handler _list;
     private readonly Create.Handler _create;
     private readonly Update.Handler _update;
     private readonly Confirm.Handler _confirm;
+    private readonly Voice.Handler _voice;
 
     public LoanModule(
         List.Handler list,
         Create.Handler create,
         Update.Handler update,
-        Confirm.Handler confirm)
+        Confirm.Handler confirm,
+        Voice.Handler voice)
     {
         _list = list;
         _create = create;
         _update = update;
         _confirm = confirm;
+        _voice = voice;
     }
 
     /// <summary>
@@ -37,7 +46,8 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             new List.Query(Context.User.Id, Context.User.Username),
             CancellationToken.None);
 
-        await ReplyAsync(embed: loanList.ToEmbeddedMessage());
+        await ReplyVoicedAsync(loanList.ToEmbeddedMessage(), LoanList,
+            "Someone asked to see the loans they are part of.");
     }
 
     /// <summary>
@@ -55,7 +65,8 @@ public class LoanModule : ModuleBase<SocketCommandContext>
 
         if (guildUser is null)
         {
-            await ReplyAsync(embed: "Invalid user mention. Please mention a user like @username".EmbedMessage());
+            await ReplyVoicedAsync("Invalid user mention. Please mention a user like @username".EmbedMessage(),
+                LoanTo, "Someone forgot to mention the other person, so the command could not run.");
             return;
         }
 
@@ -72,9 +83,9 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             },
             CancellationToken.None);
 
-        var embeddedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embeddedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), LoanTo, response.IsT0
+            ? "Someone just recorded that another person owes them money."
+            : "Someone tried to record a loan and it was refused for the reason shown.");
     }
 
     /// <summary>
@@ -91,7 +102,8 @@ public class LoanModule : ModuleBase<SocketCommandContext>
 
         if (guildUser is null)
         {
-            await ReplyAsync(embed: "Invalid user mention. Please mention a user like @username".EmbedMessage());
+            await ReplyVoicedAsync("Invalid user mention. Please mention a user like @username".EmbedMessage(),
+                LoanPayback, "Someone forgot to mention the other person, so the command could not run.");
             return;
         }
 
@@ -107,9 +119,9 @@ public class LoanModule : ModuleBase<SocketCommandContext>
             },
             CancellationToken.None);
 
-        var embeddedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embeddedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), LoanPayback, response.IsT0
+            ? "Someone just paid back money they owed."
+            : "Someone tried to pay back a loan and it was refused for the reason shown.");
     }
 
     /// <summary>
@@ -123,7 +135,8 @@ public class LoanModule : ModuleBase<SocketCommandContext>
 
         if (guildUser is null)
         {
-            await ReplyAsync(embed: "Invalid user mention. Please mention a user like @username".EmbedMessage());
+            await ReplyVoicedAsync("Invalid user mention. Please mention a user like @username".EmbedMessage(),
+                LoanConfirm, "Someone forgot to mention the other person, so the command could not run.");
             return;
         }
 
@@ -135,8 +148,14 @@ public class LoanModule : ModuleBase<SocketCommandContext>
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);
 
-        await ReplyAsync(embed: response.ToEmbeddedMessage());
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), LoanConfirm, response.IsT0
+            ? "Someone just confirmed they owe the money a loan says they do."
+            : "Someone tried to confirm a loan and there was nothing to confirm.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await _voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 
     /// <summary>The mentioned guild member, or null when there isn't one to find.</summary>
     /// <remarks>Context.Guild is null in a direct message, which used to be an unhandled NRE.</remarks>

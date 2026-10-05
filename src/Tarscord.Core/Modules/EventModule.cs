@@ -16,6 +16,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
     private readonly Create.Handler _create;
     private readonly Delete.Handler _delete;
     private readonly Generate.Handler _generate;
+    private readonly Voice.Handler _voice;
     private readonly IConfigurationRoot _config;
 
     public EventModule(
@@ -24,6 +25,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
         Create.Handler create,
         Delete.Handler delete,
         Generate.Handler generate,
+        Voice.Handler voice,
         IConfigurationRoot config)
     {
         _list = list;
@@ -31,6 +33,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
         _create = create;
         _delete = delete;
         _generate = generate;
+        _voice = voice;
         _config = config;
     }
 
@@ -42,23 +45,27 @@ public class EventModule : ModuleBase<SocketCommandContext>
     {
         var events = await _list.HandleAsync(new List.Query(Context.User.Username), CancellationToken.None);
 
-        if (events.EventInfos.Count > 0)
+        if (events.EventInfos.Count == 0)
         {
-            // Only the heading is voiced; the list itself stays deterministic.
-            var heading = await _generate.HandleAsync(
-                new Generate.Command(
-                    Prompt: $"Write the single line that introduces a list of {events.EventInfos.Count} " +
-                            "upcoming events. The events are listed under it, so name none of them and " +
-                            "invent nothing. Reply with that one line only, at most twelve words.",
-                    Fallback: List.DefaultHeading,
-                    UserId: Context.User.Id,
-                    CommandName: "event list",
-                    Channel: Context.Channel,
-                    PerformedByUser: Context.User.Username),
-                CancellationToken.None);
-
-            events = events with { Heading = heading.ToHeading() ?? List.DefaultHeading };
+            await ReplyVoicedAsync(events.ToEmbeddedMessage(), "event list",
+                "Someone asked for the upcoming events and there are none.");
+            return;
         }
+
+        // Only the heading is voiced; the list itself stays deterministic.
+        var heading = await _generate.HandleAsync(
+            new Generate.Command(
+                Prompt: $"Write the single line that introduces a list of {events.EventInfos.Count} " +
+                        "upcoming events. The events are listed under it, so name none of them and " +
+                        "invent nothing. Reply with that one line only, at most twelve words.",
+                Fallback: List.DefaultHeading,
+                UserId: Context.User.Id,
+                CommandName: "event list",
+                Channel: Context.Channel,
+                PerformedByUser: Context.User.Username),
+            CancellationToken.None);
+
+        events = events with { Heading = heading.ToHeading() ?? List.DefaultHeading };
 
         await ReplyAsync(embed: events.ToEmbeddedMessage());
     }
@@ -75,9 +82,9 @@ public class EventModule : ModuleBase<SocketCommandContext>
             new Details.Query(eventNameOrId, Context.User.Username),
             CancellationToken.None);
 
-        var embeddedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embeddedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "event show", response.IsT0
+            ? "Someone asked for the details of an event."
+            : "Someone asked about an event that could not be found.");
     }
 
     /// <summary>
@@ -96,9 +103,11 @@ public class EventModule : ModuleBase<SocketCommandContext>
         {
             string prefix = _config.CommandPrefix();
 
-            await ReplyAsync(embed:
+            await ReplyVoicedAsync(
                 $"Usage: {prefix}event create <name>, <when>, <description>".EmbedMessage(
-                    $"For example: {prefix}event create Release party, next friday, in the usual place"));
+                    $"For example: {prefix}event create Release party, next friday, in the usual place"),
+                "event create",
+                "Someone used the command to create an event the wrong way; the right way is shown.");
 
             return;
         }
@@ -112,9 +121,9 @@ public class EventModule : ModuleBase<SocketCommandContext>
 
         var response = await _create.HandleAsync(eventInfo, CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "event create", response.IsT0
+            ? "Someone just created a new event."
+            : "Someone tried to create an event and it was refused for the reason shown.");
     }
 
     /// <summary>
@@ -130,8 +139,12 @@ public class EventModule : ModuleBase<SocketCommandContext>
             new Delete.Command(eventNameOrId, Context.User.Id, Context.User.Username),
             CancellationToken.None);
 
-        var embedMessage = response.ToEmbeddedMessage();
-
-        await ReplyAsync(embed: embedMessage);
+        await ReplyVoicedAsync(response.ToEmbeddedMessage(), "event remove", response.IsT0
+            ? "Someone just cancelled an event they organized."
+            : "Someone tried to cancel an event and it was refused for the reason shown.");
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await _voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 }

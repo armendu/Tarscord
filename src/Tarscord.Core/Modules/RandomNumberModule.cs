@@ -1,3 +1,4 @@
+using Discord;
 using Discord.Commands;
 using Microsoft.Extensions.Configuration;
 using Tarscord.Core.Extensions;
@@ -8,6 +9,7 @@ namespace Tarscord.Core.Modules;
 [Name("Commands to generate random numbers")]
 public class RandomNumberModule(
     Generate.Handler generate,
+    Voice.Handler voice,
     IConfigurationRoot config) : ModuleBase<SocketCommandContext>
 {
     /// <summary>
@@ -21,8 +23,10 @@ public class RandomNumberModule(
     {
         if (min > max)
         {
-            await ReplyAsync(embed:
-                $"The lower limit has to come first. Try `{config.CommandPrefix()}random 1 100`.".EmbedMessage());
+            await ReplyVoicedAsync(
+                $"The lower limit has to come first. Try `{config.CommandPrefix()}random 1 100`.".EmbedMessage(),
+                "random",
+                "Someone gave the range for a random number the wrong way round.");
             return;
         }
 
@@ -42,4 +46,8 @@ public class RandomNumberModule(
 
         await ReplyAsync(embed: response.ToEmbeddedMessage(generatedNumber.ToString()));
     }
+
+    private async Task ReplyVoicedAsync(Embed reply, string command, string prompt) =>
+        await ReplyAsync(embed: await voice.HandleAsync(
+            new Voice.Command(reply, prompt, command, Context), CancellationToken.None));
 }
