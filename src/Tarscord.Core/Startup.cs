@@ -127,6 +127,7 @@ public class Startup
 
         Features.Personality.Generate.AddSlice(services);
         Features.Personality.SetLevels.AddSlice(services);
+        Features.Personality.Voice.AddSlice(services);
 
         Features.Reminders.Complete.AddSlice(services);
         Features.Reminders.Create.AddSlice(services);
