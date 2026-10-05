@@ -110,7 +110,7 @@ looks dead.
 docker compose up -d
 ```
 
-That brings up `tarscord-postgres` with the `tarscord_db` database on port 5432.
+That brings up `tarscord-postgres` with the `tarscord_db` database on port 5432, reachable from this machine only.
 
 ### 4. Create the schema
 
