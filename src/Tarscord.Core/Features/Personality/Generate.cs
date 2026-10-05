@@ -18,6 +18,7 @@ public static class Generate
         string Prompt,
         string Fallback,
         ulong UserId,
+        string CommandName,
         IMessageChannel Channel,
         string PerformedByUser) : IPerformedByUser;
 
@@ -44,7 +45,7 @@ public static class Generate
             }
 
             // Spent only here, after the configured check, so a call that never happens costs nothing.
-            if (!cooldown.TryGenerate(command.UserId))
+            if (!cooldown.TryGenerate(command.UserId, command.CommandName))
             {
                 logger.LogInformation("{PerformedByUser} is on cooldown; using a canned reply instead",
                     command.PerformedByUser);

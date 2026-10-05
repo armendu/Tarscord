@@ -52,6 +52,7 @@ public class EventModule : ModuleBase<SocketCommandContext>
                             "invent nothing. Reply with that one line only, at most twelve words.",
                     Fallback: List.DefaultHeading,
                     UserId: Context.User.Id,
+                    CommandName: "event list",
                     Channel: Context.Channel,
                     PerformedByUser: Context.User.Username),
                 CancellationToken.None);

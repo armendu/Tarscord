@@ -16,6 +16,7 @@ public class GenerateTests
 {
     private const string Fallback = "I dare you to write that message, bob.";
     private const ulong Alice = 111111111111111111;
+    private const string CommandName = "dare";
 
     [Fact]
     public async Task Handle_WhenTheModelAnswers_ReturnsWhatItSaid()
@@ -170,7 +171,7 @@ public class GenerateTests
         await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
-        cooldown.IsCoolingDown(Alice).Should().BeFalse();
+        cooldown.IsCoolingDown(Alice, CommandName).Should().BeFalse();
     }
 
     [Fact]
@@ -178,7 +179,7 @@ public class GenerateTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, CommandName);
 
         var chatClient = Substitute.For<IChatClient>();
         var handler = NewHandler(chatClient, cooldown: cooldown);
@@ -208,7 +209,7 @@ public class GenerateTests
         await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
-        cooldown.IsCoolingDown(Alice).Should().BeTrue();
+        cooldown.IsCoolingDown(Alice, CommandName).Should().BeTrue();
     }
 
     [Theory]
@@ -240,7 +241,7 @@ public class GenerateTests
         await handler.HandleAsync(NewCommand(), CancellationToken.None);
 
         // Assert
-        cooldown.IsCoolingDown(Alice).Should().BeTrue();
+        cooldown.IsCoolingDown(Alice, CommandName).Should().BeTrue();
     }
 
     [Fact]
@@ -276,7 +277,7 @@ public class GenerateTests
     {
         // Arrange
         var cooldown = new GenerationCooldown(new FakeTimeProvider());
-        cooldown.TryGenerate(Alice);
+        cooldown.TryGenerate(Alice, CommandName);
 
         var channel = Substitute.For<IMessageChannel>();
         var handler = NewHandler(AnsweringChatClient(), cooldown: cooldown);
@@ -300,7 +301,7 @@ public class GenerateTests
     }
 
     private static Generate.Command NewCommand(IMessageChannel? channel = null) =>
-        new("Dare bob to say it out loud.", Fallback, Alice, channel ?? Substitute.For<IMessageChannel>(), "alice");
+        new("Dare bob to say it out loud.", Fallback, Alice, CommandName, channel ?? Substitute.For<IMessageChannel>(), "alice");
 
     private static Generate.Handler NewHandler(
         IChatClient chatClient,

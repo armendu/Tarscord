@@ -35,6 +35,7 @@ public class RandomNumberModule(
                         $"and {max}. The number is shown above your line, so do not state or guess it.",
                 Fallback: $"Drawn between {min} and {max}.",
                 UserId: Context.User.Id,
+                CommandName: "random",
                 Channel: Context.Channel,
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);

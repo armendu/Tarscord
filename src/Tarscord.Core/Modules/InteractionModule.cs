@@ -32,6 +32,7 @@ public class InteractionModule(
                         "Address them directly.",
                 Fallback: $"I dare you to write that message, {user.Username}.",
                 UserId: Context.User.Id,
+                CommandName: "dare",
                 Channel: Context.Channel,
                 PerformedByUser: Context.User.Username),
             CancellationToken.None);

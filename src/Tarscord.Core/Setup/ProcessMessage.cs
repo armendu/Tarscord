@@ -12,6 +12,8 @@ namespace Tarscord.Core.Setup;
 
 public static class ProcessMessage
 {
+    internal const string MentionCommand = "mention";
+
     internal static bool IsFromPerson(IUser author) => !author.IsBot && !author.IsWebhook;
 
     public static void AddSlice(IServiceCollection services) =>
@@ -114,7 +116,7 @@ public static class ProcessMessage
             }
 
             // Only peeks: a mention on cooldown stays silent, where Generate would hand back the fallback.
-            if (cooldown.IsCoolingDown(user.Id))
+            if (cooldown.IsCoolingDown(user.Id, MentionCommand))
             {
                 logger.LogInformation("Mention from {User} ignored, still on cooldown", user.Username);
 
@@ -126,6 +128,7 @@ public static class ProcessMessage
                     Prompt: $"{user.Username} said to you: {said}",
                     Fallback: "I have nothing useful to add.",
                     UserId: user.Id,
+                    CommandName: MentionCommand,
                     Channel: channel,
                     PerformedByUser: user.Username),
                 CancellationToken.None);
