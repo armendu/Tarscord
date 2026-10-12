@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using Tarscord.Core.Features.Events;
 using Tarscord.Core.Persistence;
 using Tarscord.Core.Persistence.Entities;
@@ -11,6 +12,8 @@ namespace Tarscord.IntegrationTests.Features;
 public class EventsListTests(PostgresFixture fixture)
 {
     private const string PerformedByUser = "alice";
+
+    private static readonly DateTimeOffset Now = new(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
     public async Task Handle_WithNoEvents_ReturnsAnEmptyList()
@@ -91,8 +94,74 @@ public class EventsListTests(PostgresFixture fixture)
         response.More.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Handle_WithAnEventPastItsDate_LeavesItOut()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var arrangeContext = fixture.CreateContext();
+        arrangeContext.EventInfos.Add(NewEvent("Last week", isActive: true, daysFromNow: -7));
+        arrangeContext.EventInfos.Add(NewEvent("Next week", isActive: true, daysFromNow: 7));
+        await arrangeContext.SaveChangesAsync();
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.EventInfos.Should().ContainSingle()
+            .Which.EventName.Should().Be("Next week");
+    }
+
+    [Fact]
+    public async Task Handle_WithAnEventEarlierToday_StillListsIt()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var arrangeContext = fixture.CreateContext();
+        var startOfToday = NewEvent("Today", isActive: true);
+        startOfToday.EventDate = Now.UtcDateTime.Date;
+        arrangeContext.EventInfos.Add(startOfToday);
+        await arrangeContext.SaveChangesAsync();
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.EventInfos.Should().ContainSingle()
+            .Which.EventName.Should().Be("Today");
+    }
+
+    [Fact]
+    public async Task Handle_WithAnEventWithNoDate_StillListsIt()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var arrangeContext = fixture.CreateContext();
+        var undated = NewEvent("Someday", isActive: true);
+        undated.EventDate = null;
+        arrangeContext.EventInfos.Add(undated);
+        await arrangeContext.SaveChangesAsync();
+
+        await using var context = fixture.CreateContext();
+        var handler = NewHandler(context);
+
+        // Act
+        var response = await handler.HandleAsync(new List.Query(PerformedByUser), CancellationToken.None);
+
+        // Assert
+        response.EventInfos.Should().ContainSingle()
+            .Which.EventName.Should().Be("Someday");
+    }
+
     private static List.Handler NewHandler(TarscordContext context, string maxListed = "10") =>
-        new(NullLogger<List.Handler>.Instance, context, TestConfiguration.WithMaxListed(maxListed));
+        new(NullLogger<List.Handler>.Instance, context, new FakeTimeProvider(Now),
+            TestConfiguration.WithMaxListed(maxListed));
 
     private static EventInfo NewEvent(string eventName, bool isActive, int daysFromNow = 1) =>
         new()
@@ -100,9 +169,9 @@ public class EventsListTests(PostgresFixture fixture)
             EventOrganizer = PerformedByUser,
             EventOrganizerId = 123456789012345678,
             EventName = eventName,
-            EventDate = DateTime.UtcNow.AddDays(daysFromNow),
+            EventDate = Now.UtcDateTime.AddDays(daysFromNow),
             EventDescription = "somewhere",
             IsActive = isActive,
-            Created = DateTime.UtcNow
+            Created = Now.UtcDateTime
         };
 }

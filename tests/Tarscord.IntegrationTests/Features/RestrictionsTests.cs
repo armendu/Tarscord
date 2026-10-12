@@ -297,6 +297,85 @@ public class RestrictionsTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Lift_WhenTheChannelIsGone_MarksItLifted()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenARestriction(expiresInMinutes: -1);
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewLiftHandler(context, channel: null, NewUser()).HandleAsync(
+            new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
+
+        // Assert
+        response.AsT0.Lifted.Should().BeTrue();
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Restrictions.SingleAsync()).Lifted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Lift_WhenTheUserIsGone_MarksItLifted()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenARestriction(expiresInMinutes: -1);
+        await using var context = fixture.CreateContext();
+
+        // Act
+        var response = await NewLiftHandler(context, NewGuildChannel(), user: null).HandleAsync(
+            new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
+
+        // Assert
+        response.AsT0.Lifted.Should().BeTrue();
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Restrictions.SingleAsync()).Lifted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Lift_WhenTheMuteIsAllTheOverwriteHolds_RemovesTheOverwrite()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenARestriction(expiresInMinutes: 30);
+        await using var context = fixture.CreateContext();
+
+        var channel = NewGuildChannel(new OverwritePermissions(sendMessages: PermValue.Deny));
+
+        // Act
+        await NewLiftHandler(context, channel, NewUser()).HandleAsync(
+            new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
+
+        // Assert
+        await channel.Received().RemovePermissionOverwriteAsync(Arg.Any<IUser>(), Arg.Any<RequestOptions>());
+    }
+
+    [Fact]
+    public async Task Lift_WhenTheOverwriteHoldsMoreThanTheMute_KeepsTheRest()
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await GivenARestriction(expiresInMinutes: 30);
+        await using var context = fixture.CreateContext();
+
+        var channel = NewGuildChannel(new OverwritePermissions(
+            sendMessages: PermValue.Deny, attachFiles: PermValue.Deny));
+
+        // Act
+        await NewLiftHandler(context, channel, NewUser()).HandleAsync(
+            new Lift.Command(UserId, ChannelId, RestrictionKind.Mute, "alice"), CancellationToken.None);
+
+        // Assert
+        await channel.Received().AddPermissionOverwriteAsync(
+            Arg.Any<IUser>(),
+            Arg.Is<OverwritePermissions>(kept => kept.AttachFiles == PermValue.Deny
+                                                 && kept.SendMessages == PermValue.Inherit),
+            Arg.Any<RequestOptions>());
+    }
+
+    [Fact]
     public async Task Apply_WhenAnotherApplyInsertsFirst_ReturnsFailureInsteadOfThrowing()
     {
         // Arrange
@@ -389,27 +468,38 @@ public class RestrictionsTests(PostgresFixture fixture)
         new(context, new FakeTimeProvider(Now));
 
     private static Lift.Handler NewLiftHandler(
-        TarscordContext context, bool discordRefuses = false)
+        TarscordContext context, bool discordRefuses = false) =>
+        NewLiftHandler(context, NewGuildChannel(discordRefuses: discordRefuses), NewUser());
+
+    private static Lift.Handler NewLiftHandler(TarscordContext context, IGuildChannel? channel, IUser? user)
     {
-        var user = NewUser();
+        var discord = Substitute.For<IDiscordClient>();
+        discord.GetChannelAsync(ChannelId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
+            .Returns(Task.FromResult<IChannel>(channel!));
+        discord.GetUserAsync(UserId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
+            .Returns(Task.FromResult(user!));
+
+        return new Lift.Handler(NullLogger<Lift.Handler>.Instance, context,
+            new FakeTimeProvider(Now), discord);
+    }
+
+    private static IGuildChannel NewGuildChannel(
+        OverwritePermissions? overwrite = null, bool discordRefuses = false)
+    {
+        var refusal = discordRefuses
+            ? Task.FromException(new HttpRequestException("Discord is down"))
+            : Task.CompletedTask;
 
         var channel = Substitute.For<IGuildChannel>();
         channel.Id.Returns(ChannelId);
         channel.GetPermissionOverwrite(Arg.Any<IUser>())
-            .Returns(new OverwritePermissions(sendMessages: PermValue.Deny));
+            .Returns(overwrite ?? new OverwritePermissions(sendMessages: PermValue.Deny));
         channel.AddPermissionOverwriteAsync(
                 Arg.Any<IUser>(), Arg.Any<OverwritePermissions>(), Arg.Any<RequestOptions>())
-            .Returns(discordRefuses
-                ? Task.FromException(new HttpRequestException("Discord is down"))
-                : Task.CompletedTask);
+            .Returns(refusal);
+        channel.RemovePermissionOverwriteAsync(Arg.Any<IUser>(), Arg.Any<RequestOptions>())
+            .Returns(refusal);
 
-        var discord = Substitute.For<IDiscordClient>();
-        discord.GetChannelAsync(ChannelId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
-            .Returns(Task.FromResult<IChannel>(channel));
-        discord.GetUserAsync(UserId, Arg.Any<CacheMode>(), Arg.Any<RequestOptions>())
-            .Returns(Task.FromResult(user));
-
-        return new Lift.Handler(NullLogger<Lift.Handler>.Instance, context,
-            new FakeTimeProvider(Now), discord);
+        return channel;
     }
 }

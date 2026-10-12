@@ -37,6 +37,8 @@ public class DateTimeExtensionsTests
     [Theory]
     [InlineData("2026-05-01 18:30", "2026-05-01T18:30:00")]
     [InlineData("2026-12-24", "2026-12-24T00:00:00")]
+    [InlineData("2026-05-08 18:30+02:00", "2026-05-08T16:30:00")]
+    [InlineData("2026-05-08T18:30Z", "2026-05-08T18:30:00")]
     public void FromTextToDate_WithAnAbsoluteDate_ParsesIt(string input, string expected)
     {
         // Arrange

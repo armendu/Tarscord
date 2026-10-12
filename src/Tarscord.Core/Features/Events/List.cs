@@ -50,6 +50,7 @@ public static class List
     public sealed class Handler(
         ILogger<Handler> logger,
         TarscordContext context,
+        TimeProvider timeProvider,
         IConfigurationRoot configuration)
     {
         public async Task<ListResponse> HandleAsync(
@@ -59,8 +60,12 @@ public static class List
             logger.LogInformation("Query {Query} executed by {PerformedByUser}",
                 nameof(List), query.PerformedByUser);
 
+            // From the start of today, because "today" is stored as midnight UTC.
+            var today = timeProvider.GetUtcNow().UtcDateTime.Date;
+
             var (eventInfos, more) = await context.EventInfos
-                .Where(eventInfo => eventInfo.IsActive)
+                .Where(eventInfo => eventInfo.IsActive
+                                    && (eventInfo.EventDate == null || eventInfo.EventDate >= today))
                 .OrderBy(eventInfo => eventInfo.EventDate)
                 .TakeListedAsync(configuration.MaxListed(), cancellationToken);
 

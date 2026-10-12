@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -50,6 +51,42 @@ public class LoansCreateTests(PostgresFixture fixture)
 
         await using var verification = fixture.CreateContext();
         (await verification.Loans.CountAsync()).Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData("0.001")]
+    [InlineData("12345678901234567")]
+    public async Task Handle_WithAnAmountTheColumnCannotHold_ReturnsFailureAndStoresNothing(string amount)
+    {
+        // Arrange
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext();
+        var command = NewCommand(decimal.Parse(amount, CultureInfo.InvariantCulture));
+
+        // Act
+        var response = await NewHandler(context).HandleAsync(command, CancellationToken.None);
+
+        // Assert
+        response.AsT1.ErrorMessage.Should().Contain("at most two decimals");
+
+        await using var verification = fixture.CreateContext();
+        (await verification.Loans.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Handle_WithTheLargestAmountTheColumnHolds_StoresIt()
+    {
+        // Arrange
+        const decimal largest = 9999999999999999.99m;
+        await fixture.ResetAsync();
+        await using var context = fixture.CreateContext();
+
+        // Act
+        await NewHandler(context).HandleAsync(NewCommand(largest), CancellationToken.None);
+
+        // Assert
+        await using var verification = fixture.CreateContext();
+        (await verification.Loans.SingleAsync()).AmountLoaned.Should().Be(largest);
     }
 
     [Fact]

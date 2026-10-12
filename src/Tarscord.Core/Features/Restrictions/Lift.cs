@@ -47,29 +47,22 @@ public static class Lift
                 return new FailureResponse("They are not restricted here.");
             }
 
-            if (await discord.GetChannelAsync(command.ChannelId) is not IGuildChannel channel)
+            // A deleted channel or account leaves nothing to lift, and would otherwise be retried forever.
+            if (await discord.GetChannelAsync(command.ChannelId) is IGuildChannel channel
+                && await discord.GetUserAsync(command.UserId) is { } user)
             {
-                return new FailureResponse("That channel is gone.");
-            }
+                try
+                {
+                    await AllowInDiscordAsync(channel, user, command.Kind);
+                }
+                catch (Exception exception) when (exception is HttpException or HttpRequestException)
+                {
+                    // Unlifted on purpose, so the sweeper keeps trying rather than losing the row.
+                    logger.LogWarning(exception, "Could not lift {Kind} for {User} in {ChannelId}",
+                        command.Kind, user.Username, command.ChannelId);
 
-            var user = await discord.GetUserAsync(command.UserId);
-
-            if (user is null)
-            {
-                return new FailureResponse("I cannot find that user any more.");
-            }
-
-            try
-            {
-                await AllowInDiscordAsync(channel, user, command.Kind);
-            }
-            catch (Exception exception) when (exception is HttpException or HttpRequestException)
-            {
-                // Unlifted on purpose, so the sweeper keeps trying rather than losing the row.
-                logger.LogWarning(exception, "Could not lift {Kind} for {User} in {ChannelId}",
-                    command.Kind, user.Username, command.ChannelId);
-
-                return new FailureResponse("I don't have permission to change this channel.");
+                    return new FailureResponse("I don't have permission to change this channel.");
+                }
             }
 
             inForce.Lifted = true;
@@ -96,6 +89,14 @@ public static class Lift
             RestrictionKind.DenyReacting => permissions.Modify(addReactions: PermValue.Inherit),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown restriction kind")
         };
+
+        // An overwrite with nothing left in it would linger on the channel's permission list.
+        if (restored.AllowValue == 0 && restored.DenyValue == 0)
+        {
+            await channel.RemovePermissionOverwriteAsync(user);
+
+            return;
+        }
 
         await channel.AddPermissionOverwriteAsync(user, restored);
     }

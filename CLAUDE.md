@@ -357,6 +357,12 @@ If `Lift` marked the row lifted first and then failed in Discord, the person wou
 nothing left to find them, because the sweeper only looks at rows where `Lifted` is false. This was
 the wrong way round for `Lift` until a review caught it.
 
+**Both loops retry what can recover and drop what cannot.** A reminder whose send fails stays due and is
+retried every tick until it is an hour overdue, then marked sent. A restriction whose channel or user no
+longer exists is marked lifted, because there is nothing left to give back; only Discord refusing keeps
+the row in force. Before this, the first lost a reminder to one transient error and the second logged
+the same warning every 15 seconds forever.
+
 **`dotnet format` will make every `DbSet` nullable.** It rewrites
 `public DbSet<Loan> Loans { get; set; }` to `DbSet<Loan>?`, which is wrong — EF assigns them — and
 produces about sixty `CS8604` and `CS8602` warnings in the handlers. They are `= null!;` for this

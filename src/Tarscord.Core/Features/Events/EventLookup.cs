@@ -16,9 +16,12 @@ internal static class EventLookup
                 candidate => candidate.Id == eventId, cancellationToken);
         }
 
+        // Escaped, so a name is matched as typed rather than as a pattern: "%" is not every event.
+        string name = idOrName.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_");
+
         return await events
             .Where(candidate => candidate.IsActive
-                                && EF.Functions.ILike(candidate.EventName, idOrName))
+                                && EF.Functions.ILike(candidate.EventName, name, @"\"))
             .OrderByDescending(candidate => candidate.Created)
             .FirstOrDefaultAsync(cancellationToken);
     }

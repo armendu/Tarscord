@@ -31,6 +31,11 @@ public static class Update
                 .GreaterThan(0)
                 .WithMessage("A payment has to be for more than nothing.");
 
+            // NUMERIC(18, 2) on the column, which would round 0.001 to nothing or overflow on 17 digits.
+            RuleFor(command => command.Amount)
+                .PrecisionScale(18, 2, ignoreTrailingZeros: true)
+                .WithMessage("Give an amount with at most two decimals and sixteen digits before them.");
+
             RuleFor(command => command.LenderId)
                 .NotEqual(command => command.PayerId)
                 .WithMessage("You cannot pay yourself back.");

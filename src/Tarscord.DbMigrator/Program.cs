@@ -4,9 +4,12 @@ return RunDbMigration(args);
 
 static int RunDbMigration(string[] args)
 {
-    var connectionString =
-        args.FirstOrDefault()
-        ?? "Host=localhost;Username=root;Password=password;Database=tarscord_db";
+    // No default, so a forgotten argument cannot migrate the development database by accident.
+    if (args.FirstOrDefault() is not { Length: > 0 } connectionString)
+    {
+        Console.Error.WriteLine("Usage: Tarscord.DbMigrator \"<connection string>\"");
+        return -1;
+    }
 
     var result = DatabaseMigrator.Upgrade(connectionString);
 
@@ -15,9 +18,6 @@ static int RunDbMigration(string[] args)
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine(result.Error);
         Console.ResetColor();
-#if DEBUG
-        Console.ReadLine();
-#endif
         return -1;
     }
 

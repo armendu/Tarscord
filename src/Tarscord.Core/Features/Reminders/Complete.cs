@@ -25,7 +25,7 @@ public static class Complete
                 return false;
             }
 
-            // One at a time, after delivery, so a failed send is retried next tick.
+            // One at a time, after delivery, so a failed send stays due and is retried next tick.
             reminder.Sent = true;
             reminder.Updated = timeProvider.GetUtcNow().UtcDateTime;
 
